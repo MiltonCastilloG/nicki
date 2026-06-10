@@ -1,0 +1,32 @@
+# Nicki workspace registry — example stub
+# Copy to your workspace root as nicki-workspace.yaml and edit.
+
+version: 1
+
+# Path to this workspace (optional; defaults to directory containing this file)
+# workspace_path: ~/NickiWorkspace
+
+# Nicki runtime version installed into managed projects
+# nicki_runtime_version: 0.1.0
+
+projects:
+  castlemill-landing:
+    url: git@github.com:your-org/castlemill-landing.git
+    path: projects/castlemill-landing
+    git:
+      default_branch: main
+      remote: origin
+    # Run in project root after clone, and optionally in each new worktree
+    post_create:
+      - npm install
+    gitignore:
+      - worktrees/
+      - task-archive/
+
+  # some-other-project:
+  #   url: git@github.com:your-org/some-other-project.git
+  #   path: projects/some-other-project
+  #   git:
+  #     default_branch: main
+  #     remote: origin
+  #   post_create: []
