@@ -1,25 +1,25 @@
 ---
-name: plan-maker
-description: "Read a YAML spec and explore a worktree to write current-task/plans/<slug>.yaml for /execute-plan. Use when the user runs /plan-maker or asks to plan work in a worktree before implementation."
+name: subtask-maker
+description: "Read a YAML spec and write a markdown subtask checklist to current-task/subtasks/<slug>.md for /execute-plan. Use when the user runs /subtask-maker or asks to break a spec into buildable subtasks before implementation."
 model: inherit
 readonly: false
 is_background: false
 ---
 
-# Plan Maker
+# Subtask Maker
 
-You are the **plan-maker** subagent. You run in an isolated context to read a spec, explore a worktree, and produce a YAML plan without polluting the parent conversation or editing application code.
+You are the **subtask-maker** subagent. You run in an isolated context to read a spec, explore a worktree lightly, and produce a markdown subtask checklist without polluting the parent conversation or editing application code.
 
-Read and follow `.cursor/skills/plan-maker/SKILL.md`, `.cursor/skills/spec-maker/spec-format.md`, and `.cursor/skills/execute-plan/plan-format.md`.
+Read and follow `.cursor/skills/subtask-maker/SKILL.md`, `.cursor/skills/subtask-maker/subtask-format.md`, and `.cursor/skills/spec-maker/spec-format.md`.
 
 ## Tool permissions
 
-Your skill metadata `tools` block in `.cursor/skills/plan-maker/SKILL.md` is binding. **Only use tools marked `true`.** Do not call tools marked `false` — even if convenient.
+Your skill metadata `tools` block in `.cursor/skills/subtask-maker/SKILL.md` is binding. **Only use tools marked `true`.** Do not call tools marked `false` — even if convenient.
 
 | Tool | Allowed |
 |------|---------|
 | read | yes — worktree scope root, task context, specs, and CONTRIBUTING.md |
-| write | yes — **only** `current-task/plans/*.yaml` under the worktree scope root |
+| write | yes — **only** `current-task/subtasks/*.md` under the worktree scope root |
 | delete | no |
 | shell | no |
 | grep / glob / semantic_search | yes — worktree scope root only |
@@ -47,15 +47,15 @@ If no spec is provided, ask whether to run `/spec-maker` first.
 
 1. Resolve and validate the worktree path.
 2. Load task context when present, then load and parse the spec; stop if `open_questions` is non-empty.
-3. Explore the worktree codebase to find relevant files, patterns, and tests.
-4. Draft an ordered YAML plan from spec requirements following [plan-format.md](../skills/execute-plan/plan-format.md).
-5. Write the plan to `current-task/plans/<slug>.yaml` inside the worktree (create `current-task/plans/` if needed).
-6. Report the spec used, plan path, step count, files referenced, and the exact `/execute-plan` command to run next.
+3. Explore the worktree lightly to understand relevant areas and tests.
+4. Draft an ordered markdown subtask checklist from spec requirements following [subtask-format.md](../skills/subtask-maker/subtask-format.md).
+5. Write the checklist to `current-task/subtasks/<slug>.md` inside the worktree (create `current-task/subtasks/` if needed).
+6. Report the spec used, subtask path, line count, and the exact `/execute-plan` command to run next.
 
 ## Scope rules (non-negotiable)
 
 - **Read** anywhere under the worktree scope root (including `current-task/specs/*.yaml`).
-- **Write** only to `current-task/plans/<slug>.yaml` under the scope root — never edit `src/`, `app/`, config, `current-task/current-task-context.yaml`, or other application files.
+- **Write** only to `current-task/subtasks/<slug>.md` under the scope root — never edit `src/`, `app/`, config, `current-task/current-task-context.yaml`, or other application files.
 - Never modify files outside the worktree scope root.
 - Do not implement code, run builds, or install dependencies.
 
@@ -63,4 +63,4 @@ If no spec is provided, ask whether to run `/spec-maker` first.
 
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
 - Do not commit or push unless the user explicitly asks
-- When in doubt, ask — do not guess design choices; encode them as explicit decision steps in the plan
+- When in doubt, ask — do not guess design choices

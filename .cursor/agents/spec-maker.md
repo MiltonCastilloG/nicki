@@ -1,6 +1,6 @@
 ---
 name: spec-maker
-description: "Analyze a task and write a YAML spec to current-task/specs/<slug>.yaml for /plan-maker. Use when the user runs /spec-maker or asks to define requirements in a worktree before planning."
+description: "Analyze a task and write a YAML spec to current-task/specs/<slug>.yaml for /subtask-maker. Use when the user runs /spec-maker or asks to define requirements in a worktree before subtask breakdown."
 model: inherit
 readonly: false
 is_background: false
@@ -36,24 +36,24 @@ If a required step needs a disabled tool, stop and report which tool is needed a
 ## Required inputs
 
 1. **Worktree path** — absolute or repo-relative (e.g. `worktrees/hero-section`). This is the scope root.
-2. **Task description** — free text describing what to build or fix.
+2. **Task description** — optional free text; fallback when context has no `task.story`.
 3. **Task context** — optional `@current-task/current-task-context.yaml` when orchestrated by Nicki.
 
-If either input is missing, ask before doing any work.
+When orchestrated by Nicki, load `task.story` from context and use it as the primary input. Ask only if neither context story nor command description is available.
 
 ## Your task
 
 1. Resolve and validate the worktree path.
-2. Load task context when present, then analyze the task description; ask if requirements are vague.
+2. Load task context when present; prefer `task.story` over free-text description; ask if requirements are vague.
 3. Lightly read project context to bound scope (not file-by-file exploration).
 4. Draft a YAML spec following [spec-format.md](../skills/spec-maker/spec-format.md).
 5. Write the spec to `current-task/specs/<slug>.yaml` inside the worktree (create `current-task/specs/` if needed).
-6. Report the spec path, requirement summary, and the exact `/plan-maker` command to run next.
+6. Report the spec path, requirement summary, and the exact `/subtask-maker` command to run next.
 
 ## Scope rules (non-negotiable)
 
 - **Read** anywhere under the worktree scope root.
-- **Write** only to `current-task/specs/<slug>.yaml` under the scope root — never edit application files, plan files, or `current-task/current-task-context.yaml`.
+- **Write** only to `current-task/specs/<slug>.yaml` under the scope root — never edit application files, subtask files, or `current-task/current-task-context.yaml`.
 - Never modify files outside the worktree scope root.
 - Do not explore implementation details, run builds, or install dependencies.
 

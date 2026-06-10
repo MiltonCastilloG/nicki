@@ -1,6 +1,6 @@
 ---
 name: next-step-spec
-description: "Defines the YAML spec format for follow-up tasks created from validated review findings. Use when writing current-task/next-steps/*.yaml for plan-maker."
+description: "Defines the YAML spec format for follow-up tasks created from validated review findings. Use when writing current-task/next-steps/*.yaml for subtask-maker."
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Use this skill when an agent needs to write `current-task/next-steps/*.yaml`.
 
-Next-step files are **normal spec YAML** created when a finding is important but outside the current task scope. They must follow [spec-format.md](../spec-maker/spec-format.md) so `/plan-maker` can consume them directly.
+Next-step files are **normal spec YAML** created when a finding is important but outside the current task scope. They must follow [spec-format.md](../spec-maker/spec-format.md) so `/subtask-maker` can consume them directly.
 
 ## Output location
 
@@ -83,6 +83,6 @@ open_questions: []
 ## Rules
 
 - Write a next-step only for out-of-scope findings that are plausible and valuable.
-- The file must be directly passable to `/plan-maker worktrees/<slug> @current-task/next-steps/<file>.yaml`.
+- The file must be directly passable to `/subtask-maker worktrees/<slug> @current-task/next-steps/<file>.yaml`.
 - Do not write next-steps for wrong, duplicate, or non-actionable findings.
-- Keep this as a spec, not an implementation plan: no file paths, no plan steps.
+- Keep this as a spec, not implementation detail: no file paths, no subtask lines.

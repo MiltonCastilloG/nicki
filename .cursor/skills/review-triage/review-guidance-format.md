@@ -28,11 +28,11 @@ This is the review YAML shape plus one extra input-only key:
 approved: false
 content: |
   Previous review was discarded because its blocking findings were outside the hero task scope.
-  Rerun review using the current task spec, plan, execution, and the considerations below.
+  Rerun review using the current task spec, subtask list, execution, and the considerations below.
 
 important-considerations:
   - Do not block the hero task on footer redesign requests; footer work is outside spec.scope.in.
-  - Still report build, lint, test, safety, or correctness issues even if they were not named in the plan.
+  - Still report build, lint, test, safety, or correctness issues even if they were not named in the subtasks.
   - Verify CTA, headline, subcopy, and semantic token requirements from the spec.
 ```
 
@@ -40,5 +40,5 @@ important-considerations:
 
 - Use this only when a review was `discarded` or mostly invalid and should be rerun.
 - Keep considerations actionable and scoped to review behavior.
-- Do not include implementation instructions or plan steps.
+- Do not include implementation instructions or subtask edits.
 - Do not use this to hide real in-scope blockers from the next review.

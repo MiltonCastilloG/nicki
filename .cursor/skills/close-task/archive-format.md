@@ -46,10 +46,10 @@ outcome:
 process:
   - step: spec
     summary: Requirements and acceptance criteria captured.
-  - step: plan
-    summary: Implementation plan mapped requirements to files and checks.
+  - step: subtasks
+    summary: Subtask checklist mapped requirements to build, test, and verification items.
   - step: execute
-    summary: Plan executed and verification evidence recorded.
+    summary: Subtasks executed and verification evidence recorded.
   - step: review
     summary: Review completed with no blocking findings.
   - step: push
@@ -64,8 +64,8 @@ decisions:
 open_questions: []
 
 suggestions:
-  - area: planning
-    suggestion: Add CTA destination to the spec before planning to avoid a decision step.
+  - area: subtasking
+    suggestion: Add CTA destination to the spec before writing subtasks to avoid a decision step.
     evidence: "open_questions included CTA destination during spec."
 ```
 

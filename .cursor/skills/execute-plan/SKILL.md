@@ -1,6 +1,6 @@
 ---
 name: execute-plan
-description: "Execute a structured YAML plan inside a git worktree with strict path scope. Use when the user runs /execute-plan, asks to run a task plan in a worktree, or wants plan-driven code generation without improvisation."
+description: "Execute a markdown subtask checklist inside a git worktree with strict path scope. Use when the user runs /execute-plan, asks to implement subtasks in a worktree, or wants checklist-driven code generation without improvisation."
 disable-model-invocation: true
 metadata:
   type: subagent
@@ -25,12 +25,16 @@ metadata:
 
 # Execute Plan
 
-Generate and apply code changes by following a plan **inside one worktree**. The worktree path is a hard boundary: never modify files outside it.
+Implement work by following a **subtask checklist** inside one worktree — OpenSpec-style. Read unchecked `- [ ]` lines in order, implement each one-sentence subtask, then flip it to `- [x]` in the same file before moving on.
+
+The worktree path is a hard boundary: never modify files outside it.
+
+Subtask schema: [subtask-format.md](../subtask-maker/subtask-format.md).
 
 ## When to use
 
-- User invokes `/execute-plan` with a worktree path and a plan
-- User asks to implement a pre-written plan in an isolated worktree
+- User invokes `/execute-plan` with a worktree path and a subtask list
+- User asks to implement a pre-written subtask checklist in an isolated worktree
 - A parent workflow created a worktree via `/start-task` and now needs implementation
 
 ## Required inputs
@@ -38,7 +42,7 @@ Generate and apply code changes by following a plan **inside one worktree**. The
 | Input | Required | Notes |
 |-------|----------|-------|
 | Worktree path | Yes | Absolute or repo-relative (e.g. `worktrees/hero-section`) |
-| Plan | Yes | Inline YAML, `@file`, or path to a `.yaml` plan file |
+| Subtask list | Yes | `@current-task/subtasks/<slug>.md`, inline markdown, or path |
 | Task context | Optional | `current-task/current-task-context.yaml` when orchestrated by Nicki |
 
 If either is missing, ask before starting.
@@ -50,10 +54,9 @@ Copy this checklist and track progress:
 ```
 Task Progress:
 - [ ] Resolve and validate worktree scope
-- [ ] Parse plan into ordered steps
-- [ ] Flag ambiguous or out-of-scope steps (ask user)
-- [ ] Execute steps in order
-- [ ] Run verification
+- [ ] Parse subtask list and find unchecked items
+- [ ] Flag ambiguous or out-of-scope subtasks (ask user)
+- [ ] Execute unchecked subtasks in order, marking each complete
 - [ ] Write execution handoff
 - [ ] Report summary
 ```
@@ -69,93 +72,71 @@ Task Progress:
 **Scope rules (non-negotiable):**
 
 - **Create, edit, delete** files only under the scope root.
-- Run shell commands with `working_directory` set to the scope root unless a plan step specifies a subdirectory (still must stay under scope root).
+- Run shell commands with `working_directory` set to the scope root unless a subtask implies a subdirectory (still must stay under scope root).
 - Do **not** read sibling worktrees or the parent repo for the purpose of copying changes into other trees.
 - Do **not** modify `.cursor/`, parent-repo config, or paths outside the scope root — even if convenient.
-- Relative paths in the plan are resolved from the scope root.
-- If a plan step references a path that escapes the scope root, **stop and ask** — do not proceed with that step.
+- If a subtask would require changes outside the scope root, **stop and ask** — do not proceed.
 
-### Step 2: Parse the plan
+### Step 2: Parse the subtask list
 
-Plans are **YAML only**. Full schema and examples: [plan-format.md](plan-format.md).
+Load from `@current-task/subtasks/<slug>.md`, a path, or inline markdown. Full schema: [subtask-format.md](../subtask-maker/subtask-format.md).
 
 Extract:
 
-- Ordered **steps** (each with `action`, targets, and instructions)
-- Optional **verify** commands at the end
-- Optional **constraints** (e.g. "do not commit")
-- Optional `meta.worktree` and `covers` fields for scope and requirement traceability
-- Optional `meta.context` pointing to `current-task/current-task-context.yaml`
+- YAML **frontmatter** (`worktree`, `spec`, `constraints`, etc.)
+- Ordered checklist lines (`- [ ]` pending, `- [x]` complete)
 
-**Before executing**, check each step for:
+**Before executing**, check for:
 
-- Missing or vague instructions ("improve the footer", "clean up code")
-- Conflicting steps (create then delete same file without explanation)
-- Paths outside the scope root
-- Dependencies on files that do not exist (unless the step creates them)
-- Commands that would write outside the scope root
-- `meta.worktree` that does not match the worktree slug from the scope path
-- Missing final `verify` step
+- Missing or vague subtasks ("improve the footer", "clean up code")
+- Subtasks outside spec `scope.out` when a linked spec exists
+- `meta.worktree` / frontmatter `worktree` that does not match the worktree slug
+- No verification subtasks at the end when spec `acceptance` exists
 
 If anything is unclear, **stop and ask** with a specific question. Do not guess or fill gaps with your own design choices.
 
-### Step 3: Execute steps
+### Step 3: Execute subtasks
 
-Follow the plan **literally**, in order:
+Work through **unchecked** subtasks top to bottom:
 
-| Action | Meaning |
-|--------|---------|
-| `create` | Create the file at `path` with the described content |
-| `modify` | Edit the file at `path` as described |
-| `delete` | Remove the file at `path` |
-| `run` | Run the given command(s) from the scope root |
-| `verify` | Run check commands; report pass/fail |
+1. Read the next `- [ ]` line.
+2. Implement what that one sentence requires — explore the worktree as needed to decide files and approach.
+3. When the subtask is done, change that line to `- [x]` and **save** `current-task/subtasks/<slug>.md` immediately.
+4. Continue until all subtasks are checked or execution blocks.
 
 **Execution discipline:**
 
-- One plan step at a time; mark complete before moving on.
+- One subtask at a time; mark complete before moving on.
 - Match existing project conventions (read surrounding code in the worktree first).
-- Minimize scope — only change what the step requires.
-- Do **not** add steps, refactors, tests, or docs unless the plan says so.
-- Do **not** commit or push unless the plan explicitly includes a commit step **and** the user has asked for commits in their rules/message.
+- Minimize scope — only change what the current subtask requires.
+- Do **not** add work beyond unchecked subtasks unless the user approves.
+- Do **not** commit or push unless a subtask explicitly requires it **and** the user has asked for commits in their rules/message.
+- Verification subtasks (`Run npm run lint`, `Run npm test`, etc.) — run the commands and fix failures before marking complete.
 
-If a step fails (tool error, test failure, missing file), stop and report. Do not silently skip or rewrite the plan unless the user approves.
+If a subtask fails (tool error, test failure, missing context), stop and report. Do not silently skip or rewrite the checklist unless the user approves.
 
-### Step 4: Verify
+**Resume:** If some lines are already `- [x]`, skip them and continue from the first unchecked line.
 
-If the plan includes verify steps, run them from the scope root and report results.
-
-If there are no verify steps, ask whether to run the standard checks from [CONTRIBUTING.md](../../../CONTRIBUTING.md) (`npm run lint`, `npm test`, etc.) or stop.
-
-### Step 5: Write execution handoff
+### Step 4: Write execution handoff
 
 Write `current-task/executions/<slug>.yaml` under the scope root using [execution-format.md](execution-format.md).
 
 Write this file whenever execution reaches a terminal state:
 
-- `status: complete` when all executable plan steps finished and verification ran or was explicitly skipped by user direction.
-- `status: partial` when some steps completed but the plan did not finish.
+- `status: complete` when all subtasks are checked and verification subtasks passed or were explicitly skipped by user direction.
+- `status: partial` when some subtasks completed but the list did not finish.
 - `status: blocked` when execution cannot continue without user input, a scope decision, or a failed required command.
 
-The handoff must include:
-
-- `meta` with `worktree`, `generated_by: execute-plan`, `plan`, optional `spec`, optional `context`, `status`, and honored constraints.
-- `paths` grouped as `created`, `modified`, `deleted`, and `unplanned`.
-- `steps` mirroring the plan order with each step status.
-- `verify` command evidence when verification commands ran.
-- `deviations`, `open_questions`, `hotspots`, or `review_scope` when useful for review.
-
-Keep the handoff compact. Do not include diffs, transcripts, long logs, or approval language.
-
-### Step 6: Report
+### Step 5: Report
 
 Summarize:
 
 - Scope root used
-- Steps completed (with paths touched)
-- Steps skipped or blocked (with reason)
+- Subtasks completed (with paths touched)
+- Subtasks skipped or blocked (with reason)
 - Verification results
 - Execution handoff path written
+- Remaining unchecked subtasks, if any
 - Any questions left for the user
 
 Remind the user to run:
@@ -170,10 +151,11 @@ Replace `worktrees/<slug>` with the actual worktree path the user provided.
 
 - Never modify files outside the scope root
 - Never edit `current-task/current-task-context.yaml`; Nicki updates it through `/current-task-update`
+- May edit `current-task/subtasks/<slug>.md` only to flip checklist completion state
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
-- Do not commit or push unless the plan requires it and the user explicitly asks
+- Do not commit or push unless the user explicitly asks
 - When in doubt, ask — improvisation is a last resort, not a default
 
 ## Examples
 
-See [plan-format.md](plan-format.md) for copy-paste plan templates.
+See [subtask-format.md](../subtask-maker/subtask-format.md) for copy-paste subtask list templates.

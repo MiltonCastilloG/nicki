@@ -1,0 +1,7 @@
+# Managed project clones (tracked layout only via projects/.gitkeep)
+projects/*
+!projects/.gitkeep
+
+# Per-project task artifacts (when present under a managed clone)
+worktrees/
+task-archive/

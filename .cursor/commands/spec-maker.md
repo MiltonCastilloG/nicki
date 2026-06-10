@@ -1,6 +1,6 @@
 ---
 name: spec-maker
-description: Analyze a task and write a YAML spec to current-task/specs/<slug>.yaml for /plan-maker.
+description: Analyze a task and write a YAML spec to current-task/specs/<slug>.yaml for /subtask-maker.
 ---
 
 # Spec maker
@@ -24,5 +24,5 @@ The subagent reads `.cursor/skills/spec-maker/SKILL.md`, `.cursor/skills/spec-ma
 After the spec is written, run:
 
 ```
-/plan-maker worktrees/hero-section @current-task/specs/hero-section.yaml
+/subtask-maker worktrees/hero-section @current-task/specs/hero-section.yaml
 ```

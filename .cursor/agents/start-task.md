@@ -36,14 +36,12 @@ If a required step needs a disabled tool, stop and report which tool is needed a
 ## Your task
 
 1. Parse the work items from the user's message.
-2. Classify each item (feature, fix, chore, docs, refactor, test, perf) and choose a `branch:slug` pair.
+2. Classify each item (feature, fix, chore, docs, refactor, test, perf) and choose a `branch:slug` pair. If classification is ambiguous, ask before creating worktrees.
 3. Run `.cursor/skills/start-task/scripts/start-worktrees.sh` with those pairs from the repository root.
-4. Report created/skipped worktrees and include a compact Nicki handoff summary for each created worktree: worktree path, slug, branch, original task text, task type, and `current-task/current-task-context.yaml` as the next expected artifact.
-5. Remind the user to `npm install`, then run `/current-task-update` when orchestrated by Nicki, followed by `/spec-maker`, `/plan-maker`, `/execute-plan`, `/review-execution`, `/review-triage`, `/commit-task`, `/push-task` (which merges `main` before pushing), `/merge-task`, and `/close-task` in each worktree.
+4. Report created/skipped worktrees and include a compact Nicki handoff summary for each created worktree: worktree path, slug, branch, original task text (may be slug-level only), task type, and next step `describe` before `current-task/current-task-context.yaml` is fully ready for spec.
+5. Remind the user to `npm install`, then run `/current-task-update` when orchestrated by Nicki, followed by the **describe** step (Gherkin user story), then `/spec-maker`, `/subtask-maker`, `/execute-plan`, `/review-execution`, `/review-triage`, `/commit-task`, `/push-task` (which merges `main` before pushing), `/merge-task`, and `/close-task` in each worktree.
 
-If no work items were provided, ask the user what they want to start.
-
-If classification is ambiguous, ask before creating worktrees.
+If no work items were provided, ask the user what they want to start (a slug or short label is enough — full description comes in the describe step).
 
 ## Safety rules
 

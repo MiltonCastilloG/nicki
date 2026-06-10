@@ -1,6 +1,6 @@
 ---
 name: spec-maker
-description: "Analyze a task and write a YAML spec to current-task/specs/<slug>.yaml for /plan-maker. Use when the user runs /spec-maker or asks to define requirements in a worktree before planning."
+description: "Analyze a task and write a YAML spec to current-task/specs/<slug>.yaml for /subtask-maker. Use when the user runs /spec-maker or asks to define requirements in a worktree before subtask breakdown."
 disable-model-invocation: true
 metadata:
   type: subagent
@@ -25,25 +25,25 @@ metadata:
 
 # Spec Maker
 
-Analyze a task and produce a **YAML spec** that `/plan-maker` uses to draft an implementation plan. The spec defines **what** to build — not **how**. No file paths, no create/modify steps.
+Analyze a task and produce a **YAML spec** that `/subtask-maker` uses to draft a build checklist. The spec defines **what** to build — not **how**. No file paths, no create/modify steps.
 
 Spec schema: [spec-format.md](spec-format.md) (single source of truth).
 
 ## When to use
 
 - User invokes `/spec-maker` with a worktree path and task description
-- A worktree was created via `/start-task` and needs requirements defined before planning
-- User asks to spec (not plan or implement) work inside an isolated worktree
+- A worktree was created via `/start-task` and needs requirements defined before subtask breakdown
+- User asks to spec (not subtask or implement) work inside an isolated worktree
 
 ## Required inputs
 
 | Input | Required | Notes |
 |-------|----------|-------|
 | Worktree path | Yes | Absolute or repo-relative (e.g. `worktrees/hero-section`) |
-| Task description | Yes | Free text after the path |
+| Task description | No* | Free text after the path — fallback when context has no `task.story` |
 | Task context | Optional | `current-task/current-task-context.yaml` when orchestrated by Nicki |
 
-If either is missing, ask before starting.
+\*When orchestrated by Nicki, prefer `task.story` from context. Ask only if neither context story nor command description is available.
 
 ## Workflow
 
@@ -52,7 +52,7 @@ Copy this checklist and track progress:
 ```
 Task Progress:
 - [ ] Resolve and validate worktree scope
-- [ ] Parse task description (ask if vague)
+- [ ] Load task.story from context (preferred) or parse task description (ask if vague)
 - [ ] Light context read (CONTRIBUTING, project layout)
 - [ ] Draft YAML spec
 - [ ] Write current-task/specs/<slug>.yaml
@@ -67,17 +67,20 @@ Task Progress:
 4. Spec output path: `current-task/specs/<slug>.yaml` relative to the scope root.
 5. Infer `branch` from git when possible (e.g. `feature/hero-section`); omit if unknown.
 6. Load `current-task/current-task-context.yaml` when present and validate its `scope.worktree_path` matches the worktree path.
+7. When context includes `task.story`, use it as the primary requirements source. Otherwise use the command-line task description or `task.original`.
 
 **Scope rules (non-negotiable):**
 
 - **Read** anywhere under the scope root and CONTRIBUTING.md.
 - **Write** only to `current-task/specs/<slug>.yaml` (create `current-task/specs/` directory if missing).
-- Never edit `src/`, `app/`, config, tests, `current-task/plans/`, or any application files.
+- Never edit `src/`, `app/`, config, tests, `current-task/subtasks/`, or any application files.
 - Never modify files outside the scope root.
 
 ### Step 2: Parse task description
 
-Extract what the user wants built or fixed. Ask if:
+When `task.story` is present in context, derive requirements and acceptance from the Gherkin user story (`Feature:`, scenarios, and **As a / I want / So that**). Set `meta.task` to the full `task.story` text.
+
+Otherwise extract what the user wants built or fixed from the command description or `task.original`. Ask if:
 
 - The outcome is vague ("improve", "modernize", "clean up") with no measurable target
 - Scope is unclear (which page, which component, which behavior)
@@ -92,7 +95,7 @@ Use read, grep, glob, or semantic_search **lightly** to bound scope realisticall
 
 - Read [CONTRIBUTING.md](../../../CONTRIBUTING.md) for project conventions
 - Skim top-level layout (`app/`, `src/components/`, `src/features/`) to know what areas exist
-- Do **not** explore file-by-file or draft implementation steps — that is plan-maker's job
+- Do **not** explore file-by-file or draft implementation subtasks — that is subtask-maker's job
 
 ### Step 4: Draft the YAML spec
 
@@ -110,13 +113,13 @@ Include:
 - `constraints` — default to `no-commit` and `no-new-deps` unless the task requires otherwise
 - `acceptance` — verifiable done criteria
 - `assumptions` — defaults applied when the task was silent
-- `open_questions` — empty list, or unresolved items (plan-maker will ask)
+- `open_questions` — empty list, or unresolved items (subtask-maker will ask)
 
 **Do not:**
 
 - Name file paths or symbols
 - Include create/modify/delete/run/verify steps
-- Write implementation plans
+- Write implementation subtasks
 - Guess on design forks — ask first or list in `open_questions`
 
 ### Step 5: Write the spec file
@@ -139,7 +142,7 @@ Summarize:
 Remind the user to run:
 
 ```
-/plan-maker worktrees/<slug> @current-task/specs/<slug>.yaml
+/subtask-maker worktrees/<slug> @current-task/specs/<slug>.yaml
 ```
 
 Replace `worktrees/<slug>` with the actual worktree path the user provided.
@@ -147,7 +150,7 @@ Replace `worktrees/<slug>` with the actual worktree path the user provided.
 ## Safety rules
 
 - Never edit application code — only `current-task/specs/*.yaml`
-- Never write plan files — only specs
+- Never write subtask files — only specs
 - Never edit `current-task/current-task-context.yaml`; Nicki updates it through `/current-task-update`
 - Never modify files outside the scope root
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
@@ -163,5 +166,5 @@ Replace `worktrees/<slug>` with the actual worktree path the user provided.
 **Next command:**
 
 ```
-/plan-maker worktrees/hero-section @current-task/specs/hero-section.yaml
+/subtask-maker worktrees/hero-section @current-task/specs/hero-section.yaml
 ```

@@ -86,7 +86,7 @@ Load compactly from `current-task/` when present:
 
 - `current-task/current-task-context.yaml`
 - Spec
-- Plan
+- Subtask list
 - Execution
 - Review
 - Review validation

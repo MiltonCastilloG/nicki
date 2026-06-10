@@ -10,12 +10,12 @@ All agent YAML artifacts for the active task live under `current-task/`:
 current-task/
   current-task-context.yaml              # workflow context from /current-task-update
   specs/<slug>.yaml                    # from /spec-maker
-  plans/<slug>.yaml                    # from /plan-maker
+  subtasks/<slug>.md                   # from /subtask-maker
   executions/<slug>.yaml               # from /execute-plan
   reviews/<slug>.yaml                  # from /review-execution
   review-validations/rN-validation.yaml # from /review-triage
   review-inputs/rN-review.yaml         # optional guidance input for /review-execution
-  next-steps/*.yaml                    # follow-up specs consumable by /plan-maker
+  next-steps/*.yaml                    # follow-up specs consumable by /subtask-maker
   merges/<slug>.yaml                   # from /merge-task
   commits/<slug>.yaml                  # from /commit-task
   pushes/<slug>.yaml                   # from /push-task
@@ -53,7 +53,7 @@ important-considerations:
 
 ## `approved`
 
-- `true` — all spec requirements met, plan steps satisfied, verify commands passed, no scope creep, no blocking convention violations.
+- `true` — all spec requirements met, checked subtasks satisfied, verify commands passed, no scope creep, no blocking convention violations.
 - `false` — one or more blocking issues; see `content` for details.
 
 ## `content`
@@ -68,9 +68,9 @@ Brief pass summary (2–5 lines). Mention requirements coverage, verify results,
 approved: true
 content: |
   All spec requirements met (hero-headline, hero-subcopy, hero-cta, hero-tokens).
-  Plan steps create-hero, wire-hero completed as described.
+  Checked subtasks for Hero implementation and page wiring are complete.
   Verify: npm run lint and npm test -- Hero passed.
-  No files changed outside plan scope.
+  No files changed outside spec scope.
 ```
 
 ### When `approved: false`
@@ -80,8 +80,8 @@ List **blocking issues** only. Each bullet should be actionable — reference ID
 | Prefix | Use for |
 |--------|---------|
 | `[req-<id>]` | Spec requirement not met |
-| `[plan:<step-id>]` | Plan step not done or done incorrectly |
-| `[scope]` | Change outside spec `scope.out` or plan paths |
+| `[subtask:<index>]` | Checked subtask not done or done incorrectly |
+| `[scope]` | Change outside spec `scope.out` or subtask intent |
 | `[verify]` | Lint, test, build, or other check failure |
 | `[convention]` | CONTRIBUTING rule violation (tokens, i18n, deps) |
 
@@ -89,7 +89,7 @@ List **blocking issues** only. Each bullet should be actionable — reference ID
 approved: false
 content: |
   [req-hero-cta] Hero component has no CTA button — only headline and subcopy rendered.
-  [plan:wire-hero] app/page.tsx still imports LandingBanner; Hero not wired in.
+  [subtask:2] app/page.tsx still imports LandingBanner; Hero not wired in.
   [verify] npm run lint failed: src/components/Hero/Hero.tsx — unused import 'Link'.
   [scope] src/components/Footer/Footer.tsx modified — outside spec scope.out.
 ```
@@ -98,14 +98,14 @@ content: |
 
 **Do:**
 
-- Reference spec requirement IDs and plan step IDs when applicable
+- Reference spec requirement IDs and subtask indices when applicable
 - Name exact file paths for code and scope issues
 - Paste or summarize verify command failures with enough context to reproduce
 - Keep bullets specific and testable
 
 **Don't:**
 
-- Suggest fixes or re-plan steps — only report what failed review
+- Suggest fixes or checklist rewrites — only report what failed review
 - Include non-blocking nits unless the user asked for strict review
 - Add keys beyond `approved` and `content`
 - Mention downstream agents or routing logic
@@ -114,7 +114,7 @@ content: |
 
 The review-execution agent should ask the user before writing the review when:
 
-- Spec or plan is missing and partial review is insufficient
+- Spec or subtask list is missing and partial review is insufficient
 - A requirement is subjective and pass/fail is unclear
 - Verify commands cannot run (missing deps, wrong branch base)
 - Git history makes change discovery unreliable

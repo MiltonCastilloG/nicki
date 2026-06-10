@@ -1,6 +1,6 @@
 # Spec format
 
-Specs drive `/plan-maker`. **YAML only** — both `/spec-maker` output and `/plan-maker` input use this schema.
+Specs drive `/subtask-maker`. **YAML only** — both `/spec-maker` output and `/subtask-maker` input use this schema.
 
 Store specs in the worktree under `current-task/specs/` (e.g. `current-task/specs/hero-section.yaml`) or paste inline YAML in the command.
 
@@ -10,18 +10,18 @@ All agent YAML artifacts for the active task live under `current-task/`:
 current-task/
   current-task-context.yaml # workflow context from /current-task-update
   specs/              # spec-maker output
-  plans/              # plan-maker output
+  subtasks/           # subtask-maker output
   executions/         # execute-plan handoff output
   reviews/            # review-execution output
   review-validations/ # review-triage output
   review-inputs/      # review guidance input for review-execution
-  next-steps/         # follow-up specs consumable by plan-maker
+  next-steps/         # follow-up specs consumable by subtask-maker
   merges/             # merge-task output
   commits/            # commit-task output
   pushes/             # push-task output
 ```
 
-Specs define **what** to build (requirements, scope, acceptance). They do **not** name implementation steps or file paths — that is plan-maker's job.
+Specs define **what** to build (requirements, scope, acceptance). They do **not** name implementation subtasks or file paths — that is subtask-maker's job.
 
 ## Top-level fields
 
@@ -36,7 +36,7 @@ Specs define **what** to build (requirements, scope, acceptance). They do **not*
 | `constraints` | No | Rules for downstream agents (e.g. `no-commit`, `no-new-deps`) |
 | `acceptance` | Yes | Testable criteria for done |
 | `assumptions` | No | Defaults spec-maker applied when the task was silent |
-| `open_questions` | No | Unresolved decisions — plan-maker must ask before planning |
+| `open_questions` | No | Unresolved decisions — subtask-maker must ask before writing subtasks |
 
 ## `meta` block
 
@@ -44,7 +44,7 @@ Specs define **what** to build (requirements, scope, acceptance). They do **not*
 |-------|----------|-------------|
 | `worktree` | Yes | Worktree slug (e.g. `hero-section`) |
 | `generated_by` | Yes | `spec-maker` for original task specs; `review-triage` for next-step specs |
-| `task` | Yes | Original task description from the user |
+| `task` | Yes | Original task description from the user — prefer the Gherkin `task.story` from context when orchestrated by Nicki |
 | `branch` | No | Git branch (e.g. `feature/hero-section`) |
 | `context` | No | Path to task context (e.g. `current-task/current-task-context.yaml`) |
 | `source_review` | No | Review path when generated from review triage |
@@ -125,9 +125,9 @@ open_questions: []
 
 **Don't:**
 
-- Name file paths or implementation steps (plan-maker does that)
+- Name file paths or implementation subtasks (subtask-maker does that)
 - Use vague verbs without measurable outcomes (`improve`, `modernize`, `clean up`)
-- Duplicate plan-level detail (commands, step order, create/modify actions)
+- Duplicate subtask-level or execution detail (commands, step order, create/modify actions)
 - Leave silent on constraints — default to `no-commit` and `no-new-deps` unless the task requires otherwise
 
 ## Ambiguity → ask
@@ -150,10 +150,10 @@ When `/spec-maker` writes a spec:
 3. **Default constraints** — include `no-commit` and `no-new-deps` unless the task requires otherwise.
 4. **Include `meta`** — set `worktree`, `generated_by: spec-maker`, `task`, `context: current-task/current-task-context.yaml` when present, and `branch` when known.
 5. **Write to `current-task/specs/<slug>.yaml`** — slug matches the worktree folder name.
-6. **Hand off to plan-maker** — report the exact next command:
+6. **Hand off to subtask-maker** — report the exact next command:
 
    ```
-   /plan-maker worktrees/<slug> @current-task/specs/<slug>.yaml
+   /subtask-maker worktrees/<slug> @current-task/specs/<slug>.yaml
    ```
 
-The spec-maker agent must not edit application code or write plan files — only the YAML spec file.
+The spec-maker agent must not edit application code or write subtask files — only the YAML spec file.

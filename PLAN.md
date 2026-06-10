@@ -231,7 +231,7 @@ When Cursor opens `projects/foo/worktrees/bar`, the workspace root is the worktr
 ## Canonical workflow (unchanged)
 
 ```
-start → spec → plan → execute → review → triage → [fix loop] → commit → push → merge → close
+start → describe → spec → subtasks → execute → review → triage → [fix loop] → commit → push → merge → close
 ```
 
 With automatic `/current-task-update` after each leaf step except close.
@@ -285,7 +285,7 @@ Full detail: [`NICKI.md`](NICKI.md).
 | ---- | ----- | ------- | ----- |
 | Start | `start-task.md` | `start-task.md` | `start-task/` |
 | Spec | `spec-maker.md` | `spec-maker.md` | `spec-maker/` |
-| Plan | `plan-maker.md` | `plan-maker.md` | `plan-maker/` |
+| Subtasks | `subtask-maker.md` | `subtask-maker.md` | `subtask-maker/` |
 | Execute | `execute-plan.md` | `execute-plan.md` | `execute-plan/` |
 | Review | `review-execution.md` | `review-execution.md` | `review-execution/` |
 | Triage | `review-triage.md` | `review-triage.md` | `review-triage/` |

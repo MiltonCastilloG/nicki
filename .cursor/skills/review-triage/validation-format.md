@@ -17,7 +17,7 @@ All agent YAML artifacts for the active task live under `current-task/`:
 current-task/
   current-task-context.yaml
   specs/<slug>.yaml
-  plans/<slug>.yaml
+  subtasks/<slug>.md
   executions/<slug>.yaml
   reviews/<slug>.yaml
   review-validations/rN-validation.yaml
@@ -48,7 +48,7 @@ current-task/
 | `generated_by` | Yes | Always `review-triage` |
 | `review` | Yes | Review file or inline review label that was triaged |
 | `spec` | No | Spec path used as scope source |
-| `plan` | No | Plan path used as scope source |
+| `subtasks` | No | Subtask list path used as scope source |
 | `execution` | No | Execution handoff path used as scope source |
 | `context` | No | Task context path used as workflow source |
 
@@ -70,11 +70,11 @@ Use the same structure for `valid_findings` and `discarded_findings`.
 | `source` | No | Original review prefix or excerpt |
 | `verdict` | Yes | `valid`, `wrong`, `out_of_scope`, `duplicate`, or `not_actionable` |
 | `reason` | Yes | Why this finding was kept or discarded |
-| `evidence` | No | Spec requirement, plan step, diff path, or file reference supporting the verdict |
+| `evidence` | No | Spec requirement, subtask line, diff path, or file reference supporting the verdict |
 
 ## `next_steps`
 
-Each entry records an important out-of-scope finding that was converted into a separate spec YAML that `/plan-maker` can consume directly.
+Each entry records an important out-of-scope finding that was converted into a separate spec YAML that `/subtask-maker` can consume directly.
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -104,7 +104,7 @@ meta:
   generated_by: review-triage
   review: current-task/reviews/hero-section.yaml
   spec: current-task/specs/hero-section.yaml
-  plan: current-task/plans/hero-section.yaml
+  subtasks: current-task/subtasks/hero-section.md
   execution: current-task/executions/hero-section.yaml
   context: current-task/current-task-context.yaml
 
@@ -115,7 +115,7 @@ valid_findings:
     source: "[verify] npm run lint failed"
     verdict: valid
     reason: Verify failure is part of this task acceptance criteria.
-    evidence: "plan step verify"
+    evidence: "subtask verification item"
 
 discarded_findings:
   - id: footer-redesign
@@ -141,7 +141,7 @@ summary: |
 
 ## Triage rules
 
-- Keep findings that map to spec requirements, plan steps, execution deviations, changed paths, verify failures, or relevant CONTRIBUTING constraints.
+- Keep findings that map to spec requirements, subtask lines, execution deviations, changed paths, verify failures, or relevant CONTRIBUTING constraints.
 - Discard findings about files, features, or improvements outside spec `scope.in`, inside spec `scope.out`, or unrelated to changed paths.
 - Discard plainly wrong findings when the current-task artifacts or code contradict them.
 - Convert important out-of-scope findings into `current-task/next-steps/*.yaml` specs instead of blocking the current task.

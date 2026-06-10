@@ -20,7 +20,7 @@ worktree: worktrees/hero-section
 completed_step: spec
 completed_status: complete
 artifact: current-task/specs/hero-section.yaml
-next_step: plan
+next_step: subtasks
 open_questions: []
 summary: Spec captured requirements and acceptance criteria.
 ```

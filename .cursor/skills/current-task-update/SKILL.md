@@ -31,7 +31,7 @@ Schema: [current-task-context-format.md](current-task-context-format.md).
 
 ## When to use
 
-- Nicki has completed `start-task`, `spec`, `plan`, `execute`, `review`, `triage`, `merge`, `commit`, `push`, or a fix-loop step.
+- Nicki has completed `start-task`, `describe`, `spec`, `subtasks`, `execute`, `review`, `triage`, `merge`, `commit`, `push`, or a fix-loop step.
 - Nicki needs to persist the next workflow step, artifact paths, open questions, or history.
 - A worktree already exists and Nicki needs to initialize missing `current-task/current-task-context.yaml`.
 
@@ -51,14 +51,14 @@ worktree: worktrees/hero-section
 completed_step: spec
 completed_status: complete
 artifact: current-task/specs/hero-section.yaml
-next_step: plan
+next_step: subtasks
 open_questions: []
 summary: Spec captured requirements and acceptance criteria.
 ```
 
 Optional fields:
 
-- `task`: `slug`, `title`, `original`, `type`
+- `task`: `slug`, `title`, `original`, `story`, `type`
 - `git`: `branch`, `base`
 - `artifacts`: paths to merge into the existing context
 - `constraints`: constraints to set or carry forward
@@ -88,7 +88,7 @@ Task Progress:
 
 - Read only `current-task/current-task-context.yaml` and Nicki-provided artifact paths needed to validate the update.
 - Write only `current-task/current-task-context.yaml`.
-- Never edit specs, plans, executions, reviews, validations, source files, config, or files outside the scope root.
+- Never edit specs, subtasks, executions, reviews, validations, source files, config, or files outside the scope root.
 - Do not run shell commands.
 
 ### Step 2: Load and validate

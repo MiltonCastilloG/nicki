@@ -14,7 +14,7 @@ All agent YAML artifacts for the active task live under `current-task/`:
 current-task/
   current-task-context.yaml
   specs/<slug>.yaml
-  plans/<slug>.yaml
+  subtasks/<slug>.md
   executions/<slug>.yaml
   reviews/<slug>.yaml
   review-validations/rN-validation.yaml

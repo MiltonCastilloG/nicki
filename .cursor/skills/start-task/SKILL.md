@@ -42,12 +42,16 @@ Task Progress:
 - [ ] Classify each item and choose branch prefix + slug
 - [ ] Confirm ambiguous classifications with the user
 - [ ] Run start-worktrees.sh with branch:slug pairs
-- [ ] Report results and next steps
+- [ ] Report results and next steps (full job description comes later in the describe step)
 ```
 
 ### Step 1: Parse work items
 
 Split the user's message into distinct work items (comma-separated, line breaks, or explicit prefixes like `fix:` / `chore:`).
+
+A work item may be **minimal** — enough to classify the branch and derive a slug (e.g. `hero-section`, `fix footer`). A full job description is **not** required here. Nicki collects and formats the Gherkin user story in the `describe` step after the worktree and context file exist.
+
+If the user provides a fuller description at start, pass it through in the handoff as `original task text` for Nicki to convert later.
 
 ### Step 2: Classify and name branches
 
@@ -98,18 +102,18 @@ Summarize:
   - `worktree`
   - `slug`
   - `branch`
-  - original task text
+  - original task text (may be slug-level only)
   - task type
-  - next expected artifact: `current-task/current-task-context.yaml`
+  - next expected step: `describe` (Gherkin user story), then `current-task/current-task-context.yaml`
 
 Remind the user:
 
 1. `cd worktrees/<slug> && npm install` in each **new** worktree (worktrees do not share `node_modules`)
 2. Open a new Cursor window rooted at the worktree path for isolated agent sessions
-3. When orchestrated by Nicki, it will call `/current-task-update` next to initialize `current-task/current-task-context.yaml`
-4. Run `/spec-maker worktrees/<slug> <task description>` to write `current-task/specs/<slug>.yaml`
-5. Run `/plan-maker worktrees/<slug> @current-task/specs/<slug>.yaml` then `/execute-plan worktrees/<slug> @current-task/plans/<slug>.yaml` to write `current-task/executions/<slug>.yaml`
-6. Run `/review-execution worktrees/<slug>` to review the diff with spec, plan, execution handoff, and write `current-task/reviews/<slug>.yaml`
+3. When orchestrated by Nicki, it will call `/current-task-update` to initialize context, then run the **describe** step — ask for the job description if needed and persist a Gherkin user story before spec
+4. Run `/spec-maker worktrees/<slug>` (Nicki passes `task.story` from context when orchestrated) to write `current-task/specs/<slug>.yaml`
+5. Run `/subtask-maker worktrees/<slug> @current-task/specs/<slug>.yaml` then `/execute-plan worktrees/<slug> @current-task/subtasks/<slug>.md` to write `current-task/executions/<slug>.yaml`
+6. Run `/review-execution worktrees/<slug>` to review the diff with spec, subtask list, execution handoff, and write `current-task/reviews/<slug>.yaml`
 7. Run `/review-triage worktrees/<slug>` to filter review findings against task scope and write `current-task/review-validations/rN-validation.yaml`
 8. Run `/commit-task worktrees/<slug>` to create a local commit and write `current-task/commits/<slug>.yaml`
 9. Run `/push-task worktrees/<slug> @current-task/commits/<slug>.yaml` to merge `main`, publish the branch, and write `current-task/pushes/<slug>.yaml`

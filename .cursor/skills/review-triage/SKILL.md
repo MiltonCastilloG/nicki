@@ -25,7 +25,7 @@ metadata:
 
 # Review Triage
 
-Triage a `/review-execution` YAML review against the full `current-task/` context. Keep only review findings that are correct and in scope. Discard findings that are plainly wrong, duplicate, non-actionable, or outside the task scope. Important out-of-scope findings become normal spec YAML files under `current-task/next-steps/` so `/plan-maker` can consume them. Invalid reviews can also produce review guidance under `current-task/review-inputs/` with `important-considerations` for a future `/review-execution`.
+Triage a `/review-execution` YAML review against the full `current-task/` context. Keep only review findings that are correct and in scope. Discard findings that are plainly wrong, duplicate, non-actionable, or outside the task scope. Important out-of-scope findings become normal spec YAML files under `current-task/next-steps/` so `/subtask-maker` can consume them. Invalid reviews can also produce review guidance under `current-task/review-inputs/` with `important-considerations` for a future `/review-execution`.
 
 - Review input schema: [review-format.md](../review-execution/review-format.md)
 - Validation output schema: [validation-format.md](validation-format.md)
@@ -35,7 +35,7 @@ Triage a `/review-execution` YAML review against the full `current-task/` contex
 ## When to use
 
 - User invokes `/review-triage` after `/review-execution`
-- Review feedback needs sorting before deciding whether to fix, re-plan, or create a new task
+- Review feedback needs sorting before deciding whether to fix, regenerate subtasks, or create a new task
 - User asks whether a review stayed within task scope
 
 ## Required inputs
@@ -45,7 +45,7 @@ Triage a `/review-execution` YAML review against the full `current-task/` contex
 | Worktree path | Yes | Absolute or repo-relative (e.g. `worktrees/hero-section`) |
 | Review | Preferred | Auto-load `current-task/reviews/<slug>.yaml` from worktree or accept an explicit review path/inline YAML |
 | Spec | Preferred | Auto-load `current-task/specs/<slug>.yaml` |
-| Plan | Preferred | Auto-load `current-task/plans/<slug>.yaml` |
+| Subtask list | Preferred | Auto-load `current-task/subtasks/<slug>.md` |
 | Execution | Preferred | Auto-load `current-task/executions/<slug>.yaml` when present |
 | Task context | Optional | Auto-load `current-task/current-task-context.yaml` when present |
 
@@ -94,18 +94,18 @@ Use `r1-validation.yaml`, `r2-validation.yaml`, `r3-validation.yaml`, and so on.
 Load available artifacts from `current-task/`:
 
 - Spec: requirements, `scope.in`, `scope.out`, constraints, acceptance
-- Plan: steps, paths, requirement coverage, verify commands
+- Subtask list: checklist items, completion state, test/verification subtasks
 - Execution: touched paths, deviations, hotspots, verify evidence
 - Review: exactly `approved` and `content`
 - Task context: current workflow step, open questions, artifact paths, history
 
-If spec or plan is missing, ask whether to proceed with partial triage or stop. Missing execution is a warning, not a blocker.
+If spec or subtask list is missing, ask whether to proceed with partial triage or stop. Missing execution is a warning, not a blocker.
 
 ### Step 3: Split review findings
 
 Parse `content` into review findings:
 
-- Bullets with prefixes such as `[req-*]`, `[plan:*]`, `[scope]`, `[verify]`, `[convention]`
+- Bullets with prefixes such as `[req-*]`, `[subtask:*]`, `[scope]`, `[verify]`, `[convention]`
 - Short pass summaries when `approved: true`
 - Any sentence that asks for or implies a change
 
@@ -115,16 +115,16 @@ Do not rewrite the original review.
 
 For each finding, classify it:
 
-- `valid` — directly supported by spec, plan, execution, diff evidence, verification evidence, changed files, or CONTRIBUTING constraints.
+- `valid` — directly supported by spec, subtask list, execution, diff evidence, verification evidence, changed files, or CONTRIBUTING constraints.
 - `out_of_scope` — useful but outside spec `scope.in`, explicitly inside `scope.out`, unrelated to changed paths, or belongs to a separate concern.
-- `wrong` — contradicted by source files, artifacts, plan status, or verification evidence.
+- `wrong` — contradicted by source files, artifacts, subtask completion state, or verification evidence.
 - `duplicate` — same actionable issue already represented by another finding.
 - `not_actionable` — too vague to drive a fix or future task.
 
 Keep the review strict but fair:
 
 - A finding does not need to be worded perfectly to be valid if the underlying issue is real and in scope.
-- Do not reject safety, correctness, or build-breaking issues just because they were not named in the plan.
+- Do not reject safety, correctness, or build-breaking issues just because they were not named in the subtasks.
 - Do reject style preferences, redesign requests, unrelated refactors, and broad improvements outside the task scope.
 
 ### Step 5: Write next-step specs
@@ -172,7 +172,7 @@ Summarize:
 - Never edit application code
 - Never edit `current-task/current-task-context.yaml`; Nicki updates it through `/current-task-update`
 - Never edit the original review
-- Never edit the original task spec, plans, or executions
+- Never edit the original task spec, subtask list, or executions
 - Never edit review guidance once written; create a new numbered file instead
 - Never modify files outside the worktree scope root
 - Do not spawn subagents (`task: false`)

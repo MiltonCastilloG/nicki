@@ -1,21 +1,21 @@
 # Execution format
 
-Executions are the handoff from `/execute-plan` to `/review-execution`. **YAML only** — write one compact artifact after executing, partially executing, or blocking on a plan.
+Executions are the handoff from `/execute-plan` to `/review-execution`. **YAML only** — write one compact artifact after executing, partially executing, or blocking on a subtask list.
 
 Store executions in the worktree under `current-task/executions/` (e.g. `current-task/executions/hero-section.yaml`).
 
-All agent YAML artifacts for the active task live under `current-task/`:
+All agent artifacts for the active task live under `current-task/`:
 
 ```
 current-task/
   current-task-context.yaml              # workflow context from /current-task-update
   specs/<slug>.yaml                    # from /spec-maker
-  plans/<slug>.yaml                    # from /plan-maker
+  subtasks/<slug>.md                   # from /subtask-maker; executor updates checkboxes
   executions/<slug>.yaml               # from /execute-plan
   reviews/<slug>.yaml                  # from /review-execution
   review-validations/rN-validation.yaml # from /review-triage
   review-inputs/rN-review.yaml         # optional guidance input for /review-execution
-  next-steps/*.yaml                    # follow-up specs consumable by /plan-maker
+  next-steps/*.yaml                    # follow-up specs consumable by /subtask-maker
   merges/<slug>.yaml                   # from /merge-task
   commits/<slug>.yaml                  # from /commit-task
   pushes/<slug>.yaml                   # from /push-task
@@ -27,11 +27,11 @@ The execution file is a map for review, not an approval. `/review-execution` sti
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `meta` | Yes | Routing, source plan, and execution status |
+| `meta` | Yes | Routing, source subtask list, and execution status |
 | `paths` | Yes | Touched paths grouped by change type |
-| `steps` | Yes | One result entry per plan step, in plan order |
+| `subtasks` | Yes | One result entry per checklist line, in list order |
 | `verify` | If verify ran | Command evidence from execution |
-| `deviations` | No | Approved or blocked departures from the plan |
+| `deviations` | No | Approved or blocked departures from the subtask list |
 | `open_questions` | No | Questions left unresolved at handoff time |
 | `hotspots` | No | Reviewer focus areas |
 | `review_scope` | No | Hints for full, triage, or focused review |
@@ -42,11 +42,11 @@ The execution file is a map for review, not an approval. `/review-execution` sti
 |-------|----------|-------------|
 | `worktree` | Yes | Worktree slug (e.g. `hero-section`) |
 | `generated_by` | Yes | Always `execute-plan` |
-| `plan` | Yes | Plan path used (e.g. `current-task/plans/hero-section.yaml`) |
+| `subtasks` | Yes | Subtask list path used (e.g. `current-task/subtasks/hero-section.md`) |
 | `spec` | No | Spec path when known |
 | `context` | No | Path to task context (e.g. `current-task/current-task-context.yaml`) |
 | `status` | Yes | `complete`, `partial`, or `blocked` |
-| `constraints` | No | Constraints honored from the plan |
+| `constraints` | No | Constraints honored from the subtask list frontmatter |
 
 ## `paths`
 
@@ -57,20 +57,21 @@ Use paths relative to the worktree root.
 | `created` | No | Files created during execution |
 | `modified` | No | Files modified during execution |
 | `deleted` | No | Files deleted during execution |
-| `unplanned` | No | Files touched but not named by a plan step |
+| `unplanned` | No | Files touched but not implied by any subtask |
 
 At least one list should be non-empty unless execution blocked before edits.
 
-## `steps`
+## `subtasks`
 
-Mirror plan order. Do not copy the full plan body; reference `id` and summarize the result.
+Mirror checklist order. Do not copy the full subtask list; reference line index and summarize the result.
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `id` | Yes | Plan step ID |
+| `index` | Yes | 1-based line number in the checklist (after frontmatter) |
+| `text` | Yes | The one-sentence subtask text |
 | `status` | Yes | `done`, `partial`, `skipped`, or `blocked` |
-| `action` | No | Plan action (`create`, `modify`, `delete`, `run`, `verify`) |
-| `paths` | No | Paths touched by this step |
+| `checked` | Yes | `true` if marked `- [x]` in the markdown file |
+| `paths` | No | Paths touched by this subtask |
 | `note` | No | One-line outcome, blocker, or user decision |
 
 ## `verify`
@@ -88,12 +89,12 @@ Include one entry per command run by `/execute-plan`.
 
 ### `deviations`
 
-Use when execution differed from the plan.
+Use when execution differed from the subtask list.
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `kind` | Yes | `user_approved`, `plan_gap`, `blocked`, or `out_of_scope` |
-| `step_id` | No | Related plan step |
+| `kind` | Yes | `user_approved`, `list_gap`, `blocked`, or `out_of_scope` |
+| `subtask_index` | No | Related subtask index |
 | `note` | Yes | What changed and why |
 
 ### `hotspots`
@@ -113,7 +114,7 @@ Use when review should be partial or focused.
 |-------|----------|-------------|
 | `mode` | No | `full` (default), `triage`, or `verify_only` |
 | `focus_paths` | No | Paths to prioritize |
-| `skip_steps` | No | Step IDs that are not reviewable yet |
+| `skip_subtasks` | No | Subtask indices that are not reviewable yet |
 
 ## YAML example
 
@@ -121,7 +122,7 @@ Use when review should be partial or focused.
 meta:
   worktree: hero-section
   generated_by: execute-plan
-  plan: current-task/plans/hero-section.yaml
+  subtasks: current-task/subtasks/hero-section.md
   spec: current-task/specs/hero-section.yaml
   context: current-task/current-task-context.yaml
   status: complete
@@ -133,21 +134,24 @@ paths:
   deleted: []
   unplanned: []
 
-steps:
-  - id: create-hero
+subtasks:
+  - index: 1
+    text: Implement a Hero component with headline, subcopy, and a primary CTA using semantic Tailwind tokens only.
     status: done
-    action: create
+    checked: true
     paths: [src/components/Hero/Hero.tsx]
     note: Hero with headline, subcopy, CTA, and semantic tokens.
-  - id: wire-hero
+  - index: 2
+    text: Replace the home page hero with the new Hero component above the fold.
     status: done
-    action: modify
+    checked: true
     paths: [app/page.tsx]
     note: Replaced landing banner with Hero.
-  - id: verify
+  - index: 6
+    text: Run npm test for Hero and home page test suites.
     status: done
-    action: verify
-    note: All verify commands passed.
+    checked: true
+    note: All test commands passed.
 
 verify:
   - command: npm run lint
@@ -173,7 +177,7 @@ review_scope:
 **Do:**
 
 - Write the file even when execution blocks or stops partially.
-- Keep notes short; point to plan step IDs instead of repeating plan instructions.
+- Keep notes short; reference subtask index instead of repeating full sentences.
 - Record all changed paths, including unplanned paths.
 - Include failure output only when a command fails, and keep it short.
 

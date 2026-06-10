@@ -9,7 +9,7 @@ This command launches a **subagent**, not inline parent work.
 
 Launch the **review-triage** subagent (`.cursor/agents/review-triage.md`) in an isolated context via the Task tool or `/review-triage` subagent invocation. Pass all user text after this command as the subagent prompt. Do not execute the workflow in the parent agent.
 
-The subagent reads `.cursor/skills/review-triage/SKILL.md`, `.cursor/skills/review-triage/validation-format.md`, `.cursor/skills/review-triage/review-guidance-format.md`, `.cursor/skills/next-step-spec/SKILL.md`, optional `current-task/current-task-context.yaml`, and the current-task spec/plan/execution/review schemas. Tool permissions live in `.cursor/skills/review-triage/SKILL.md` metadata — the subagent must not use any tool marked `false`.
+The subagent reads `.cursor/skills/review-triage/SKILL.md`, `.cursor/skills/review-triage/validation-format.md`, `.cursor/skills/review-triage/review-guidance-format.md`, `.cursor/skills/next-step-spec/SKILL.md`, optional `current-task/current-task-context.yaml`, and the current-task spec/subtask/execution/review schemas. Tool permissions live in `.cursor/skills/review-triage/SKILL.md` metadata — the subagent must not use any tool marked `false`.
 
 ## Examples
 
@@ -33,7 +33,7 @@ current-task/review-validations/r2-validation.yaml
 current-task/review-validations/r3-validation.yaml
 ```
 
-Important out-of-scope findings become spec YAML under `current-task/next-steps/`, directly consumable by `/plan-maker`.
+Important out-of-scope findings become spec YAML under `current-task/next-steps/`, directly consumable by `/subtask-maker`.
 
 Invalid reviews can also produce rerun guidance:
 

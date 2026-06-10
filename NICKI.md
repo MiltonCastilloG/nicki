@@ -46,7 +46,7 @@ Every workflow step follows the same pattern:
 Nicki knows this step sequence:
 
 ```
-start → spec → plan → execute → review → triage → [fix loop] → commit → push → merge → close
+start → describe → spec → subtasks → execute → review → triage → [fix loop] → commit → push → merge → close
 ```
 
 With automatic context updates after each leaf step:
@@ -54,9 +54,11 @@ With automatic context updates after each leaf step:
 ```
 start-task
 current-task-update
+describe              ← Nicki-only: ask if needed, draft Gherkin user story, persist task.story
+current-task-update
 spec-maker
 current-task-update
-plan-maker
+subtask-maker
 current-task-update
 execute-plan
 current-task-update
@@ -73,32 +75,34 @@ current-task-update
 close-task             ← "Time for the feedback woof! Want?"
 ```
 
-The `fix` step is not a separate agent. When review or triage surfaces blockers, Nicki asks whether to re-plan, execute a fix plan, rerun review with guidance, or start a follow-up task.
+The `fix` step is not a separate agent. When review or triage surfaces blockers, Nicki asks whether to regenerate subtasks, execute remaining subtasks, rerun review with guidance, or start a follow-up task.
 
 ```mermaid
 flowchart LR
   A[start-task] --> B[current-task-update]
-  B --> C[spec-maker]
+  B --> C[describe]
   C --> D[current-task-update]
-  D --> E[plan-maker]
+  D --> E[spec-maker]
   E --> F[current-task-update]
-  F --> G[execute-plan]
+  F --> G[subtask-maker]
   G --> H[current-task-update]
-  H --> I[review-execution]
+  H --> I[execute-plan]
   I --> J[current-task-update]
-  J --> K[review-triage]
+  J --> K[review-execution]
   K --> L[current-task-update]
-  L --> M{ready?}
-  M -->|blockers| N[fix loop]
-  N --> E
-  M -->|ready| O[commit-task]
-  O --> P[current-task-update]
-  P --> Q[push-task]
+  L --> M[review-triage]
+  M --> N[current-task-update]
+  N --> O{ready?}
+  O -->|blockers| P[fix loop]
+  P --> G
+  O -->|ready| Q[commit-task]
   Q --> R[current-task-update]
-  R --> S[merge-task]
+  R --> S[push-task]
   S --> T[current-task-update]
-  T --> U[close-task]
-  U --> V[task-archive]
+  T --> U[merge-task]
+  U --> V[current-task-update]
+  V --> W[close-task]
+  W --> X[task-archive]
 ```
 
 ---
@@ -111,9 +115,10 @@ Each leaf agent produces a YAML handoff. Artifacts live under `worktrees/<slug>/
 | ---- | ------- | ------------ | -------------- |
 | Setup | `/start-task` | No | `worktrees/<slug>/` |
 | State | `/current-task-update` | No (context YAML only) | `current-task/current-task-context.yaml` |
+| Describe | Nicki (no command) | No | `task.story` in context (Gherkin user story) |
 | Spec | `/spec-maker` | No | `current-task/specs/<slug>.yaml` |
-| Plan | `/plan-maker` | No | `current-task/plans/<slug>.yaml` |
-| Execute | `/execute-plan` | Yes | Code changes + `current-task/executions/<slug>.yaml` |
+| Subtasks | `/subtask-maker` | No | `current-task/subtasks/<slug>.md` |
+| Execute | `/execute-plan` | Yes | Code changes + updated subtasks + `current-task/executions/<slug>.yaml` |
 | Review | `/review-execution` | No | `current-task/reviews/<slug>.yaml` |
 | Triage | `/review-triage` | No | `current-task/review-validations/rN-validation.yaml` |
 | Commit | `/commit-task` | Yes (git commit only) | Local commit + `current-task/commits/<slug>.yaml` |
@@ -124,14 +129,15 @@ Each leaf agent produces a YAML handoff. Artifacts live under `worktrees/<slug>/
 ### Artifact handoff chain
 
 ```
-spec ──→ plan ──→ execution ──→ review ──→ validation
-                                              ├── next-steps/*.yaml  (follow-up specs for plan-maker)
-                                              └── review-inputs/rN-review.yaml  (guidance for review rerun)
+spec ──→ subtasks ──→ execution ──→ review ──→ validation
+                                                   ├── next-steps/*.yaml  (follow-up specs for subtask-maker)
+                                                   └── review-inputs/rN-review.yaml  (guidance for review rerun)
 commit ──→ push ──→ merge ──→ archive
 ```
 
 - **Spec** defines *what* to build — requirements, scope, acceptance. No file paths.
-- **Plan** maps spec to file-level steps for `/execute-plan`.
+- **Subtask list** breaks spec into one-sentence build items with checkbox completion state (tests included).
+- **Execute-plan** implements unchecked subtasks in order and marks each `- [x]` in place.
 - **Execution** is an evidence map for review, not an approval.
 - **Review** has exactly `approved` and `content`.
 - **Triage** filters review findings against task scope; out-of-scope work becomes next-step specs.
@@ -156,7 +162,7 @@ The canonical task-local state file lives inside the worktree at `current-task/c
 
 | Section | Purpose |
 | ------- | ------- |
-| `task` | Identity + step pointers: `current_step`, `next_step`, `last_completed_step` |
+| `task` | Identity + step pointers: `current_step`, `next_step`, `last_completed_step`, `story` (Gherkin user story) |
 | `scope` | Worktree slug and path — hard scope boundary |
 | `artifacts` | Paths to all known handoff files |
 | `open_questions` | Blockers; empty list means Nicki can continue |
@@ -168,7 +174,7 @@ There is **no broad task-level `state` enum**. Step pointers, `open_questions`, 
 
 ### Step values
 
-`start`, `spec`, `plan`, `execute`, `review`, `triage`, `fix`, `commit`, `push`, `merge`, `close`, `done`
+`start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `triage`, `fix`, `commit`, `push`, `merge`, `close`, `done`
 
 Schema: `.cursor/skills/current-task-update/current-task-context-format.md`
 
@@ -181,7 +187,7 @@ worktree: worktrees/hero-section
 completed_step: spec
 completed_status: complete
 artifact: current-task/specs/hero-section.yaml
-next_step: plan
+next_step: subtasks
 open_questions: []
 summary: Spec captured requirements and acceptance criteria.
 ```
@@ -196,7 +202,7 @@ Before invoking any leaf agent except `/current-task-update`, Nicki shows a comp
 
 ```markdown
 Current task: `hero-section` — Hero section redesign
-Progress: `start` → `spec` → `plan`
+Progress: `describe` → `spec` → `subtasks`
 Next action: invoke `spec-maker`
 Expected output: `current-task/specs/hero-section.yaml`
 ```
@@ -276,16 +282,16 @@ Merge is **mandatory**, not optional. Commit and push are intentionally separate
 
 `/close-task` writes `task-archive/<slug>/summary.yaml` at the repository root with compact context, process, decisions, open questions, and suggestions for smoother future tasks. It does **not** copy the full artifact tree. Then it deletes `<worktree>/current-task/`.
 
-### 11. Spec/plan/execution separation
+### 11. Spec/subtask/execution separation
 
-- **Spec-maker** defines requirements — no file paths, no implementation steps.
-- **Plan-maker** maps requirements to file-level steps.
-- **Execute-plan** follows the plan with minimal improvisation; ambiguous steps trigger a question.
+- **Spec-maker** defines requirements — no file paths, no implementation subtasks.
+- **Subtask-maker** maps requirements to one-sentence checklist items, including tests and verification.
+- **Execute-plan** follows unchecked subtasks in order, marks completed items `- [x]`, and asks on ambiguity.
 - **Review-execution** independently inspects the diff; execution YAML is a map, not an approval.
 
 ### 12. Review triage filters scope
 
-Review findings that are valid but out-of-scope become `current-task/next-steps/*.yaml` specs (consumable by plan-maker). Invalid reviews produce `current-task/review-inputs/rN-review.yaml` guidance for a rerun.
+Review findings that are valid but out-of-scope become `current-task/next-steps/*.yaml` specs (consumable by subtask-maker). Invalid reviews produce `current-task/review-inputs/rN-review.yaml` guidance for a rerun.
 
 ---
 
@@ -313,8 +319,8 @@ Review findings that are valid but out-of-scope become `current-task/next-steps/
 | ---- | ----- | ------- | ----- | ------------- |
 | Start | `start-task.md` | `start-task.md` | `start-task/SKILL.md` | — |
 | Spec | `spec-maker.md` | `spec-maker.md` | `spec-maker/SKILL.md` | `spec-format.md` |
-| Plan | `plan-maker.md` | `plan-maker.md` | `plan-maker/SKILL.md` | `plan-format.md` |
-| Execute | `execute-plan.md` | `execute-plan.md` | `execute-plan/SKILL.md` | `plan-format.md`, `execution-format.md` |
+| Subtasks | `subtask-maker.md` | `subtask-maker.md` | `subtask-maker/SKILL.md` | `subtask-format.md` |
+| Execute | `execute-plan.md` | `execute-plan.md` | `execute-plan/SKILL.md` | `execution-format.md` |
 | Review | `review-execution.md` | `review-execution.md` | `review-execution/SKILL.md` | `review-format.md` |
 | Triage | `review-triage.md` | `review-triage.md` | `review-triage/SKILL.md` | `validation-format.md`, `review-guidance-format.md` |
 | Commit | `commit-task.md` | `commit-task.md` | `commit-task/SKILL.md` | `commit-format.md` |
@@ -343,7 +349,7 @@ Cursor subagent frontmatter supports only `name`, `description`, `model`, `reado
 | current-task-update | yes | yes (context only) | no | no | no | no |
 | start-task | yes | no | no | yes | no | no |
 | spec-maker | yes | yes | no | no | yes | no |
-| plan-maker | yes | yes | no | no | yes | no |
+| subtask-maker | yes | yes | no | no | yes | no |
 | execute-plan | yes | yes | yes | yes | yes | no |
 | review-execution | yes | yes (review YAML) | no | yes | yes | no |
 | review-triage | yes | yes | no | no | yes | no |
@@ -359,13 +365,14 @@ Per-tool `true`/`false` is prompt-enforced today; Cursor native support is limit
 ## Quick invocation example
 
 ```bash
-# 1. Create worktree
-/start-task redesign hero section
+# 1. Create worktree (slug or short label is enough)
+/start-task hero-section
 
-# 2. Nicki auto-updates context, then continues through the pipeline
-/spec-maker worktrees/hero-section redesign hero with headline, subcopy, CTA
-/plan-maker worktrees/hero-section @current-task/specs/hero-section.yaml
-/execute-plan worktrees/hero-section @current-task/plans/hero-section.yaml
+# 2. Nicki initializes context, asks for job description if needed,
+#    drafts a Gherkin user story, then continues through the pipeline
+/spec-maker worktrees/hero-section
+/subtask-maker worktrees/hero-section @current-task/specs/hero-section.yaml
+/execute-plan worktrees/hero-section @current-task/subtasks/hero-section.md
 /review-execution worktrees/hero-section
 /review-triage worktrees/hero-section
 /commit-task worktrees/hero-section
@@ -377,6 +384,45 @@ Per-tool `true`/`false` is prompt-enforced today; Cursor native support is limit
 ```
 
 When orchestrated by Nicki, you invoke Nicki once and confirm each transition. The slash commands above remain usable directly without Nicki.
+
+---
+
+## Cursor mode picker (future)
+
+Cursor 2.1+ removed user-defined custom modes from the chat mode dropdown (Plan, Agent, Build, etc.). Today Nicki is only available as `.cursor/agents/nicki.md` — a subagent the parent invokes via Task, not a selectable primary mode.
+
+**Add when Cursor supports repo-defined custom modes again** (or Copilot-style `.agent.md` / `user-invocable` agents in the mode picker):
+
+| Goal | Notes |
+| ---- | ----- |
+| Nicki in the mode dropdown | Same persona as `.cursor/agents/nicki.md`; user picks Nicki like Plan or Agent |
+| Read-only orchestrator tools | `read`, `task`, `ask_question`, `todo_write` only — no write, shell, or source search |
+| Not a slash command | Mode selection starts a Nicki-governed conversation; leaf steps still use `/start-task`, `/spec-maker`, etc. |
+| Optional handoffs | Copilot-style buttons after each step (e.g. “Run spec-maker”, “Update context”) if the platform supports `handoffs` |
+
+Until then, run Nicki by invoking the subagent or asking the parent agent to follow `.cursor/agents/nicki.md`.
+
+---
+
+## Surviving context compaction (Cursor 3.7+)
+
+Cursor **3.7.27** still compacts parent chats automatically when the context window fills. Summarization is **lossy**: early turns, exact tool output, unpersisted yes/no approvals, and in-flight describe drafts may vanish from what the model sees. Raw bubbles remain on disk in Cursor storage; orchestration must not depend on them.
+
+| Survives compaction | Does not survive (unless persisted) |
+| ------------------- | ----------------------------------- |
+| `current-task/current-task-context.yaml` | Chat memory of `current_step` / `next_step` |
+| Step artifacts (`specs/`, `subtasks/`, executions, etc.) | Unapproved describe drafts |
+| `.cursor/agents/nicki.md` on disk | Parent chat following nicki rules from memory |
+| Rules injected every turn (if configured) | Pending git-transition confirmations |
+
+**Patterns:**
+
+1. **Disk-first** — `current-task-context.yaml` and artifacts are the source of truth (design decision #4).
+2. **Reload on activation** — Nicki re-reads context YAML before every transition; see **Session bootstrap** in `.cursor/agents/nicki.md`.
+3. **Re-invoke Nicki as a subagent** — each Task spawn reloads the full `.cursor/agents/nicki.md` prompt; prefer this over long inline parent orchestration.
+4. **Re-confirm transitions** — treat chat approvals as lost unless recorded in `history` or `open_questions` on disk.
+
+Custom modes: Cursor 3.7 still has internal `modes4` storage and **Export Custom Modes**, but no **Add custom mode** UI — mode-picker entry for Nicki remains future work (see above).
 
 ---
 
