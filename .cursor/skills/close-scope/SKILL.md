@@ -24,7 +24,7 @@ Missing → ask. Stop.
 
 ## 2. Unregister
 
-**Only close-task** mutates `global-status.json`. Schema: [global-status-format.md](../current-task-update/global-status-format.md).
+**Only sheep-close** mutates `global-status.json`. Schema: [global-status-format.md](../current-task-update/global-status-format.md).
 
 Prereq: `task-archive/<slug>/summary.yaml` + `report.md` exist.
 
@@ -36,7 +36,7 @@ Prereq: `task-archive/<slug>/summary.yaml` + `report.md` exist.
 
 ## 3. Teardown
 
-Prereq: archive written + unregister done (or skip). Nicki confirm: `Time for the feedback woof! Want?`
+Prereq: archive written + unregister done (or skip). Nicki confirm: archive and delete worktree.
 
 ```bash
 rm -rf -- "<worktree_path>"

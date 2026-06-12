@@ -1,7 +1,6 @@
 ---
 name: conflict-resolution
 description: "Protocol for resolving git merge conflicts by asking the user for every conflicted file or hunk."
-disable-model-invocation: true
 ---
 
 # Conflict Resolution

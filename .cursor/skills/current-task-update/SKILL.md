@@ -2,26 +2,23 @@
 name: current-task-update
 description: "Update current-task/status.json from a compact Nicki workflow summary. Status-update writer — never touches global-status.json. Use when Nicki finishes a workflow step."
 disable-model-invocation: true
-metadata:
-  type: subagent
-  subagent: current-task-update
 ---
 
 # Status update (current-task-update)
 
-Update per-task workflow state from Nicki summary. Also called **status-update**. Writes exactly one file: `current-task/status.json` under the task worktree.
+Update per-task workflow state from Nicki summary. Invoked by **sheep-status**. Writes exactly one file: `current-task/status.json` under the task worktree.
 
-**Never write `global-status.json`.** Registry is start-task / close-task only.
+**Never write `global-status.json`.** Registry is sheep-start / sheep-close only.
 
 Schemas:
 
 - Per-task: [status-format.md](status-format.md)
-- Global registry (read only): [global-status-format.md](global-status-format.md)
+- Global registry (read only): [global-status-read.md](global-status-read.md)
 - Legacy (deprecated): [current-task-context-format.md](current-task-context-format.md)
 
 ## When to use
 
-- Nicki completed `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `triage`, `acceptance`, `commit`, `push`, `merge`, `publish`, or fix-loop routing.
+- Nicki completed `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `acceptance`, `sync`, `integrate`, or fix-loop routing.
 - Nicki needs next step, artifact pointers, open questions, or history persisted.
 - Worktree exists; need init missing `current-task/status.json`.
 
@@ -46,7 +43,7 @@ summary: Spec captured requirements and acceptance.
 
 Optional: `task` (slug, title, original, story_artifact, type), `git`, `artifacts`, `constraints`.
 
-For describe: set `task.story_artifact: current-task/story.md` and write story body to that markdown file (caveman full per caveman skill) in same agent turn only if summary includes full story text — otherwise Nicki passes story for a dedicated write step.
+For describe: set `task.story_artifact: current-task/story.md` and write story body terse per caveman skill when summary includes full story text — otherwise Nicki passes story for a dedicated write step.
 
 ## Workflow
 
@@ -84,9 +81,9 @@ Task Progress:
 
 - `meta.updated_by: status-update`
 - `task.current_step`, `task.next_step`, `task.last_completed_step` when complete
-- Merge `artifacts`; after triage set `artifacts.review_validation` to latest validation path from summary `artifact`
+- Merge `artifacts`; after review set `artifacts.review_validation` to latest validation path from summary `artifact`
 - Mirror spec `open_questions` into status when summary includes them
-- Fix-loop: when `completed_step: fix` or triage reruns after fix, append `history` with `step: fix` and validation path
+- Fix-loop: when `completed_step: fix` or review reruns after fix, append `history` with `step: fix` and validation path
 - Acceptance: when `completed_step: acceptance`, record user accept/reject in `history`; reject may populate `open_questions`
 - `open_questions` from summary; blocked when non-empty
 - Append `history` event

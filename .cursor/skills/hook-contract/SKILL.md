@@ -46,9 +46,9 @@ jq -r --arg id "$TASK_ID" '.tasks[$id] | "\(.project) \(.worktree_path)"' global
 
 ## Rules
 
-- Hooks **read only** — never write `global-status.json` during leaf steps.
+- Hooks **read only** — never write `global-status.json` during sheep steps.
 - Task id must be explicit; do not infer from chat.
-- Readiness: follow `artifacts.review_validation` pointer when routing after triage.
+- Readiness: follow `artifacts.review_validation` pointer when routing after review.
 
 ## Example script
 
@@ -62,6 +62,6 @@ See `.cursor/hooks/examples/resolve-task-status.sh`.
 | `.cursor/hooks/enforce-agent-tools.sh` | `preToolUse` hook — reads permissions, denies disallowed tools |
 | `.cursor/hooks.json` | Registers the `preToolUse` hook |
 
-Agent identity from `agent_type`, `subagent_type`, or task text. Unknown agent or unmapped tool → allow. Known agent + `false` permission → deny.
+Agent identity from `subagent_type` then `agent_type` only — **not** task/description text (avoids false match on words like `nicki` in prompts). Unknown agent or unmapped tool → allow. Known agent + `false` permission → deny.
 
 Smoke test: `.cursor/hooks/scripts/smoke-agent-tools.sh`

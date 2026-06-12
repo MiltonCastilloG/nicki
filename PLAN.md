@@ -17,7 +17,7 @@ Use [`NICKI.md`](NICKI.md) for workflow semantics (orchestrator rules, artifact 
 | Worktrees under repo root `worktrees/` | `projects/<name>/worktrees/<slug>/` (`PROJECT` env in start-worktrees.sh) |
 | Single-repo scope | Nicki workspace holds many cloned projects in parallel |
 
-Nicki still does **not** implement features. It orchestrates leaf agents, passes artifacts, and Task-spawns `current-task-update` after each step.
+Nicki still does **not** implement features. It orchestrates sheep via Task, passes artifacts, and sends `sheep-status` after each step.
 
 ---
 
@@ -193,21 +193,21 @@ Change to:
 - Read `default_branch` and `remote` from project config or `nicki-workspace.yaml`
 - Still create worktrees at `<project>/worktrees/<slug>`
 
-### 2. Update Nicki + leaf agent prompts
+### 2. Update Nicki + sheep prompts
 
 Today paths assume a single repo root. After extraction:
 
 - Resolve **project** from workspace registry or user prompt
 - Resolve **worktree** as `<project>/worktrees/<slug>`
-- Pass absolute paths to leaf agents
+- Pass absolute paths to sheep
 - Nicki validates `scope.worktree_path` in context against the selected worktree
 
 Keep invariants from `NICKI.md`:
 
-- Nicki is read-only; only current-task-update subagent writes context YAML
-- Leaf agents have `task: false`
+- Nicki is read-only; only `sheep-status` writes per-task `status.json`
+- Sheep have `task: false`; parent agent must not Task-spawn sheep
 - Git side effects need explicit user confirmation
-- No current-task-update subagent after close-task
+- No `sheep-status` after `sheep-close`
 
 ### 3. Gitignore per managed project
 
@@ -229,10 +229,10 @@ When Cursor opens `projects/foo/worktrees/bar`, the workspace root is the worktr
 ## Canonical workflow (unchanged)
 
 ```
-start → describe → spec → subtasks → execute → review → triage → [fix loop] → commit → push → merge → close
+start → describe → spec → subtasks → execute → review → acceptance → sync → integrate → close
 ```
 
-With automatic current-task-update subagent after each leaf step except close.
+With automatic `sheep-status` after each sheep except close. Validation (readiness + next-steps) runs inside `sheep-review`.
 
 Full detail: [`NICKI.md`](NICKI.md).
 
@@ -244,7 +244,7 @@ Full detail: [`NICKI.md`](NICKI.md).
 2. **Define registry** — finalize `nicki-workspace.yaml` schema; add example.
 3. **Minimal CLI** — `workspace init`, `project clone`, `runtime install`, `doctor`.
 4. **Adapt worktrees** — project-path-aware `start-worktrees.sh`.
-5. **Update prompts** — project/worktree resolution in nicki.md and leaf agents.
+5. **Update prompts** — project/worktree resolution in nicki.md and sheep agents.
 6. **Dogfood** — register castlemill-landing as first managed project; run one task end-to-end.
 
 ---
@@ -256,7 +256,7 @@ Full detail: [`NICKI.md`](NICKI.md).
 - Worktrees belong under their project, not mixed globally.
 - `current-task/` stays inside the active task worktree.
 - Nicki manages many projects but orchestrates one selected project/task at a time.
-- Leaf agents remain leaf agents; Nicki is the only orchestrator.
+- Sheep remain workflow-bound workers; Nicki is the only orchestrator.
 
 ---
 
@@ -273,29 +273,26 @@ Full detail: [`NICKI.md`](NICKI.md).
 
 | File | Role |
 | ---- | ---- |
-| `runtime/.cursor/agents/current-task-update.md` | State writer |
-| `runtime/.cursor/skills/current-task-update/` | Skill + context schema |
+| `runtime/.cursor/agents/sheep-status.md` | State writer sheep |
+| `runtime/.cursor/skills/current-task-update/` | State writer skill + schemas |
 
-### Leaf pipeline
+### Sheep pipeline
 
-| Step | Agent | Skill |
+| Step | Sheep | Skill |
 | ---- | ----- | ----- |
-| Start | `start-task.md` | `start-task/` |
-| Spec | `spec-maker.md` | `spec-maker/` |
-| Subtasks | `subtask-maker.md` | `subtask-maker/` |
-| Execute | `execute-plan.md` | `execute-plan/` |
-| Review | `review-execution.md` | `review-execution/` |
-| Triage | `review-triage.md` | `review-triage/` |
-| Commit | `commit-task.md` | `commit-task/` |
-| Push | `push-task.md` | `push-task/` |
-| Merge | `merge-task.md` | `merge-task/` |
-| Publish | `publish-task.md` | `publish-task/` |
-| Close | `close-task.md` | `close-task/` |
+| Start | `sheep-start.md` | `start-task/` |
+| Spec | `sheep-spec.md` | `spec-maker/` |
+| Subtasks | `sheep-subtask.md` | `subtask-maker/` |
+| Execute | `sheep-execute.md` | `execute-plan/` |
+| Review | `sheep-review.md` | `review-execution/`, `validation/` |
+| Sync | `sheep-sync.md` | `sync-task/` |
+| Integrate | `sheep-integrate.md` | `integrate-task/` |
+| Close | `sheep-close.md` | `close-task/` |
 
 ### Shared
 
 | File | Role |
 | ---- | ---- |
-| `runtime/.cursor/skills/conflict-resolution/` | Push/merge conflict protocol |
-| `runtime/.cursor/skills/next-step-spec/` | Follow-up spec format |
+| `runtime/.cursor/skills/conflict-resolution/` | Sync/integrate conflict protocol |
+| `runtime/.cursor/skills/validation/` | Readiness and out-of-scope next-steps |
 | `runtime/.cursor/skills/start-task/scripts/start-worktrees.sh` | Worktree creation |

@@ -1,0 +1,151 @@
+# Nicki step routing — authoritative map for Task-spawn orchestration.
+# Nicki reads this file + status.json; do NOT read .cursor/agents/sheep-*.md.
+# Sheep load their own disk inputs in isolated child context.
+
+steps:
+  start:
+    sheep: sheep-start
+    nicki_only: false
+    artifact_key: status
+    expected_artifact: current-task/status.json
+    default_next_step: describe
+    gate: no worktree yet; user confirmed start
+    prompt: work items / slugs from user message
+
+  describe:
+    sheep: null
+    nicki_only: true
+    artifact_key: story
+    expected_artifact: current-task/story.md
+    default_next_step: spec
+    gate: after start + first sheep-status; task.original present or collected in chat
+    prompt: null
+
+  spec:
+    sheep: sheep-spec
+    nicki_only: false
+    artifact_key: spec
+    expected_artifact: current-task/specs/<slug>.yaml
+    default_next_step: subtasks
+    gate: task.story_artifact exists and story file on disk
+    prompt: worktree path, task id
+
+  subtasks:
+    sheep: sheep-subtask
+    nicki_only: false
+    artifact_key: subtasks
+    expected_artifact: current-task/subtasks/<slug>.md
+    default_next_step: execute
+    gate: spec open_questions empty; status open_questions empty
+    prompt: worktree path, task id
+
+  execute:
+    sheep: sheep-execute
+    nicki_only: false
+    artifact_key: execution
+    expected_artifact: current-task/executions/<slug>.yaml
+    default_next_step: review
+    gate: subtasks artifact exists
+    prompt: worktree path, task id
+
+  review:
+    sheep: sheep-review
+    nicki_only: false
+    artifact_key: review_validation
+    secondary_artifact_key: review
+    expected_artifact: current-task/review-validations/rN-validation.yaml
+    default_next_step: null
+    gate: execution artifact exists; partial review_scope needs user confirm first
+    prompt: worktree path, task id, review_scope when partial
+    also_writes:
+      - current-task/reviews/<slug>.yaml
+      - current-task/next-steps/*.yaml
+
+  acceptance:
+    sheep: null
+    nicki_only: true
+    artifact_key: null
+    expected_artifact: null
+    default_next_step: sync
+    gate: readiness.status is ready_for_acceptance; user accepts on disk summary
+    prompt: null
+
+  fix:
+    sheep: null
+    nicki_only: true
+    artifact_key: null
+    expected_artifact: null
+    default_next_step: execute
+    gate: readiness.status is fix_required
+    prompt: null
+
+  sync:
+    sheep: sheep-sync
+    nicki_only: false
+    artifact_key: sync
+    expected_artifact: current-task/syncs/<slug>.yaml
+    default_next_step: integrate
+    gate: acceptance recorded or user override; readiness not fix_required or blocked
+    user_confirm: local commit, merge main into feature branch, push feature branch
+    prompt: worktree path, task id
+
+  integrate:
+    sheep: sheep-integrate
+    nicki_only: false
+    artifact_key: integrate
+    expected_artifact: current-task/integrates/<slug>.yaml
+    default_next_step: close
+    gate: sync artifact exists; user confirmed merge into main and push main
+    user_confirm: merge feature into main and push main to remote
+    prompt: worktree path, task id
+
+  close:
+    sheep: sheep-close
+    nicki_only: false
+    artifact_key: archive
+    expected_artifact: task-archive/<slug>/summary.yaml
+    default_next_step: done
+    gate: integrate recorded or tail override; user confirmed close
+    user_confirm: archive worktree and delete scope
+    prompt: worktree path, task id
+    skip_status_update: true
+
+  done:
+    sheep: null
+    nicki_only: true
+    artifact_key: null
+    expected_artifact: null
+    default_next_step: null
+    gate: close completed
+    prompt: null
+
+status_update:
+  sheep: sheep-status
+  nicki_only: false
+  skip_user_confirm: true
+
+readiness_routing:
+  ready_for_acceptance:
+    route_step: acceptance
+    sync_blocked: true
+  fix_required:
+    route_step: execute
+    sync_blocked: true
+  blocked:
+    route_step: blocked
+    sync_blocked: true
+
+sheep_return_contract:
+  description: >
+    Every sheep ends its final message with compact YAML for sheep-status.
+    Nicki forwards this YAML verbatim — do not re-read the written artifact unless
+    readiness routing requires validation YAML or spec open_questions gate check.
+  required_fields:
+    - worktree
+    - completed_step
+    - completed_status
+    - artifact
+    - next_step
+    - open_questions
+    - summary
+  on_blocked: set completed_status to blocked; populate open_questions

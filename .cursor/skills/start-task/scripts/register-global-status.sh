@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Register task in global-status.json. Only start-task should call this.
+# Register task in global-status.json. Only sheep-start should call this.
 # Usage: register-global-status.sh <workspace_root> <task_id> <project> <slug> <worktree_path>
 set -euo pipefail
 

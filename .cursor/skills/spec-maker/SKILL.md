@@ -1,10 +1,6 @@
 ---
 name: spec-maker
 description: "Analyze a task and write a YAML spec. Defines what to build — not how."
-disable-model-invocation: true
-metadata:
-  type: subagent
-  subagent: spec-maker
 ---
 
 # Spec Maker

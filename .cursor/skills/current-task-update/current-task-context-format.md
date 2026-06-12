@@ -2,7 +2,7 @@
 
 > **Deprecated.** Use [status-format.md](status-format.md) (`current-task/status.json`) and [global-status-format.md](global-status-format.md) (`global-status.json`). Do not write this file for new tasks.
 
-`current-task/current-task-context.yaml` was the legacy task-local workflow context. It stores task identity, worktree scope, artifact paths, the current workflow step, blockers, and history so Nicki can orchestrate the leaf agents without relying on chat memory.
+`current-task/current-task-context.yaml` was the legacy task-local workflow context. It stores task identity, worktree scope, artifact paths, the current workflow step, blockers, and history so Nicki can orchestrate sheep without relying on chat memory.
 
 The file lives inside the worktree:
 
@@ -16,12 +16,11 @@ current-task/
   review-validations/rN-validation.yaml
   review-inputs/rN-review.yaml
   next-steps/*.yaml
-  commits/<slug>.yaml
-  pushes/<slug>.yaml
-  merges/<slug>.yaml
+  syncs/<slug>.yaml
+  integrates/<slug>.yaml
 ```
 
-`current-task-update` is the only writer for this file. Nicki and leaf agents may read it, and leaf artifacts should reference it with `meta.context` when their schema allows metadata.
+`sheep-status` (current-task-update skill) is the only writer for this file. Nicki and other sheep may read it; artifacts should reference it with `meta.context` when their schema allows metadata.
 
 ## Top-level fields
 
@@ -125,9 +124,8 @@ Use paths relative to the worktree root.
 | `review_validation` | No | Latest `current-task/review-validations/rN-validation.yaml` |
 | `review_input` | No | Latest `current-task/review-inputs/rN-review.yaml` |
 | `next_steps` | No | List of follow-up specs under `current-task/next-steps/` |
-| `commit` | No | `current-task/commits/<slug>.yaml` |
-| `push` | No | `current-task/pushes/<slug>.yaml` |
-| `merge` | No | `current-task/merges/<slug>.yaml` |
+| `sync` | No | `current-task/syncs/<slug>.yaml` |
+| `integrate` | No | `current-task/integrates/<slug>.yaml` |
 | `archive` | No | Root archive path, e.g. `task-archive/<slug>/summary.yaml` |
 
 ## `open_questions`
@@ -203,9 +201,8 @@ artifacts:
   execution: current-task/executions/hero-section.yaml
   review: current-task/reviews/hero-section.yaml
   review_validation: current-task/review-validations/r1-validation.yaml
-  merge: current-task/merges/hero-section.yaml
-  commit: current-task/commits/hero-section.yaml
-  push: current-task/pushes/hero-section.yaml
+  sync: current-task/syncs/hero-section.yaml
+  integrate: current-task/integrates/hero-section.yaml
 
 constraints:
   - no-commit

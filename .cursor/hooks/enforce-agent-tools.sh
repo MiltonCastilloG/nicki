@@ -14,7 +14,7 @@ deny() {
     '{
       permission: "deny",
       user_message: ("Blocked " + $tool_name + " for " + $agent + "."),
-      agent_message: ("Tool " + $tool_name + " (" + $tool_key + ") is denied for " + $agent + ". Use the correct leaf subagent.")
+      agent_message: ("Tool " + $tool_name + " (" + $tool_key + ") is denied for " + $agent + ". Nicki sends sheep for disk work.")
     }'
 }
 
@@ -51,24 +51,17 @@ map_tool() {
 
 resolve_agent() {
   local input="$1"
-  local agent hint
+  local agent
 
-  for field in agent_type subagent_type; do
+  # Only trust explicit agent identity from Cursor — never match task/description
+  # text (e.g. "nicki" in a prompt falsely resolves to the nicki orchestrator).
+  for field in subagent_type agent_type; do
     agent="$(normalize_agent "$(printf '%s' "$input" | jq -r --arg f "$field" '.[$f] // empty')")"
     if [[ -n "$agent" ]] && jq -e --arg a "$agent" 'has($a)' "$PERMISSIONS" >/dev/null; then
       printf '%s' "$agent"
       return 0
     fi
   done
-
-  hint="$(printf '%s' "$input" | jq -r '[.task, .description, .agent_message] | map(select(. != null and . != "")) | join(" ")')"
-  while IFS= read -r agent; do
-    [[ -z "$agent" ]] && continue
-    if [[ "$hint" == *"$agent"* ]]; then
-      printf '%s' "$agent"
-      return 0
-    fi
-  done < <(jq -r 'keys[]' "$PERMISSIONS")
 
   printf '%s' ""
 }

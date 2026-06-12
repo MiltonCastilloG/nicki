@@ -4,7 +4,7 @@ Per-task workflow state inside the active worktree. **JSON only.** Replaces the 
 
 Path: `current-task/status.json` relative to task worktree root.
 
-**Write boundary:** only status-update agent (`current-task-update` command). Nicki and leaf agents read only.
+**Write boundary:** only `sheep-status`. Nicki and other sheep read via [status-read.md](status-read.md).
 
 Handoff YAML/Markdown bodies stay separate; status holds pointers and step position only.
 
@@ -44,7 +44,7 @@ Handoff YAML/Markdown bodies stay separate; status holds pointers and step posit
 | `next_step` | Yes | Next step Nicki should propose |
 | `last_completed_step` | No | Latest completed step |
 
-Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `triage`, `fix`, `acceptance`, `commit`, `push`, `merge`, `publish`, `close`, `done`.
+Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `integrate`, `close`, `done`.
 
 ## `scope`
 
@@ -66,10 +66,8 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `tria
 | `review_validation` | No | Latest validation YAML |
 | `review_input` | No | Latest review guidance YAML |
 | `next_steps` | No | Array of follow-up spec paths |
-| `commit` | No | Commit handoff path |
-| `push` | No | Push handoff path |
-| `merge` | No | Merge handoff path |
-| `publish` | No | Publish handoff path when used |
+| `sync` | No | Sync handoff path (`current-task/syncs/<slug>.yaml`) |
+| `integrate` | No | Integrate handoff path (`current-task/integrates/<slug>.yaml`) |
 | `archive` | No | Archive path at project root |
 
 ## `open_questions`
@@ -109,10 +107,10 @@ Status values: `complete`, `blocked`, `failed`, `skipped`.
 
 ## Readiness routing
 
-After triage, status-update sets `artifacts.review_validation` to latest validation YAML. Nicki + hooks read `readiness` from that file — **not** review markdown, **not** chat.
+After review, status-update sets `artifacts.review_validation` to latest validation YAML. Nicki + hooks read `readiness` from that file — **not** review markdown, **not** chat.
 
-| `readiness.status` | `task.next_step` typical | `commit-task` |
-|--------------------|--------------------------|---------------|
+| `readiness.status` | `task.next_step` typical | `sync-task` |
+|--------------------|--------------------------|-------------|
 | `ready_for_acceptance` | `acceptance` | blocked until user accepts |
 | `fix_required` | `execute` | blocked |
 | `rerun_review` | `review` | blocked |
@@ -120,11 +118,11 @@ After triage, status-update sets `artifacts.review_validation` to latest validat
 
 ### Validation pointer
 
-`artifacts.review_validation` → `current-task/review-validations/rN-validation.yaml`. Refresh on every triage complete.
+`artifacts.review_validation` → `current-task/review-validations/rN-validation.yaml`. Refresh on every review complete.
 
 ### Fix-loop history
 
-When triage reruns after fix execute, append history:
+When review reruns after fix execute, append history:
 
 ```json
 { "step": "fix", "status": "complete", "artifact": "current-task/review-validations/r2-validation.yaml", "summary": "Fix loop iteration 2." }
@@ -132,7 +130,7 @@ When triage reruns after fix execute, append history:
 
 ### Acceptance
 
-Nicki-only step after `ready_for_acceptance`. On user accept, history records `step: acceptance`; `next_step` may advance to `commit` (still needs git confirm). On reject, update `open_questions` / blockers; route `execute` or `describe` per user.
+Nicki-only step after `ready_for_acceptance`. On user accept, history records `step: acceptance`; `next_step` may advance to `sync` (still needs git confirm). On reject, update `open_questions` / blockers; route `execute` or `describe` per user.
 
 ### Spec `open_questions` mirror
 
@@ -144,7 +142,7 @@ When spec handoff has non-empty `open_questions`, status-update mirrors into `op
 |----------|--------|
 | User story | `current-task/story.md` + `task.story_artifact` pointer |
 | Blocked state | Non-empty `open_questions` + blocking `next_step` until cleared or override |
-| Caveman MD | Full intensity for workflow Markdown handoffs per caveman skill |
+| Terse MD | Lite caveman for workflow Markdown handoffs per caveman skill |
 
 ## Example
 
@@ -196,4 +194,4 @@ When spec handoff has non-empty `open_questions`, status-update mirrors into `op
 | Workspace | `global-status.json`, `task-archive/` |
 | Project | `projects/<project>/` git repo root |
 | Task worktree | `projects/<project>/worktrees/<slug>/`, `current-task/*` |
-| Target branch | project checkout for merge/publish (`main` default) |
+| Target branch | project checkout for integrate (`main` default) |

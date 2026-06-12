@@ -15,7 +15,7 @@ Default path: `current-task/reviews/<slug>.yaml` under the worktree scope root.
 
 ## Optional review input (guidance)
 
-Review guidance files use review YAML plus one extra input-only key. See [review-guidance-format.md](../review-triage/review-guidance-format.md).
+Review guidance files use review YAML plus one extra input-only key. See [review-guidance-format.md](review-guidance-format.md).
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -27,8 +27,8 @@ Review guidance files use review YAML plus one extra input-only key. See [review
 
 ## `approved`
 
-- `true` — all spec requirements met, checked subtasks satisfied, verify commands passed, no scope creep, no blocking convention violations.
-- `false` — one or more blocking issues; see `content` for details.
+- `true` — requirements met, subtasks satisfied, verify passed, no blocking convention violations. `[scope]` notes allowed.
+- `false` — one or more **blocking** issues (`[req-`, `[subtask:`, `[verify]`, `[convention]`). `[scope]` alone does not require `false`.
 
 ## `content`
 
@@ -55,7 +55,7 @@ List **blocking issues** only. Each bullet should be actionable — reference ID
 |--------|---------|
 | `[req-<id>]` | Spec requirement not met |
 | `[subtask:<index>]` | Checked subtask not done or done incorrectly |
-| `[scope]` | Change outside spec `scope.out` or subtask intent |
+| `[scope]` | Change outside spec `scope.out` — **non-blocking**; validation skill may write `next-steps/*.yaml` |
 | `[verify]` | Lint, test, build, or other check failure |
 | `[convention]` | CONTRIBUTING rule violation (tokens, i18n, deps) |
 

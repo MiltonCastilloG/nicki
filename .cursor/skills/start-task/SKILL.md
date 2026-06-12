@@ -1,10 +1,6 @@
 ---
 name: start-task
 description: "Pull main and create git worktrees for parallel task work."
-disable-model-invocation: true
-metadata:
-  type: subagent
-  subagent: start-task
 ---
 
 # Start Task

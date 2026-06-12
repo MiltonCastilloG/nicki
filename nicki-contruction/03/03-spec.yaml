@@ -1,0 +1,100 @@
+meta:
+  worktree: skills-sheep-separation
+  generated_by: spec-maker
+  task: nicki-contruction/03/03-stories.md. Baseline slices 00–02.
+
+title: Skills lock + sheep agents
+type: refactor
+
+summary: >
+  Separate portable skills from Nicki-only workflow binding. Phase 1: enable model
+  invocation on user-facing pipeline skills; keep workflow-only skills locked; sheep
+  agents get terse "Nicki sent you" voice. Phase 2: rename leaf agents to sheep-*;
+  add routing.yaml with sheep keys and return contract; simplify git tail to
+  sync-task + integrate-task; fold review-triage into validation skill; strip pipeline
+  leakage from skills; update docs and write boundaries.
+
+requirements:
+  - id: pipeline-skills-unlocked
+    description: >
+      Remove disable-model-invocation and metadata.subagent from user-facing pipeline
+      skills: spec-maker, subtask-maker, execute-plan, review-execution, start-task,
+      sync-task, integrate-task, conflict-resolution — users attach skills for ad-hoc work.
+  - id: workflow-skills-locked
+    description: >
+      Keep disable-model-invocation on workflow-only skills: current-task-update,
+      close-task, close-scope, task-archive, hook-contract, validation, caveman.
+  - id: skills-readme-invocation-policy
+    description: >
+      .cursor/skills/README.md documents three layers (skill, sheep, Nicki), invocation
+      policy (users = skills, Nicki = sheep, parent must not send sheep), and pure-functionality rules.
+  - id: sheep-agent-voice
+    description: >
+      Each .cursor/agents/sheep-*.md uses "You are a sheep. Nicki sent you." voice,
+      short description "Nicki sheep. Path only. Skill: …", disk inputs, output contract,
+      scope/safety — procedure lives in skills only.
+  - id: sheep-rename
+    description: >
+      Replace leaf agent files with sheep-*: sheep-start, sheep-spec, sheep-subtask,
+      sheep-execute, sheep-review, sheep-sync, sheep-integrate, sheep-close, sheep-status;
+      delete old start-task, spec-maker, subtask-maker, execute-plan, review-execution,
+      sync-task, integrate-task, close-task, current-task-update agent files.
+  - id: nicki-routing-yaml
+    description: >
+      Add .cursor/skills/nicki/routing.yaml — authoritative step map with sheep: keys,
+      gates, artifacts, readiness_routing, status_update.sheep sheep-status,
+      sheep_return_contract for compact YAML handoff to sheep-status.
+  - id: nicki-sheep-orchestration
+    description: >
+      Rewrite nicki.md for sheep terminology, routing.yaml bootstrap, sheep map table,
+      readiness from validation YAML, sync/integrate git confirms; Nicki never reads sheep agent files.
+  - id: git-tail-simplified
+    description: >
+      Remove commit-task, push-task, merge-task, publish-task agents and skills; add
+      sync-task (commit, merge main into feature, push feature) and integrate-task
+      (merge feature into main, push main) with handoff schemas and sheep bindings.
+  - id: validation-folded
+    description: >
+      Remove review-triage skill and agent; add validation skill with validation-format.md;
+      sheep-review loads review-execution + validation; readiness and next-steps in one review spawn.
+  - id: skills-pure-functionality
+    description: >
+      Strip pipeline/status leakage from leaf skills — no status.json references, no pipeline
+      step names, no "send sheep next"; inputs from sheep prompt only; format files single-artifact.
+  - id: write-boundaries-sheep
+    description: >
+      Document write boundaries: global-status.json — sheep-start/sheep-close only;
+      current-task/status.json — sheep-status only; close-scope registry via sheep-close.
+  - id: agent-permissions-git-tail
+    description: >
+      Update agent-permissions.json — sheep-* keys for all pipeline workers; remove
+      commit-task, push-task, merge-task, publish-task, out-of-scope, and legacy skill-name keys.
+  - id: docs-sheep-model
+    description: >
+      Update README.md, NICKI.md, complexity.md, PLAN.md for sheep terminology, sync/integrate
+      pipeline, skills-vs-sheep table, ad-hoc skill attachment; parent must not Task-spawn sheep.
+  - id: subtask-load-trim
+    description: >
+      Add subtask-maker/spec-input.md for read-only spec fields; drop full spec-format and
+      caveman from subtask-maker load list; compress SKILL and subtask-format duplication.
+  - id: caveman-lite-default
+    description: >
+      Simplify caveman skill — default lite intensity, disable-model-invocation, remove
+      "ACTIVE EVERY RESPONSE" persistence block from skill and nicki-default rule.
+  - id: construction-reports-relocated
+    description: >
+      Move report.md and report-2.md from repo root to nicki-contruction/; add complexity.md
+      agent load analysis with sheep-* names.
+
+acceptance_criteria:
+  - Pipeline skills lack disable-model-invocation; workflow-only skills retain it
+  - Nine sheep-*.md agents exist; no legacy leaf agent .md files under .cursor/agents/
+  - routing.yaml uses sheep: keys and sheep_return_contract; status_update.sheep is sheep-status
+  - nicki.md sheep map matches routing.yaml steps including sync and integrate
+  - sync-task and integrate-task skills exist; commit/push/merge/publish skills removed
+  - validation skill and validation-format.md exist; review-triage skill removed
+  - global-status-format.md and status-format.md name sheep write boundaries
+  - README and NICKI.md describe users attach skills; only Nicki sends sheep via Task
+  - Gherkin scenarios in 03-stories.md pass by inspection of runtime docs and file tree
+
+open_questions: []

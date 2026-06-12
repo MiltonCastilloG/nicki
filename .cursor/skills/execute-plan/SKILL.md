@@ -1,10 +1,6 @@
 ---
 name: execute-plan
 description: "Execute a markdown subtask checklist inside a git worktree with strict path scope."
-disable-model-invocation: true
-metadata:
-  type: subagent
-  subagent: execute-plan
 ---
 
 # Execute Plan
@@ -13,7 +9,7 @@ Implement work by following a **subtask checklist** inside one worktree — Open
 
 The worktree path is a hard boundary: never modify files outside it.
 
-Subtask schema: [subtask-format.md](../subtask-maker/subtask-format.md).
+Subtask input: [subtask-input.md](../subtask-maker/subtask-input.md).
 Execution schema: [execution-format.md](execution-format.md).
 
 ## Inputs
@@ -56,7 +52,7 @@ Task Progress:
 
 ### Step 2: Parse the subtask list
 
-Load from path or inline markdown. Full schema: [subtask-format.md](../subtask-maker/subtask-format.md).
+Load from path or inline markdown. Parse per [subtask-input.md](../subtask-maker/subtask-input.md).
 
 Extract:
 

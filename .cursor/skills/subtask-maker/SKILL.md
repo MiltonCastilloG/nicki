@@ -1,125 +1,49 @@
 ---
 name: subtask-maker
 description: "Read a YAML spec and write a markdown subtask checklist. One sentence per line, OpenSpec-style."
-disable-model-invocation: true
-metadata:
-  type: subagent
-  subagent: subtask-maker
 ---
 
 # Subtask Maker
 
-Read a **YAML spec**, explore the worktree lightly, and produce a **markdown subtask checklist** — one sentence per line with `- [ ]` / `- [x]` completion state.
+Read a **YAML spec**, explore the worktree lightly, write a **markdown subtask checklist** — one sentence per `- [ ]` line.
 
-Subtask schema: [subtask-format.md](subtask-format.md) (single source of truth).
-
-## Inputs
-
-| Input | Required | Notes |
-|-------|----------|-------|
-| Worktree path | Yes | Absolute or repo-relative (e.g. `worktrees/hero-section`) |
-| Spec | Preferred | Path, `@` reference, or inline YAML per [spec-format.md](../spec-maker/spec-format.md) |
-| Task description | Fallback | Free text only when no spec is provided |
-| Output path | No | Default `current-task/subtasks/<slug>.md` under scope root |
-| Frontmatter `context` | No | Optional traceability path; set only when the agent passes one |
-
-If worktree path is missing, ask before starting.
-
-If no spec is provided, ask for a spec or whether to accept free-text as fallback.
+Output schema: [subtask-format.md](subtask-format.md). Spec input: [spec-input.md](spec-input.md).
 
 ## Procedure
 
 ```
-Task Progress:
-- [ ] Resolve and validate worktree scope
-- [ ] Load and parse spec (stop on open_questions)
-- [ ] Explore relevant code and tests lightly
-- [ ] Draft ordered subtask checklist from spec requirements
+- [ ] Resolve worktree scope
+- [ ] Load spec (stop on open_questions)
+- [ ] Explore code and tests lightly
+- [ ] Draft ordered checklist from spec
 - [ ] Write subtask file
 - [ ] Report summary
 ```
 
-### Step 1: Resolve worktree scope
+### 1. Resolve worktree scope
 
-1. Resolve the worktree path to an **absolute** path.
-2. Confirm the directory exists.
-3. Set the **scope root** to that absolute path. Derive `<slug>` from the final folder name.
-4. Default output: `current-task/subtasks/<slug>.md` relative to the scope root.
+Resolve path to absolute; confirm exists. Scope root = that path; `<slug>` = final folder name. Default output: `current-task/subtasks/<slug>.md`.
 
-**Scope rules (non-negotiable):**
+**Scope:** read anywhere under scope root; write only the subtask output path (create parent dir if needed). Never edit application code or files outside the scope root.
 
-- **Read** anywhere under the scope root (including spec files).
-- **Write** only to the subtask output path (create parent directory if missing).
-- Never edit `src/`, `app/`, config, tests, or any application files.
-- Never modify files outside the scope root.
+### 2. Load and parse the spec
 
-### Step 2: Load and parse the spec
+Load from path or inline YAML. Validate per [spec-input.md](spec-input.md). Extract `requirements`, `scope`, `constraints`, `acceptance`, `assumptions`. Map each requirement and acceptance item to subtask lines.
 
-1. Load the spec from path or inline YAML.
-2. Validate against [spec-format.md](../spec-maker/spec-format.md).
-3. If `open_questions` is non-empty, **stop and ask** — do not write subtasks.
-4. Extract: `requirements`, `scope`, `constraints`, `acceptance`, `assumptions`.
+If worktree path or spec is missing, ask before starting.
 
-Map each requirement and acceptance item to one or more subtask lines during drafting.
+### 3. Explore lightly
 
-### Step 3: Explore the worktree lightly
+Use grep, glob, semantic_search, read — relevant pages, components, tests, project patterns. Stay inside scope root; respect `scope.out`. Enough context for realistic one-line subtasks — no file paths or create/modify steps in checklist text.
 
-Use grep, glob, semantic_search, and read to understand:
+### 4. Draft checklist
 
-- Relevant pages, components, features, and existing tests
-- Patterns to follow (i18n, semantic Tailwind tokens, barrel exports)
+Follow [subtask-format.md](subtask-format.md): frontmatter, `# Subtasks`, ordered `- [ ]` lines. Typical size 6–15 lines — implementation, tests, verification from `acceptance`.
 
-Read [.cursor/skills/caveman/SKILL.md](../caveman/SKILL.md) for markdown voice. Skim project layout for realistic subtasks.
+### 5. Write and report
 
-**Exploration discipline:**
+Write only the subtask file. Report scope root, spec path, subtask path, line count, requirement mapping.
 
-- Stay inside the scope root.
-- Respect spec `scope.out`.
-- Do **not** draft file paths or create/modify steps — only enough context to write realistic one-line subtasks.
+## Safety
 
-### Step 4: Draft the subtask checklist
-
-Write checklist body in **caveman full** — terse lines, technical terms exact, no filler.
-
-Follow [subtask-format.md](subtask-format.md).
-
-Include:
-
-- YAML frontmatter with `worktree`, `generated_by: subtask-maker`, `spec`, optional `context`, `title`, and `constraints`
-- `# Subtasks` heading
-- Ordered `- [ ]` lines — **one sentence each**
-- **Test subtasks** for every requirement that implies test coverage
-- **Verification subtasks** at the end from spec `acceptance` (lint, scoped test runs)
-
-Typical checklist size: 6–15 lines covering implementation, tests, and verification.
-
-**Do not:**
-
-- Use file paths or symbol names in subtask text
-- Combine multiple outcomes on one line
-- Include work outside spec `scope.out`
-- Skip test subtasks when acceptance or requirements imply them
-
-### Step 5: Write the subtask file
-
-1. Create the output directory under the scope root if it does not exist.
-2. Write the complete markdown to the output path.
-3. Do not write any other files.
-
-### Step 6: Report
-
-Summarize:
-
-- Scope root used
-- Spec file used
-- Subtask file path and line count
-- How spec requirements map to subtasks
-- Constraints applied
-
-## Safety rules
-
-- Never edit application code — only subtask markdown files
-- Never modify files outside the scope root
-- Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
-- Do not commit or push unless the user explicitly asks
-- When in doubt, ask — do not guess
+Never force-push, `reset --hard`, or delete worktrees/branches without explicit approval. Do not commit or push unless asked. When in doubt, ask.

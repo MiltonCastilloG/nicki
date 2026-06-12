@@ -1,6 +1,6 @@
 # Spec format
 
-**YAML only** — spec-maker output and subtask-maker input share this schema.
+**YAML only** — spec-maker writes this schema. Subtask-maker reads via [spec-input.md](../subtask-maker/spec-input.md).
 
 Default path: `current-task/specs/<slug>.yaml` under the worktree scope root.
 
@@ -26,12 +26,12 @@ Specs define **what** to build (requirements, scope, acceptance). They do **not*
 | Field | Required | Description |
 |-------|----------|-------------|
 | `worktree` | Yes | Worktree slug (e.g. `hero-section`) |
-| `generated_by` | Yes | `spec-maker` for original task specs; `review-triage` for follow-up specs |
+| `generated_by` | Yes | `spec-maker` for original task specs; `validation` for follow-up specs |
 | `task` | Yes | Original task description — Gherkin story or user text |
 | `branch` | No | Git branch (e.g. `feature/hero-section`) |
 | `context` | No | Optional traceability path when the loading agent sets one |
-| `source_review` | No | Review path when generated from review triage |
-| `source_validation` | No | Validation path when generated from review triage |
+| `source_review` | No | Review path when generated from validation out-of-scope follow-up |
+| `source_validation` | No | Validation path when generated from validation out-of-scope follow-up |
 | `source_finding` | No | Original review finding that triggered a follow-up spec |
 
 ## Requirement fields

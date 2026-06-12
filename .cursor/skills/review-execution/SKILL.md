@@ -1,21 +1,15 @@
 ---
 name: review-execution
 description: "Review worktree changes against spec, subtasks, and execution evidence; write a YAML review with approved and content."
-disable-model-invocation: true
-metadata:
-  type: subagent
-  subagent: review-execution
 ---
 
 # Review Execution
 
 Review implementation in a worktree. Compare changes against the spec, subtask list, execution handoff, optional review guidance, and actual git diff; run verification checks; produce YAML with exactly `approved` and `content`.
 
-- Spec schema (input): [spec-format.md](../spec-maker/spec-format.md)
-- Subtask schema (input): [subtask-format.md](../subtask-maker/subtask-format.md)
-- Execution schema (input): [execution-format.md](../execute-plan/execution-format.md)
-- Review schema (output): [review-format.md](review-format.md)
-- Guidance schema (input): [review-guidance-format.md](../review-triage/review-guidance-format.md)
+- Review output: [review-format.md](review-format.md)
+- Guidance input: [review-guidance-format.md](review-guidance-format.md)
+- Post-review validation: [validation-format.md](../validation/validation-format.md)
 
 ## Inputs
 
@@ -47,7 +41,9 @@ Task Progress:
 - [ ] Spot-check CONTRIBUTING conventions
 - [ ] Decide approved true/false
 - [ ] Write review YAML
-- [ ] Report summary and echo YAML
+- [ ] Validation per validation-format.md
+- [ ] Append ## Fix when fix_required
+- [ ] Report summary and echo both paths
 ```
 
 ### Step 1: Resolve worktree scope
@@ -60,7 +56,8 @@ Task Progress:
 **Scope rules (non-negotiable):**
 
 - **Read** anywhere under the scope root and CONTRIBUTING.md.
-- **Write** only to the review output path (create parent directory if missing).
+- **Write** review path, `current-task/review-validations/rN-validation.yaml`, and `current-task/next-steps/*.yaml` when deferred scope findings warrant follow-up.
+- **Append** `## Fix` on subtask list only when `fix_required`.
 - Never edit `src/`, `app/`, config, tests, specs, subtasks, or any application files.
 - Never modify files outside the scope root.
 - Run shell commands with `working_directory` set to the scope root.
@@ -139,16 +136,24 @@ Record blocking violations as `[convention]` bullets.
 
 ### Step 8: Decide `approved`
 
-- `approved: true` only when **no blocking issues** remain across requirements, subtasks, scope, verify, and conventions.
-- Any blocking issue → `approved: false`.
+- `approved: true` only when **no blocking issues** remain across requirements, subtasks, verify, and conventions.
+- `[scope]` bullets alone do **not** force `approved: false` — list them under `[scope]` for deferred follow-up.
+- Any blocking issue (`[req-`, `[subtask:`, `[verify]`, `[convention]`) → `approved: false`.
 - Do not include non-blocking nits unless the user requested strict review.
 
-### Step 9: Write and report
+### Step 9: Write review YAML
 
 1. Create the review output directory if it does not exist.
 2. Write the complete YAML per [review-format.md](review-format.md).
 3. Echo the same YAML in the report.
-4. Summarize: scope root, inputs used, files reviewed, commands run, issue count, review file path.
+
+### Step 10: Validation
+
+Follow [validation-format.md](../validation/validation-format.md) on the review just written.
+
+### Step 11: Report
+
+Summarize: scope root, inputs used, files reviewed, commands run, review path, validation path, `readiness.status`, next-step paths.
 
 ## Safety rules
 

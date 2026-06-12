@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unregister task from global-status.json. Only close-task should call this.
+# Unregister task from global-status.json. Only sheep-close should call this.
 # Usage: unregister-global-status.sh <workspace_root> <task_id>
 set -euo pipefail
 

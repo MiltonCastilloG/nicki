@@ -1,16 +1,14 @@
 # Subtask list format
 
-**Markdown only** — subtask-maker writes; execute-plan reads, implements unchecked items in order, and flips `- [ ]` to `- [x]` as each completes.
+**Markdown only** — subtask-maker writes; execute-plan reads via [subtask-input.md](subtask-input.md).
 
 Default path: `current-task/subtasks/<slug>.md` under the worktree scope root.
 
-Subtask lists define **what to build**, one atomic sentence per line — not file paths or create/modify steps.
-
 ## File structure
 
-1. **YAML frontmatter** — metadata for scope and traceability.
-2. **`# Subtasks` heading** — required.
-3. **Checklist body** — ordered `- [ ]` lines; executor marks `- [x]` when done.
+1. YAML frontmatter — scope and traceability.
+2. `# Subtasks` heading — required.
+3. Checklist body — ordered `- [ ]` lines.
 
 ## Frontmatter fields
 
@@ -19,33 +17,17 @@ Subtask lists define **what to build**, one atomic sentence per line — not fil
 | `worktree` | Yes | Worktree slug (e.g. `hero-section`) |
 | `generated_by` | Yes | Always `subtask-maker` |
 | `spec` | Yes when a spec exists | Path to the spec file |
-| `context` | No | Optional traceability path when the loading agent sets one |
+| `context` | No | Traceability path when agent sets one |
 | `title` | No | Short task name from the spec |
-| `constraints` | No | Rules for execution (default `no-commit`, `no-new-deps`) |
+| `constraints` | No | Default `no-commit`, `no-new-deps` |
 
 ## Checklist line rules
 
-Each subtask is exactly **one sentence** on its own line:
+One **terse sentence** per line — no filler (just, basically, really); keep technical terms exact.
 
-```markdown
-- [ ] Implement a Hero component with headline, subcopy, and a primary CTA using semantic Tailwind tokens only.
-```
+**Do:** one buildable outcome per line; dependencies first; test subtasks when spec implies coverage; verification subtasks last from spec `acceptance`; map every requirement and acceptance item.
 
-**Do:**
-
-- Write one clear, buildable outcome per line.
-- Order subtasks for sequential implementation (dependencies first).
-- Include **test subtasks** — unit, integration, or component tests the spec implies.
-- Include **verification subtasks** at the end (`npm run lint`, scoped `npm test`, etc.) mapped from spec `acceptance`.
-- Map every spec `requirement` and `acceptance` item to at least one subtask.
-- Start every unchecked item with `- [ ]` and every completed item with `- [x]`.
-
-**Don't:**
-
-- Use multiple sentences on one line.
-- Name file paths or shell commands in the subtask text (except verification subtasks may name the check, e.g. "Run npm run lint on changed files").
-- Split one requirement across vague lines ("improve hero", "clean up code").
-- Skip tests when the spec or acceptance criteria imply them.
+**Don't:** multiple sentences on one line; file paths or symbol names in text (verification may name checks, e.g. "Run npm run lint on changed files"); vague lines; skip implied tests.
 
 ## Example
 
@@ -65,17 +47,8 @@ constraints:
 - [ ] Implement a Hero component with headline, subcopy, and a primary CTA using semantic Tailwind tokens only.
 - [ ] Replace the home page hero with the new Hero component above the fold.
 - [ ] Add unit tests asserting the Hero renders headline, subcopy, and CTA.
-- [ ] Add or update home page tests to cover the hero section.
 - [ ] Run npm run lint on changed files and fix any issues.
 - [ ] Run npm test for Hero and home page test suites.
 ```
 
-After partial execution:
-
-```markdown
-- [x] Implement a Hero component with headline, subcopy, and a primary CTA using semantic Tailwind tokens only.
-- [x] Replace the home page hero with the new Hero component above the fold.
-- [ ] Add unit tests asserting the Hero renders headline, subcopy, and CTA.
-```
-
-Spec schema (input): [spec-format.md](../spec-maker/spec-format.md).
+Spec input (read): [spec-input.md](spec-input.md). Execute input (read): [subtask-input.md](subtask-input.md). Full spec schema: [spec-format.md](../spec-maker/spec-format.md).

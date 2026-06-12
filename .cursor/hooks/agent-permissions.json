@@ -16,7 +16,7 @@
     "generate_image": false,
     "switch_mode": false
   },
-  "current-task-update": {
+  "sheep-status": {
     "read": true,
     "write": true,
     "delete": false,
@@ -33,7 +33,7 @@
     "generate_image": false,
     "switch_mode": false
   },
-  "start-task": {
+  "sheep-start": {
     "read": true,
     "write": false,
     "delete": false,
@@ -50,7 +50,7 @@
     "generate_image": false,
     "switch_mode": false
   },
-  "spec-maker": {
+  "sheep-spec": {
     "read": true,
     "write": true,
     "delete": false,
@@ -67,7 +67,7 @@
     "generate_image": false,
     "switch_mode": false
   },
-  "subtask-maker": {
+  "sheep-subtask": {
     "read": true,
     "write": true,
     "delete": false,
@@ -84,7 +84,7 @@
     "generate_image": false,
     "switch_mode": false
   },
-  "execute-plan": {
+  "sheep-execute": {
     "read": true,
     "write": true,
     "delete": true,
@@ -101,7 +101,7 @@
     "generate_image": false,
     "switch_mode": false
   },
-  "review-execution": {
+  "sheep-review": {
     "read": true,
     "write": true,
     "delete": false,
@@ -118,41 +118,7 @@
     "generate_image": false,
     "switch_mode": false
   },
-  "review-triage": {
-    "read": true,
-    "write": true,
-    "delete": false,
-    "shell": false,
-    "grep": true,
-    "glob": true,
-    "semantic_search": true,
-    "task": false,
-    "web_search": false,
-    "web_fetch": false,
-    "mcp": false,
-    "ask_question": true,
-    "todo_write": true,
-    "generate_image": false,
-    "switch_mode": false
-  },
-  "commit-task": {
-    "read": true,
-    "write": true,
-    "delete": false,
-    "shell": true,
-    "grep": false,
-    "glob": true,
-    "semantic_search": false,
-    "task": false,
-    "web_search": false,
-    "web_fetch": false,
-    "mcp": false,
-    "ask_question": true,
-    "todo_write": true,
-    "generate_image": false,
-    "switch_mode": false
-  },
-  "push-task": {
+  "sheep-sync": {
     "read": true,
     "write": true,
     "delete": false,
@@ -169,7 +135,7 @@
     "generate_image": false,
     "switch_mode": false
   },
-  "merge-task": {
+  "sheep-integrate": {
     "read": true,
     "write": true,
     "delete": false,
@@ -186,24 +152,7 @@
     "generate_image": false,
     "switch_mode": false
   },
-  "publish-task": {
-    "read": true,
-    "write": true,
-    "delete": false,
-    "shell": true,
-    "grep": true,
-    "glob": true,
-    "semantic_search": false,
-    "task": false,
-    "web_search": false,
-    "web_fetch": false,
-    "mcp": false,
-    "ask_question": true,
-    "todo_write": true,
-    "generate_image": false,
-    "switch_mode": false
-  },
-  "close-task": {
+  "sheep-close": {
     "read": true,
     "write": true,
     "delete": true,

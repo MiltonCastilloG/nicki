@@ -1,8 +1,6 @@
 # Nicki — workflow orchestrator context
 
-**Nicki is a good dog.**
-
-Nicki is the read-only orchestrator for the CastleMill current-task pipeline. Nicki controls workflow order, not implementation. Nicki asks before each leaf-agent transition, invokes the correct subagent, passes prior inputs and outputs, and Task-spawns `current-task-update` after every step — except close, which deletes the task context folder.
+Nicki is the read-only orchestrator for the CastleMill current-task pipeline. Nicki controls workflow order, not implementation. Nicki asks before each step, sends the correct sheep, passes prior inputs and outputs, and sends `sheep-status` after every step — except close, which deletes the task context folder.
 
 Use this document as a rebuild guide: what Nicki is, what it controls, how the pieces fit together, and the key decisions that shaped the design.
 
@@ -13,11 +11,11 @@ Use this document as a rebuild guide: what Nicki is, what it controls, how the p
 | Nicki does | Nicki does not |
 | ---------- | -------------- |
 | Read workflow docs, `global-status.json`, `current-task/status.json`, and task artifacts | Write files |
-| Invoke leaf subagents via the Task tool | Run shell commands |
+| Send sheep via the Task tool | Run shell commands |
 | Ask for confirmation before each transition | Search or edit application source |
-| Pass worktree path, context, and prior artifacts to leaf agents | Improvise workflow transitions |
-| Task-spawn `current-task-update` automatically after each leaf step (except close) | Spawn nested subagents from leaf workers |
-| Track orchestration progress with todos | Commit, push, merge, or delete without explicit user confirmation |
+| Pass worktree path, context, and prior artifacts to sheep | Improvise workflow transitions |
+| Send `sheep-status` automatically after each sheep (except close) | Spawn nested sheep from workers |
+| Track orchestration progress with todos | Sync, integrate, or delete without explicit user confirmation |
 
 Nicki = `.cursor/agents/nicki.md` subagent (`readonly: true`; `read`, `task`, `ask_question`, `todo_write`). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
 
@@ -27,17 +25,19 @@ Nicki = `.cursor/agents/nicki.md` subagent (`readonly: true`; `read`, `task`, `a
 
 | Layer | Path | Role |
 | ----- | ---- | ---- |
-| Nicki | `.cursor/agents/nicki.md` | Pipeline, gates, transitions, status-update summaries |
-| Agent | `.cursor/agents/<leaf>.md` | Workflow binding — disk inputs, gates, handoffs; Nicki Task-spawns |
+| Nicki | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.yaml` | Pipeline, gates, transitions, status-update summaries |
+| Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — disk inputs, gates, handoffs; loaded in **child** Task context only (Nicki sends) |
 | Skill | `.cursor/skills/<name>/` | Pure functionality — procedures and artifact schemas; no pipeline knowledge |
 
 See `.cursor/skills/README.md` for rules and workflow exceptions.
 
 **Frontmatter parsing:** Cursor uses a simplified YAML parser. Use single-line quoted `description: "..."` strings — do not use block scalars (`>-`, `>`, `|`) or the description may truncate to the first line only.
 
-**Leaf workers** never spawn subagents. Nicki is the only orchestrator; it invokes leaf agents one at a time. Each agent loads `current-task/*` per its `## Disk inputs` section, then follows the skill.
+**Sheep** never spawn other sheep. Nicki is the only orchestrator; she sends one sheep at a time via `routing.yaml` → Task `subagent_type`. Nicki does **not** read sheep agent files — each child loads `current-task/*` per its disk inputs, then follows the skill. Nicki relays the sheep return YAML to `sheep-status`.
 
-**State writer** is status-update (current-task-update subagent): sole writer for per-task `current-task/status.json`. **Registry writer** is start-task / close-task agents only for `global-status.json`. Nicki never writes either directly.
+**State writer** is `sheep-status`: sole writer for per-task `current-task/status.json`. **Registry writer** is `sheep-start` / `sheep-close` only for `global-status.json`. Nicki never writes either directly.
+
+**Users attach skills** for ad-hoc work; they do not Task-spawn sheep from the parent agent.
 
 ---
 
@@ -46,114 +46,94 @@ See `.cursor/skills/README.md` for rules and workflow exceptions.
 Nicki knows this step sequence:
 
 ```
-start → describe → spec → subtasks → execute → review → triage → acceptance → commit → push → merge → publish → close
+start → describe → spec → subtasks → execute → review → acceptance → sync → integrate → close
                                       ↑ fix loop (readiness.fix_required → execute)
 ```
 
-With automatic context updates after each leaf step:
+With automatic context updates after each sheep step:
 
 ```
-start-task
-current-task-update
+sheep-start
+sheep-status
 describe              ← Nicki-only: ask if needed, draft Gherkin user story, persist task.story
-current-task-update
-spec-maker
-current-task-update
-subtask-maker
-current-task-update
-execute-plan
-current-task-update
-review-execution
-current-task-update
-review-triage
-current-task-update
+sheep-status
+sheep-spec
+sheep-status
+sheep-subtask
+sheep-status
+sheep-execute
+sheep-status
+sheep-review           ← review + validation skill (readiness + next-steps)
+sheep-status
 acceptance             ← Nicki-only; readiness.ready_for_acceptance
-current-task-update
-commit-task            ← user confirmation required
-current-task-update
-push-task              ← user confirmation required
-current-task-update
-merge-task             ← user confirmation required
-current-task-update
-publish-task           ← user confirmation required; push target branch
-current-task-update
-close-task             ← "Time for the feedback woof! Want?"
+sheep-status
+sheep-sync             ← user confirmation required
+sheep-status
+sheep-integrate        ← user confirmation required; merge into main + push main
+sheep-status
+sheep-close            ← user confirms archive + delete
 ```
 
-`fix` not separate agent. Triage emits `readiness` in validation YAML. Nicki routes from disk — not review prose. `fix_required` → execute appended `## Fix` subtasks (`- [x]` preserved). `rerun_review` → review with guidance. `ready_for_acceptance` → acceptance checkpoint before commit. `fix_required` / `blocked` block `commit-task`.
+`fix` not separate agent. Validation skill emits `readiness` and writes `next-steps/*.yaml` for deferred `[scope]` findings in the same review spawn. Nicki routes from validation — not review prose. `fix_required` → execute with `## Fix` appended. `ready_for_acceptance` → acceptance before sync.
 
 ```mermaid
 flowchart LR
-  A[start-task] --> B[current-task-update]
+  A[sheep-start] --> B[sheep-status]
   B --> C[describe]
-  C --> D[current-task-update]
-  D --> E[spec-maker]
-  E --> F[current-task-update]
-  F --> G[subtask-maker]
-  G --> H[current-task-update]
-  H --> I[execute-plan]
-  I --> J[current-task-update]
-  J --> K[review-execution]
-  K --> L[current-task-update]
-  L --> M[review-triage]
-  M --> N[current-task-update]
-  N --> O{readiness}
-  O -->|fix_required| P[execute fix subtasks]
+  C --> D[sheep-status]
+  D --> E[sheep-spec]
+  E --> F[sheep-status]
+  F --> G[sheep-subtask]
+  G --> H[sheep-status]
+  H --> I[sheep-execute]
+  I --> J[sheep-status]
+  J --> K[sheep-review]
+  K --> L{readiness}
+  L -->|fix_required| P[execute fix subtasks]
   P --> I
-  O -->|rerun_review| K
-  O -->|ready_for_acceptance| Acp[acceptance]
-  Acp --> Q[commit-task]
-  O -->|blocked| Ask[ask user]
-  Q --> R[current-task-update]
-  R --> S[push-task]
-  S --> T[current-task-update]
-  T --> U[merge-task]
-  U --> V[current-task-update]
-  V --> W[publish-task]
-  W --> X[current-task-update]
-  X --> Y[close-task]
+  L -->|ready_for_acceptance| Acp[acceptance]
+  Acp --> Q[sheep-sync]
+  L -->|blocked| Ask[ask user]
+  Q --> R[sheep-status]
+  R --> S[sheep-integrate]
+  S --> T[sheep-status]
+  T --> Y[sheep-close]
   Y --> Z[task-archive]
 ```
 
 ---
 
-## Leaf agents and artifacts
+## Sheep and artifacts
 
-Each leaf agent produces YAML handoff under `projects/<project>/worktrees/<slug>/current-task/` (legacy `worktrees/<slug>/` OK).
+Each sheep produces YAML handoff under `projects/<project>/worktrees/<slug>/current-task/` (legacy `worktrees/<slug>/` OK).
 
-| Step | Subagent | Writes code? | Primary output |
-| ---- | -------- | ------------ | -------------- |
-| Setup | `start-task` | No | `projects/<project>/worktrees/<slug>/` |
-| State | `current-task-update` | No (status JSON only) | `current-task/status.json` |
+| Step | Sheep | Writes code? | Primary output |
+| ---- | ----- | ------------ | -------------- |
+| Setup | `sheep-start` | No | `projects/<project>/worktrees/<slug>/` |
+| State | `sheep-status` | No (status JSON only) | `current-task/status.json` |
 | Describe | Nicki only | No | `task.story` in context (Gherkin user story) |
-| Spec | `spec-maker` | No | `current-task/specs/<slug>.yaml` |
-| Subtasks | `subtask-maker` | No | `current-task/subtasks/<slug>.md` |
-| Execute | `execute-plan` | Yes | Code changes + updated subtasks + `current-task/executions/<slug>.yaml` |
-| Review | `review-execution` | No | `current-task/reviews/<slug>.yaml` |
-| Triage | `review-triage` | No | `current-task/review-validations/rN-validation.yaml` |
-| Commit | `commit-task` | Yes (git commit only) | Local commit + `current-task/commits/<slug>.yaml` |
-| Push | `push-task` | Yes (pre-push merge + push) | Remote branch + `current-task/pushes/<slug>.yaml` |
-| Merge | `merge-task` | Yes (merge into `main`) | `current-task/merges/<slug>.yaml` in task worktree |
-| Publish | `publish-task` | Yes (push target branch) | `current-task/publishes/<slug>.yaml` |
-| Close | `close-task` | Archive + delete | `task-archive/<slug>/`; needs merge + publish or override |
+| Spec | `sheep-spec` | No | `current-task/specs/<slug>.yaml` |
+| Subtasks | `sheep-subtask` | No | `current-task/subtasks/<slug>.md` |
+| Execute | `sheep-execute` | Yes | Code changes + updated subtasks + `current-task/executions/<slug>.yaml` |
+| Review | `sheep-review` | No | `reviews/<slug>.yaml` + `review-validations/rN-validation.yaml` + optional `next-steps/*.yaml` |
+| Sync | `sheep-sync` | Yes (commit + pre-push merge + push feature) | `current-task/syncs/<slug>.yaml` |
+| Integrate | `sheep-integrate` | Yes (merge into `main` + push `main`) | `current-task/integrates/<slug>.yaml` |
+| Close | `sheep-close` | Archive + delete | `task-archive/<slug>/`; needs integrate or override |
 
 ### Artifact handoff chain
 
 ```
-spec ──→ subtasks ──→ execution ──→ review ──→ validation
-                                                   ├── next-steps/*.yaml  (follow-up specs for subtask-maker)
-                                                   └── review-inputs/rN-review.yaml  (guidance for review rerun)
-commit ──→ push ──→ merge ──→ publish ──→ archive
+spec ──→ subtasks ──→ execution ──→ review + validation (+ next-steps when deferred scope)
+sync ──→ integrate ──→ archive
 ```
 
 - **Spec** defines *what* to build — requirements, scope, acceptance. No file paths.
 - **Subtask list** breaks spec into one-sentence build items with checkbox completion state (tests included).
 - **Execute-plan** implements unchecked subtasks in order and marks each `- [x]` in place.
 - **Execution** is an evidence map for review, not an approval.
-- **Review** has exactly `approved` and `content`.
-- **Triage** filters review findings against task scope; out-of-scope work becomes next-step specs.
-- **Commit / push / merge / publish** separate git steps; handoffs in task worktree; status pointers only in JSON.
-- **Archive** — compact `summary.yaml` + caveman `report.md` at repo root; whole worktree removed after close.
+- **Review** has `approved` and `content`; **validation** skill emits readiness and out-of-scope next-steps in same spawn.
+- **Sync / integrate** — two git steps; handoffs in task worktree; status pointers only in JSON.
+- **Archive** — compact `summary.yaml` + terse `report.md` at repo root; whole worktree removed after close.
 
 Closed tasks are stored at:
 
@@ -165,11 +145,11 @@ task-archive/<slug>/summary.yaml
 
 ## State model: JSON status (two layers)
 
-**Workspace registry:** `global-status.json` at workspace root — active tasks, project, worktree path, route to per-task status. **Only start-task and close-task write this file.**
+**Workspace registry:** `global-status.json` at workspace root — active tasks, project, worktree path, route to per-task status. **Only sheep-start and sheep-close write this file.**
 
-**Per-task status:** `current-task/status.json` inside the worktree — step pointers, artifact paths, open questions, history. **Only current-task-update subagent (status-update) writes this file.**
+**Per-task status:** `current-task/status.json` inside the worktree — step pointers, artifact paths, open questions, history. **Only sheep-status writes this file.**
 
-Nicki and leaf agents read both; leaf agents must not edit either. Legacy `current-task/current-task-context.yaml` is deprecated.
+Nicki and sheep read both; sheep must not edit either. Legacy `current-task/current-task-context.yaml` is deprecated.
 
 ### What it stores
 
@@ -187,13 +167,13 @@ There is **no broad task-level `state` enum**. Step pointers, `open_questions`, 
 
 ### Step values
 
-`start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `triage`, `fix`, `acceptance`, `commit`, `push`, `merge`, `publish`, `close`, `done`
+`start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `integrate`, `close`, `done`
 
 Schemas: `.cursor/skills/current-task-update/status-format.md`, `.cursor/skills/current-task-update/global-status-format.md`, `.cursor/skills/hook-contract/SKILL.md`
 
 ### Nicki summary → context update
 
-After each leaf step, Nicki Task-spawns `current-task-update` with a compact summary (no separate user confirmation needed):
+After each sheep, Nicki sends `sheep-status` with a compact summary (no separate user confirmation needed):
 
 ```yaml
 worktree: projects/castlemill-landing/worktrees/hero-section
@@ -205,18 +185,18 @@ open_questions: []
 summary: Spec captured requirements and acceptance criteria.
 ```
 
-Exception: **do not Task-spawn `current-task-update` after close-task** — close deletes `current-task/`.
+Exception: **do not send `sheep-status` after sheep-close** — close deletes `current-task/`.
 
 ---
 
 ## Transition discipline
 
-Before invoking any leaf agent except `current-task-update`, Nicki shows a compact state view and asks for confirmation:
+Before sending any sheep except `sheep-status`, Nicki shows a compact state view and asks for confirmation:
 
 ```markdown
 Current task: `hero-section` — Hero section redesign
 Progress: `describe` → `spec` → `subtasks`
-Next action: invoke `spec-maker`
+Next action: send `sheep-spec`
 Expected output: `current-task/specs/hero-section.yaml`
 ```
 
@@ -226,17 +206,15 @@ If the user declines, Nicki stops.
 
 | Agent | Must name this side effect |
 | ----- | -------------------------- |
-| `commit-task` | Creating a local git commit |
-| `push-task` | Merge `main` into task branch; push task branch |
-| `merge-task` | Merge task branch into `main` |
-| `publish-task` | Push merged target branch (`main`) to remote |
+| `sync-task` | Local commit, merge `main` into feature branch, push feature branch |
+| `integrate-task` | Merge feature into `main` and push `main` to remote |
 
 ### Close requires the feedback prompt
 
 Before close-task, Nicki asks exactly:
 
 ```text
-Time for the feedback woof! Want?
+Archive and delete worktree?
 ```
 
 And shows:
@@ -248,19 +226,19 @@ And shows:
 
 ## Key design decisions
 
-These decisions are load-bearing. Changing them requires updating Nicki, leaf agents, and docs together.
+These decisions are load-bearing. Changing them requires updating Nicki, sheep, and docs together.
 
 ### 1. Nicki is read-only; state has a dedicated writer
 
-Nicki orchestrates but never writes files. current-task-update subagent writes per-task `status.json`; start-task / close-task own `global-status.json`. This prevents the orchestrator from corrupting workflow state while improvising.
+Nicki orchestrates but never writes files. sheep-status writes per-task `status.json`; sheep-start / sheep-close own `global-status.json`. This prevents the orchestrator from corrupting workflow state while improvising.
 
-### 2. Leaf agents are atomic; no nested delegation
+### 2. Sheep are atomic; no nested delegation
 
 Every workflow step agent has `task: false`. Nicki is the only agent that invokes other agents. This keeps scope, permissions, and accountability clear.
 
-### 3. Nicki Task-spawns leaf subagents
+### 3. Nicki sends sheep
 
-Nicki invokes leaf workers via Task `subagent_type` only. Parent agent does not run pipeline steps inline.
+Nicki sends sheep via Task `subagent_type` only. Parent agent does not run pipeline steps inline and does not send sheep.
 
 ### 4. YAML handoffs between steps, not chat memory
 
@@ -274,26 +252,24 @@ Instead of a `state: in_progress | blocked | done` field, the context file uses 
 
 Task work inside `projects/<project>/worktrees/<slug>/` (or legacy path). execute-plan hard boundary. Nicki validates `scope.worktree_path`.
 
-### 7. Git tail: commit → push → merge → publish
+### 7. Git tail: sync → integrate
 
-1. **Commit** — task branch (commit-task)
-2. **Push** — merge `main` into task branch, push task branch (push-task)
-3. **Merge** — task branch into `main` locally (merge-task); first touch of `main`
-4. **Publish** — user confirm; push `main` to remote (publish-task)
+1. **Sync** — local commit, merge `main` into feature branch, push feature branch (`sync-task`)
+2. **Integrate** — merge feature into `main`, push `main` to remote (`integrate-task`)
 
-Merge mandatory. Publish separate explicit step after merge. Close gates on merge + publish handoffs or archive override.
+Two user confirms. Close gates on integrate handoff or archive override.
 
 ### 8. Shared conflict-resolution protocol
 
-push-task and merge-task both reference `.cursor/skills/conflict-resolution/SKILL.md`. Agents summarize conflicts but must ask the user for every resolution. No inferring, no strategy flags unless the user explicitly asks.
+sync-task and integrate-task both reference `.cursor/skills/conflict-resolution/SKILL.md`. Agents summarize conflicts but must ask the user for every resolution. No inferring, no strategy flags unless the user explicitly asks.
 
 ### 9. Automatic context update after every step — except close
 
-current-task-update subagent runs automatically after each leaf step without asking. Exception: close-task removes the worktree — no context write after.
+sheep-status runs automatically after each sheep without asking. Exception: sheep-close removes the worktree — no context write after.
 
 ### 10. Close: tail gate, archive, teardown
 
-close-task checks merge + publish handoffs (or records override), writes archive first, unregisters `global-status.json`, deletes whole worktree last.
+close-task checks integrate handoff (or records override), writes archive first, unregisters `global-status.json`, deletes whole worktree last.
 
 ### 11. Spec/subtask/execution separation
 
@@ -302,13 +278,13 @@ close-task checks merge + publish handoffs (or records override), writes archive
 - **Execute-plan** follows unchecked subtasks in order, marks completed items `- [x]`, and asks on ambiguity.
 - **Review-execution** independently inspects the diff; execution YAML is a map, not an approval.
 
-### 12. Review triage filters scope + readiness
+### 12. Review emits readiness
 
-Out-of-scope findings → `next-steps/*.yaml`. Invalid reviews → `review-inputs/`. Every validation includes `readiness` block — Nicki routes acceptance / fix / review rerun from enum, not chat.
+`validation` skill runs after review in same spawn: readiness, `next-steps/*.yaml` for deferred `[scope]`, `## Fix` when needed. Nicki routes from validation enum, not review prose.
 
-### 13. Acceptance before commit
+### 13. Acceptance before sync
 
-`ready_for_acceptance` → Nicki-only checkpoint with disk summary. No `commit-task` until user accepts. Reject → blockers + fix or describe route.
+`ready_for_acceptance` → Nicki-only checkpoint with disk summary. No `sync-task` until user accepts. Reject → blockers + fix or describe route.
 
 ### 14. Spec open_questions gate
 
@@ -316,7 +292,7 @@ Non-empty spec `open_questions` blocks `subtask-maker`; mirrored in status until
 
 ### 15. Partial execution review
 
-All subtasks done or no `review_scope` → full review. `review_scope.mode: partial` → user confirm scoped review; no commit without full readiness.
+All subtasks done or no `review_scope` → full review. `review_scope.mode: partial` → user confirm scoped review; no sync without full readiness.
 
 ---
 
@@ -333,28 +309,25 @@ All subtasks done or no `review_scope` → full review. `review_scope.mode: part
 
 | File | Role |
 | ---- | ---- |
-| `.cursor/agents/current-task-update.md` | State writer subagent |
+| `.cursor/agents/sheep-status.md` | State writer sheep |
 | `.cursor/skills/current-task-update/SKILL.md` | State writer workflow |
 | `.cursor/skills/current-task-update/status-format.md` | Per-task status schema |
 | `.cursor/skills/current-task-update/global-status-format.md` | Workspace registry schema |
 
-### Leaf agents (agent + skill + format)
+### Sheep (agent + skill + format)
 
-| Step | Agent | Skill | Format schema |
+| Step | Sheep | Skill | Format schema |
 | ---- | ----- | ----- | ------------- |
-| Start | `start-task.md` | `start-task/SKILL.md` | — |
-| Spec | `spec-maker.md` | `spec-maker/SKILL.md` | `spec-format.md` |
-| Subtasks | `subtask-maker.md` | `subtask-maker/SKILL.md` | `subtask-format.md` |
-| Execute | `execute-plan.md` | `execute-plan/SKILL.md` | `execution-format.md` |
-| Review | `review-execution.md` | `review-execution/SKILL.md` | `review-format.md` |
-| Triage | `review-triage.md` | `review-triage/SKILL.md` | `validation-format.md`, `review-guidance-format.md` |
-| Commit | `commit-task.md` | `commit-task/SKILL.md` | `commit-format.md` |
-| Push | `push-task.md` | `push-task/SKILL.md` | `push-format.md` |
-| Merge | `merge-task.md` | `merge-task/SKILL.md` | `merge-format.md` |
-| Publish | `publish-task.md` | `publish-task/SKILL.md` | `publish-format.md` |
-| Close | `close-task.md` | `close-task/SKILL.md` | `task-archive/archive-format.md` |
+| Start | `sheep-start.md` | `start-task/SKILL.md` | — |
+| Spec | `sheep-spec.md` | `spec-maker/SKILL.md` | `spec-format.md` |
+| Subtasks | `sheep-subtask.md` | `subtask-maker/SKILL.md` | `subtask-format.md` |
+| Execute | `sheep-execute.md` | `execute-plan/SKILL.md` | `execution-format.md` |
+| Review | `sheep-review.md` | `review-execution/SKILL.md` | `review-format.md`, `validation/` |
+| Sync | `sheep-sync.md` | `sync-task/SKILL.md` | `sync-format.md` |
+| Integrate | `sheep-integrate.md` | `integrate-task/SKILL.md` | `integrate-format.md` |
+| Close | `sheep-close.md` | `close-task/SKILL.md` | `task-archive/archive-format.md` |
 
-### Close helpers (no subagent)
+### Close helpers (no sheep)
 
 | Skill | Role |
 | ----- | ---- |
@@ -365,8 +338,8 @@ All subtasks done or no `review_scope` → full review. `review_scope.mode: part
 
 | File | Role |
 | ---- | ---- |
-| `.cursor/skills/conflict-resolution/SKILL.md` | Shared merge conflict protocol for push and merge |
-| `.cursor/skills/next-step-spec/SKILL.md` | Follow-up spec format (same schema as spec) |
+| `.cursor/skills/conflict-resolution/SKILL.md` | Shared merge conflict protocol for sync and integrate |
+| `.cursor/skills/validation/SKILL.md` | Validation, readiness, out-of-scope next-steps |
 | `.cursor/skills/start-task/scripts/start-worktrees.sh` | Worktree creation |
 | `.cursor/skills/close-scope/scripts/unregister-global-status.sh` | Registry unregister (close-task only) |
 | `CONTRIBUTING.md` | Full contributor workflow documentation |
@@ -386,7 +359,7 @@ nicki hero-section
 nicki continue
 ```
 
-Nicki Task-spawns `start-task`, then `current-task-update`, describe, and each leaf step after confirmation. Ad-hoc: attach a skill path; do not run the pipeline inline in the parent agent.
+Nicki sends `sheep-start`, then `sheep-status`, describe, and each sheep after confirmation. Ad-hoc: attach a skill path; do not run the pipeline inline in the parent agent.
 
 ---
 
