@@ -1,12 +1,8 @@
 # Merge format
 
-Merges are the handoff from `/merge-task` after merging a pushed task branch into `main` or another target branch, or after blocking on conflicts. **YAML only**.
+**YAML only** — one compact artifact after merging a task branch into a target branch, or after blocking on conflicts.
 
-Store merge handoffs in the worktree under `current-task/merges/`:
-
-```
-current-task/merges/<slug>.yaml
-```
+Default path: `current-task/merges/<slug>.yaml` under the **task worktree** (not the target checkout).
 
 ## Top-level fields
 
@@ -20,13 +16,20 @@ current-task/merges/<slug>.yaml
 | `checks` | No | Commands run after merge |
 | `blockers` | If blocked | Why merge did not finish |
 
+## `meta`
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `worktree` | Yes | Task worktree slug |
+| `generated_by` | Yes | Always `merge-task` |
+| `context` | No | Optional traceability path when the loading agent sets one |
+
 ## YAML example
 
 ```yaml
 meta:
   worktree: hero-section
   generated_by: merge-task
-  context: current-task/current-task-context.yaml
 
 status: conflicts_resolved
 
@@ -57,6 +60,6 @@ blockers: []
 ## Rules
 
 - Write this artifact even when blocked.
-- Record every conflicted file.
-- Record every user decision used for resolution.
-- Do not push; `/push-task` owns publishing task branches.
+- Record every conflicted file and every user decision used for resolution.
+- Handoff file lives under task worktree `current-task/merges/` — not target repo checkout.
+- Do not push the target branch from merge-task.

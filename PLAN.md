@@ -14,10 +14,10 @@ Use [`NICKI.md`](NICKI.md) for workflow semantics (orchestrator rules, artifact 
 | ----- | ------ |
 | Nicki lives inside one app repo (e.g. castlemill-landing) | Nicki is its own repo |
 | Workflow files committed in host `.cursor/` | Nicki owns source; installs runtime into managed projects |
-| Worktrees under repo root `worktrees/` | Worktrees under each project: `projects/<name>/worktrees/<slug>/` |
+| Worktrees under repo root `worktrees/` | `projects/<name>/worktrees/<slug>/` (`PROJECT` env in start-worktrees.sh) |
 | Single-repo scope | Nicki workspace holds many cloned projects in parallel |
 
-Nicki still does **not** implement features. It orchestrates leaf agents, passes artifacts, and calls `/current-task-update` after each step.
+Nicki still does **not** implement features. It orchestrates leaf agents, passes artifacts, and Task-spawns `current-task-update` after each step.
 
 ---
 
@@ -66,7 +66,7 @@ flowchart TB
     │   ├── worktrees/
     │   │   └── hero-section/
     │   │       ├── current-task/
-    │   │       │   ├── current-task-context.yaml
+    │   │       │   ├── status.json
     │   │       │   ├── specs/
     │   │       │   └── …
     │   │       └── … app files …
@@ -97,11 +97,10 @@ nicki/
 ├── PLAN.md                          # this file
 ├── NICKI.md                         # workflow semantics + design decisions
 ├── nicki-workspace.example.yaml     # workspace registry stub
-└── runtime/
-    └── .cursor/
-        ├── agents/                  # subagent definitions (incl. nicki.md)
-        ├── commands/                # slash commands
-        └── skills/                  # skills + format schemas + start-worktrees.sh
+└── .cursor/
+    ├── agents/                      # subagent definitions (incl. nicki.md)
+    ├── rules/                       # nicki-default routing
+    └── skills/                      # skills + schemas + start-worktrees.sh
 ```
 
 When you create the Nicki repo, suggested target:
@@ -113,8 +112,7 @@ nicki/                               # new git repo root
 ├── NICKI.md
 ├── nicki-workspace.example.yaml
 ├── bin/nicki                        # CLI (later)
-└── package/
-    └── .cursor/                     # ← move contents of runtime/.cursor/ here
+└── package/.cursor/                 # ← copy from repo .cursor/
 ```
 
 To install runtime into a managed project:
@@ -206,10 +204,10 @@ Today paths assume a single repo root. After extraction:
 
 Keep invariants from `NICKI.md`:
 
-- Nicki is read-only; only `/current-task-update` writes context YAML
+- Nicki is read-only; only current-task-update subagent writes context YAML
 - Leaf agents have `task: false`
 - Git side effects need explicit user confirmation
-- No `/current-task-update` after `/close-task`
+- No current-task-update subagent after close-task
 
 ### 3. Gitignore per managed project
 
@@ -234,7 +232,7 @@ When Cursor opens `projects/foo/worktrees/bar`, the workspace root is the worktr
 start → describe → spec → subtasks → execute → review → triage → [fix loop] → commit → push → merge → close
 ```
 
-With automatic `/current-task-update` after each leaf step except close.
+With automatic current-task-update subagent after each leaf step except close.
 
 Full detail: [`NICKI.md`](NICKI.md).
 
@@ -276,23 +274,23 @@ Full detail: [`NICKI.md`](NICKI.md).
 | File | Role |
 | ---- | ---- |
 | `runtime/.cursor/agents/current-task-update.md` | State writer |
-| `runtime/.cursor/commands/current-task-update.md` | `/current-task-update` |
 | `runtime/.cursor/skills/current-task-update/` | Skill + context schema |
 
 ### Leaf pipeline
 
-| Step | Agent | Command | Skill |
-| ---- | ----- | ------- | ----- |
-| Start | `start-task.md` | `start-task.md` | `start-task/` |
-| Spec | `spec-maker.md` | `spec-maker.md` | `spec-maker/` |
-| Subtasks | `subtask-maker.md` | `subtask-maker.md` | `subtask-maker/` |
-| Execute | `execute-plan.md` | `execute-plan.md` | `execute-plan/` |
-| Review | `review-execution.md` | `review-execution.md` | `review-execution/` |
-| Triage | `review-triage.md` | `review-triage.md` | `review-triage/` |
-| Commit | `commit-task.md` | `commit-task.md` | `commit-task/` |
-| Push | `push-task.md` | `push-task.md` | `push-task/` |
-| Merge | `merge-task.md` | `merge-task.md` | `merge-task/` |
-| Close | `close-task.md` | `close-task.md` | `close-task/` |
+| Step | Agent | Skill |
+| ---- | ----- | ----- |
+| Start | `start-task.md` | `start-task/` |
+| Spec | `spec-maker.md` | `spec-maker/` |
+| Subtasks | `subtask-maker.md` | `subtask-maker/` |
+| Execute | `execute-plan.md` | `execute-plan/` |
+| Review | `review-execution.md` | `review-execution/` |
+| Triage | `review-triage.md` | `review-triage/` |
+| Commit | `commit-task.md` | `commit-task/` |
+| Push | `push-task.md` | `push-task/` |
+| Merge | `merge-task.md` | `merge-task/` |
+| Publish | `publish-task.md` | `publish-task/` |
+| Close | `close-task.md` | `close-task/` |
 
 ### Shared
 

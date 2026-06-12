@@ -1,12 +1,8 @@
 # Push format
 
-Pushes are the handoff from `/push-task` after merging the base branch into a task branch and publishing it. **YAML only** — write one compact artifact after pushing or blocking before push.
+**YAML only** — one compact artifact after pushing or blocking before push.
 
-Store push handoffs in the worktree under `current-task/pushes/`:
-
-```
-current-task/pushes/<slug>.yaml
-```
+Default path: `current-task/pushes/<slug>.yaml` under the worktree scope root.
 
 ## Top-level fields
 
@@ -21,7 +17,15 @@ current-task/pushes/<slug>.yaml
 | `user_resolutions` | No | Explicit user inputs used to resolve conflicts |
 | `upstream` | No | Upstream tracking branch after push |
 | `blockers` | If blocked | Why no push was performed |
-| `next` | No | Suggested next workflow step |
+
+## `meta`
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `worktree` | Yes | Worktree slug |
+| `generated_by` | Yes | Always `push-task` |
+| `context` | No | Optional traceability path when the loading agent sets one |
+| `commit_handoff` | No | Commit handoff path used as push source |
 
 ## YAML example
 
@@ -29,7 +33,6 @@ current-task/pushes/<slug>.yaml
 meta:
   worktree: hero-section
   generated_by: push-task
-  context: current-task/current-task-context.yaml
   commit_handoff: current-task/commits/hero-section.yaml
 
 status: pushed
@@ -52,9 +55,6 @@ user_resolutions: []
 upstream: origin/feature/hero-section
 
 blockers: []
-
-next:
-  suggested: merge
 ```
 
 ## Rules

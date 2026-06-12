@@ -1,0 +1,48 @@
+meta:
+  worktree: commandless-orchestration
+  generated_by: spec-maker
+  task: nicki-contruction/02/02-stories.md. Baseline slices 00–01.
+
+title: Task-spawn orchestration without leaf commands
+type: refactor
+
+summary: >
+  Retire leaf slash commands from the operator path. Nicki invokes every pipeline step
+  via Task subagent_type only. Skills stay canonical for procedure; agents stay thin
+  subagent shells. Parent routes to Nicki via rule/name without requiring
+  .cursor/commands/nicki.md. Docs describe two-layer agent + skill model.
+
+requirements:
+  - id: nicki-task-spawn
+    description: >
+      Nicki agent doc and behavior invoke leaf steps and current-task-update via Task
+      subagent_type; no slash-command shorthand in canonical orchestration text.
+  - id: remove-leaf-commands
+    description: >
+      Delete or archive all leaf pipeline files under .cursor/commands/; optional
+      nicki command file may go if rule-only routing suffices.
+  - id: docs-two-layer
+    description: >
+      NICKI.md, README.md, PLAN.md — agent + skill per step; Nicki entry via Task or
+      nicki-default rule; remove slash-command-first examples.
+  - id: thin-agents
+    description: >
+      Leaf agent files remain identity/scope/safety + skill pointer; no slash-command
+      instructions; avoid duplicating skill checklists.
+  - id: skills-unchanged-role
+    description: >
+      Skills remain canonical workflow; operator may attach skills ad-hoc outside Nicki
+      without new commands for helper skills.
+  - id: parent-no-inline-pipeline
+    description: >
+      nicki-default rule unchanged intent — parent spawns Nicki, does not improvise full
+      pipeline when user did not opt into Nicki.
+
+acceptance_criteria:
+  - Nicki.md uses Task spawn language for every leaf and status-update invocation
+  - No leaf pipeline slash command files under .cursor/commands/
+  - NICKI.md architecture section documents agents + skills only (commands absent or deprecated)
+  - README quick start does not require slash commands for normal Nicki operation
+  - Gherkin scenarios in 02-stories.md pass by inspection of runtime docs and file tree
+
+open_questions: []

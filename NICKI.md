@@ -2,7 +2,7 @@
 
 **Nicki is a good dog.**
 
-Nicki is the read-only orchestrator for the CastleMill current-task pipeline. Nicki controls workflow order, not implementation. Nicki asks before each leaf-agent transition, invokes the correct subagent, passes prior inputs and outputs, and calls `/current-task-update` after every step — except close, which deletes the task context folder.
+Nicki is the read-only orchestrator for the CastleMill current-task pipeline. Nicki controls workflow order, not implementation. Nicki asks before each leaf-agent transition, invokes the correct subagent, passes prior inputs and outputs, and Task-spawns `current-task-update` after every step — except close, which deletes the task context folder.
 
 Use this document as a rebuild guide: what Nicki is, what it controls, how the pieces fit together, and the key decisions that shaped the design.
 
@@ -12,32 +12,32 @@ Use this document as a rebuild guide: what Nicki is, what it controls, how the p
 
 | Nicki does | Nicki does not |
 | ---------- | -------------- |
-| Read workflow docs, `current-task/current-task-context.yaml`, and task artifacts | Write files |
+| Read workflow docs, `global-status.json`, `current-task/status.json`, and task artifacts | Write files |
 | Invoke leaf subagents via the Task tool | Run shell commands |
 | Ask for confirmation before each transition | Search or edit application source |
 | Pass worktree path, context, and prior artifacts to leaf agents | Improvise workflow transitions |
-| Call `/current-task-update` automatically after each leaf step (except close) | Spawn nested subagents from leaf workers |
+| Task-spawn `current-task-update` automatically after each leaf step (except close) | Spawn nested subagents from leaf workers |
 | Track orchestration progress with todos | Commit, push, merge, or delete without explicit user confirmation |
 
-Nicki is defined in `.cursor/agents/nicki.md`. It is a top-level subagent with `readonly: true` and a tightly scoped tool matrix: `read`, `task`, `ask_question`, and `todo_write` only.
+Nicki = `.cursor/agents/nicki.md` subagent (`readonly: true`; `read`, `task`, `ask_question`, `todo_write`). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
 
 ---
 
 ## Architecture (three layers)
 
-Every workflow step follows the same pattern:
-
 | Layer | Path | Role |
 | ----- | ---- | ---- |
-| Subagent | `.cursor/agents/<name>.md` | Isolated execution; Cursor frontmatter: `name`, `description`, `model`, `readonly`, `is_background` |
-| Command | `.cursor/commands/<name>.md` | Slash command — launches the subagent, not inline parent work; frontmatter: `name`, `description` |
-| Skill | `.cursor/skills/<name>/` | Workflow instructions, `metadata.tools`, and format schemas |
+| Nicki | `.cursor/agents/nicki.md` | Pipeline, gates, transitions, status-update summaries |
+| Agent | `.cursor/agents/<leaf>.md` | Workflow binding — disk inputs, gates, handoffs; Nicki Task-spawns |
+| Skill | `.cursor/skills/<name>/` | Pure functionality — procedures and artifact schemas; no pipeline knowledge |
+
+See `.cursor/skills/README.md` for rules and workflow exceptions.
 
 **Frontmatter parsing:** Cursor uses a simplified YAML parser. Use single-line quoted `description: "..."` strings — do not use block scalars (`>-`, `>`, `|`) or the description may truncate to the first line only.
 
-**Leaf workers** have `task: false` — they never delegate to other agents. Nicki is the only orchestrator; it invokes leaf agents one at a time.
+**Leaf workers** never spawn subagents. Nicki is the only orchestrator; it invokes leaf agents one at a time. Each agent loads `current-task/*` per its `## Disk inputs` section, then follows the skill.
 
-**State writer** is a dedicated leaf agent: `/current-task-update` is the only writer for `current-task/current-task-context.yaml`. Nicki never writes that file directly.
+**State writer** is status-update (current-task-update subagent): sole writer for per-task `current-task/status.json`. **Registry writer** is start-task / close-task agents only for `global-status.json`. Nicki never writes either directly.
 
 ---
 
@@ -46,7 +46,8 @@ Every workflow step follows the same pattern:
 Nicki knows this step sequence:
 
 ```
-start → describe → spec → subtasks → execute → review → triage → [fix loop] → commit → push → merge → close
+start → describe → spec → subtasks → execute → review → triage → acceptance → commit → push → merge → publish → close
+                                      ↑ fix loop (readiness.fix_required → execute)
 ```
 
 With automatic context updates after each leaf step:
@@ -66,16 +67,20 @@ review-execution
 current-task-update
 review-triage
 current-task-update
-commit-task          ← user confirmation required
+acceptance             ← Nicki-only; readiness.ready_for_acceptance
+current-task-update
+commit-task            ← user confirmation required
 current-task-update
 push-task              ← user confirmation required
 current-task-update
 merge-task             ← user confirmation required
 current-task-update
+publish-task           ← user confirmation required; push target branch
+current-task-update
 close-task             ← "Time for the feedback woof! Want?"
 ```
 
-The `fix` step is not a separate agent. When review or triage surfaces blockers, Nicki asks whether to regenerate subtasks, execute remaining subtasks, rerun review with guidance, or start a follow-up task.
+`fix` not separate agent. Triage emits `readiness` in validation YAML. Nicki routes from disk — not review prose. `fix_required` → execute appended `## Fix` subtasks (`- [x]` preserved). `rerun_review` → review with guidance. `ready_for_acceptance` → acceptance checkpoint before commit. `fix_required` / `blocked` block `commit-task`.
 
 ```mermaid
 flowchart LR
@@ -92,39 +97,45 @@ flowchart LR
   K --> L[current-task-update]
   L --> M[review-triage]
   M --> N[current-task-update]
-  N --> O{ready?}
-  O -->|blockers| P[fix loop]
-  P --> G
-  O -->|ready| Q[commit-task]
+  N --> O{readiness}
+  O -->|fix_required| P[execute fix subtasks]
+  P --> I
+  O -->|rerun_review| K
+  O -->|ready_for_acceptance| Acp[acceptance]
+  Acp --> Q[commit-task]
+  O -->|blocked| Ask[ask user]
   Q --> R[current-task-update]
   R --> S[push-task]
   S --> T[current-task-update]
   T --> U[merge-task]
   U --> V[current-task-update]
-  V --> W[close-task]
-  W --> X[task-archive]
+  V --> W[publish-task]
+  W --> X[current-task-update]
+  X --> Y[close-task]
+  Y --> Z[task-archive]
 ```
 
 ---
 
 ## Leaf agents and artifacts
 
-Each leaf agent produces a YAML handoff. Artifacts live under `worktrees/<slug>/current-task/` during the active task.
+Each leaf agent produces YAML handoff under `projects/<project>/worktrees/<slug>/current-task/` (legacy `worktrees/<slug>/` OK).
 
-| Step | Command | Writes code? | Primary output |
-| ---- | ------- | ------------ | -------------- |
-| Setup | `/start-task` | No | `worktrees/<slug>/` |
-| State | `/current-task-update` | No (context YAML only) | `current-task/current-task-context.yaml` |
-| Describe | Nicki (no command) | No | `task.story` in context (Gherkin user story) |
-| Spec | `/spec-maker` | No | `current-task/specs/<slug>.yaml` |
-| Subtasks | `/subtask-maker` | No | `current-task/subtasks/<slug>.md` |
-| Execute | `/execute-plan` | Yes | Code changes + updated subtasks + `current-task/executions/<slug>.yaml` |
-| Review | `/review-execution` | No | `current-task/reviews/<slug>.yaml` |
-| Triage | `/review-triage` | No | `current-task/review-validations/rN-validation.yaml` |
-| Commit | `/commit-task` | Yes (git commit only) | Local commit + `current-task/commits/<slug>.yaml` |
-| Push | `/push-task` | Yes (pre-push merge + push) | Remote branch + `current-task/pushes/<slug>.yaml` |
-| Merge | `/merge-task` | Yes (merge into `main`) | Merge result + `current-task/merges/<slug>.yaml` |
-| Close | `/close-task` | Yes (archive + delete) | `task-archive/<slug>/summary.yaml`, then deletes `current-task/` |
+| Step | Subagent | Writes code? | Primary output |
+| ---- | -------- | ------------ | -------------- |
+| Setup | `start-task` | No | `projects/<project>/worktrees/<slug>/` |
+| State | `current-task-update` | No (status JSON only) | `current-task/status.json` |
+| Describe | Nicki only | No | `task.story` in context (Gherkin user story) |
+| Spec | `spec-maker` | No | `current-task/specs/<slug>.yaml` |
+| Subtasks | `subtask-maker` | No | `current-task/subtasks/<slug>.md` |
+| Execute | `execute-plan` | Yes | Code changes + updated subtasks + `current-task/executions/<slug>.yaml` |
+| Review | `review-execution` | No | `current-task/reviews/<slug>.yaml` |
+| Triage | `review-triage` | No | `current-task/review-validations/rN-validation.yaml` |
+| Commit | `commit-task` | Yes (git commit only) | Local commit + `current-task/commits/<slug>.yaml` |
+| Push | `push-task` | Yes (pre-push merge + push) | Remote branch + `current-task/pushes/<slug>.yaml` |
+| Merge | `merge-task` | Yes (merge into `main`) | `current-task/merges/<slug>.yaml` in task worktree |
+| Publish | `publish-task` | Yes (push target branch) | `current-task/publishes/<slug>.yaml` |
+| Close | `close-task` | Archive + delete | `task-archive/<slug>/`; needs merge + publish or override |
 
 ### Artifact handoff chain
 
@@ -132,7 +143,7 @@ Each leaf agent produces a YAML handoff. Artifacts live under `worktrees/<slug>/
 spec ──→ subtasks ──→ execution ──→ review ──→ validation
                                                    ├── next-steps/*.yaml  (follow-up specs for subtask-maker)
                                                    └── review-inputs/rN-review.yaml  (guidance for review rerun)
-commit ──→ push ──→ merge ──→ archive
+commit ──→ push ──→ merge ──→ publish ──→ archive
 ```
 
 - **Spec** defines *what* to build — requirements, scope, acceptance. No file paths.
@@ -141,8 +152,8 @@ commit ──→ push ──→ merge ──→ archive
 - **Execution** is an evidence map for review, not an approval.
 - **Review** has exactly `approved` and `content`.
 - **Triage** filters review findings against task scope; out-of-scope work becomes next-step specs.
-- **Commit / push / merge** are separate, explicit git steps with their own handoff YAML.
-- **Archive** is a compact root-level summary; the full `current-task/` tree is deleted after close.
+- **Commit / push / merge / publish** separate git steps; handoffs in task worktree; status pointers only in JSON.
+- **Archive** — compact `summary.yaml` + caveman `report.md` at repo root; whole worktree removed after close.
 
 Closed tasks are stored at:
 
@@ -152,11 +163,13 @@ task-archive/<slug>/summary.yaml
 
 ---
 
-## State model: `current-task-context.yaml`
+## State model: JSON status (two layers)
 
-The canonical task-local state file lives inside the worktree at `current-task/current-task-context.yaml`.
+**Workspace registry:** `global-status.json` at workspace root — active tasks, project, worktree path, route to per-task status. **Only start-task and close-task write this file.**
 
-**Only `/current-task-update` writes this file.** Nicki and all leaf agents may read it; leaf agents must not edit it.
+**Per-task status:** `current-task/status.json` inside the worktree — step pointers, artifact paths, open questions, history. **Only current-task-update subagent (status-update) writes this file.**
+
+Nicki and leaf agents read both; leaf agents must not edit either. Legacy `current-task/current-task-context.yaml` is deprecated.
 
 ### What it stores
 
@@ -174,16 +187,16 @@ There is **no broad task-level `state` enum**. Step pointers, `open_questions`, 
 
 ### Step values
 
-`start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `triage`, `fix`, `commit`, `push`, `merge`, `close`, `done`
+`start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `triage`, `fix`, `acceptance`, `commit`, `push`, `merge`, `publish`, `close`, `done`
 
-Schema: `.cursor/skills/current-task-update/current-task-context-format.md`
+Schemas: `.cursor/skills/current-task-update/status-format.md`, `.cursor/skills/current-task-update/global-status-format.md`, `.cursor/skills/hook-contract/SKILL.md`
 
 ### Nicki summary → context update
 
-After each leaf step, Nicki calls `/current-task-update` with a compact summary (no separate user confirmation needed):
+After each leaf step, Nicki Task-spawns `current-task-update` with a compact summary (no separate user confirmation needed):
 
 ```yaml
-worktree: worktrees/hero-section
+worktree: projects/castlemill-landing/worktrees/hero-section
 completed_step: spec
 completed_status: complete
 artifact: current-task/specs/hero-section.yaml
@@ -192,13 +205,13 @@ open_questions: []
 summary: Spec captured requirements and acceptance criteria.
 ```
 
-Exception: **do not call `/current-task-update` after `/close-task`** — close deletes `current-task/`.
+Exception: **do not Task-spawn `current-task-update` after close-task** — close deletes `current-task/`.
 
 ---
 
 ## Transition discipline
 
-Before invoking any leaf agent except `/current-task-update`, Nicki shows a compact state view and asks for confirmation:
+Before invoking any leaf agent except `current-task-update`, Nicki shows a compact state view and asks for confirmation:
 
 ```markdown
 Current task: `hero-section` — Hero section redesign
@@ -214,12 +227,13 @@ If the user declines, Nicki stops.
 | Agent | Must name this side effect |
 | ----- | -------------------------- |
 | `commit-task` | Creating a local git commit |
-| `push-task` | Merging `main` into the task branch, resolving conflicts only with user input, and pushing to remote |
-| `merge-task` | Merging the pushed task branch into `main` |
+| `push-task` | Merge `main` into task branch; push task branch |
+| `merge-task` | Merge task branch into `main` |
+| `publish-task` | Push merged target branch (`main`) to remote |
 
 ### Close requires the feedback prompt
 
-Before `/close-task`, Nicki asks exactly:
+Before close-task, Nicki asks exactly:
 
 ```text
 Time for the feedback woof! Want?
@@ -227,8 +241,8 @@ Time for the feedback woof! Want?
 
 And shows:
 
-- Archive output: `task-archive/<slug>/summary.yaml`
-- Delete scope: `<worktree>/current-task/`
+- Archive: `task-archive/<slug>/summary.yaml` + `report.md`
+- Delete scope: whole `<worktree>/` after archive
 
 ---
 
@@ -238,19 +252,19 @@ These decisions are load-bearing. Changing them requires updating Nicki, leaf ag
 
 ### 1. Nicki is read-only; state has a dedicated writer
 
-Nicki orchestrates but never writes files. A separate `/current-task-update` agent is the sole writer for `current-task-context.yaml`. This prevents the orchestrator from accidentally corrupting workflow state while improvising.
+Nicki orchestrates but never writes files. current-task-update subagent writes per-task `status.json`; start-task / close-task own `global-status.json`. This prevents the orchestrator from corrupting workflow state while improvising.
 
 ### 2. Leaf agents are atomic; no nested delegation
 
 Every workflow step agent has `task: false`. Nicki is the only agent that invokes other agents. This keeps scope, permissions, and accountability clear.
 
-### 3. Commands launch subagents, not inline parent work
+### 3. Nicki Task-spawns leaf subagents
 
-Each `/command` delegates to an isolated subagent context. The parent agent (including Nicki when invoking via Task) passes the prompt and does not execute the workflow inline.
+Nicki invokes leaf workers via Task `subagent_type` only. Parent agent does not run pipeline steps inline.
 
 ### 4. YAML handoffs between steps, not chat memory
 
-Each step produces a compact YAML artifact. Downstream agents consume prior artifacts plus `current-task-context.yaml`. This makes the pipeline reproducible and inspectable outside the chat transcript.
+Each step produces compact handoff artifacts (YAML/Markdown). Downstream agents consume prior artifacts plus `global-status.json` / `status.json` pointers. Disk-first, not chat memory.
 
 ### 5. No broad state enum — step pointers + open questions
 
@@ -258,29 +272,28 @@ Instead of a `state: in_progress | blocked | done` field, the context file uses 
 
 ### 6. Worktree path is the hard scope boundary
 
-All task work happens inside `worktrees/<slug>/`. `/execute-plan` treats the worktree as a hard boundary — no edits outside it. Nicki validates that the requested worktree matches `scope.worktree_path` in context.
+Task work inside `projects/<project>/worktrees/<slug>/` (or legacy path). execute-plan hard boundary. Nicki validates `scope.worktree_path`.
 
-### 7. Git workflow: never touch `main` until merge
+### 7. Git tail: commit → push → merge → publish
 
-Task work runs on a feature branch in an isolated worktree. The sequence is:
+1. **Commit** — task branch (commit-task)
+2. **Push** — merge `main` into task branch, push task branch (push-task)
+3. **Merge** — task branch into `main` locally (merge-task); first touch of `main`
+4. **Publish** — user confirm; push `main` to remote (publish-task)
 
-1. **Commit** — local commit on the task branch (`/commit-task`)
-2. **Push** — merge `main` into the task branch, resolve conflicts with user input, push (`/push-task`)
-3. **Merge** — merge the pushed task branch into `main` (`/merge-task`); this is the **first step that touches `main`**
-
-Merge is **mandatory**, not optional. Commit and push are intentionally separate so publishing remains an explicit step after local review.
+Merge mandatory. Publish separate explicit step after merge. Close gates on merge + publish handoffs or archive override.
 
 ### 8. Shared conflict-resolution protocol
 
-`/push-task` and `/merge-task` both reference `.cursor/skills/conflict-resolution/SKILL.md`. Agents summarize conflicts but must ask the user for every resolution. No inferring, no strategy flags unless the user explicitly asks.
+push-task and merge-task both reference `.cursor/skills/conflict-resolution/SKILL.md`. Agents summarize conflicts but must ask the user for every resolution. No inferring, no strategy flags unless the user explicitly asks.
 
 ### 9. Automatic context update after every step — except close
 
-`/current-task-update` runs automatically after each leaf step without asking. The one exception is `/close-task`, which deletes `current-task/` and therefore cannot be followed by a context write.
+current-task-update subagent runs automatically after each leaf step without asking. Exception: close-task removes the worktree — no context write after.
 
-### 10. Close archives compactly, then deletes task context
+### 10. Close: tail gate, archive, teardown
 
-`/close-task` writes `task-archive/<slug>/summary.yaml` at the repository root with compact context, process, decisions, open questions, and suggestions for smoother future tasks. It does **not** copy the full artifact tree. Then it deletes `<worktree>/current-task/`.
+close-task checks merge + publish handoffs (or records override), writes archive first, unregisters `global-status.json`, deletes whole worktree last.
 
 ### 11. Spec/subtask/execution separation
 
@@ -289,9 +302,21 @@ Merge is **mandatory**, not optional. Commit and push are intentionally separate
 - **Execute-plan** follows unchecked subtasks in order, marks completed items `- [x]`, and asks on ambiguity.
 - **Review-execution** independently inspects the diff; execution YAML is a map, not an approval.
 
-### 12. Review triage filters scope
+### 12. Review triage filters scope + readiness
 
-Review findings that are valid but out-of-scope become `current-task/next-steps/*.yaml` specs (consumable by subtask-maker). Invalid reviews produce `current-task/review-inputs/rN-review.yaml` guidance for a rerun.
+Out-of-scope findings → `next-steps/*.yaml`. Invalid reviews → `review-inputs/`. Every validation includes `readiness` block — Nicki routes acceptance / fix / review rerun from enum, not chat.
+
+### 13. Acceptance before commit
+
+`ready_for_acceptance` → Nicki-only checkpoint with disk summary. No `commit-task` until user accepts. Reject → blockers + fix or describe route.
+
+### 14. Spec open_questions gate
+
+Non-empty spec `open_questions` blocks `subtask-maker`; mirrored in status until cleared.
+
+### 15. Partial execution review
+
+All subtasks done or no `review_scope` → full review. `review_scope.mode: partial` → user confirm scoped review; no commit without full readiness.
 
 ---
 
@@ -309,24 +334,32 @@ Review findings that are valid but out-of-scope become `current-task/next-steps/
 | File | Role |
 | ---- | ---- |
 | `.cursor/agents/current-task-update.md` | State writer subagent |
-| `.cursor/commands/current-task-update.md` | `/current-task-update` command |
 | `.cursor/skills/current-task-update/SKILL.md` | State writer workflow |
-| `.cursor/skills/current-task-update/current-task-context-format.md` | Context schema |
+| `.cursor/skills/current-task-update/status-format.md` | Per-task status schema |
+| `.cursor/skills/current-task-update/global-status-format.md` | Workspace registry schema |
 
-### Leaf agents (agent + command + skill + format)
+### Leaf agents (agent + skill + format)
 
-| Step | Agent | Command | Skill | Format schema |
-| ---- | ----- | ------- | ----- | ------------- |
-| Start | `start-task.md` | `start-task.md` | `start-task/SKILL.md` | — |
-| Spec | `spec-maker.md` | `spec-maker.md` | `spec-maker/SKILL.md` | `spec-format.md` |
-| Subtasks | `subtask-maker.md` | `subtask-maker.md` | `subtask-maker/SKILL.md` | `subtask-format.md` |
-| Execute | `execute-plan.md` | `execute-plan.md` | `execute-plan/SKILL.md` | `execution-format.md` |
-| Review | `review-execution.md` | `review-execution.md` | `review-execution/SKILL.md` | `review-format.md` |
-| Triage | `review-triage.md` | `review-triage.md` | `review-triage/SKILL.md` | `validation-format.md`, `review-guidance-format.md` |
-| Commit | `commit-task.md` | `commit-task.md` | `commit-task/SKILL.md` | `commit-format.md` |
-| Push | `push-task.md` | `push-task.md` | `push-task/SKILL.md` | `push-format.md` |
-| Merge | `merge-task.md` | `merge-task.md` | `merge-task/SKILL.md` | `merge-format.md` |
-| Close | `close-task.md` | `close-task.md` | `close-task/SKILL.md` | `archive-format.md` |
+| Step | Agent | Skill | Format schema |
+| ---- | ----- | ----- | ------------- |
+| Start | `start-task.md` | `start-task/SKILL.md` | — |
+| Spec | `spec-maker.md` | `spec-maker/SKILL.md` | `spec-format.md` |
+| Subtasks | `subtask-maker.md` | `subtask-maker/SKILL.md` | `subtask-format.md` |
+| Execute | `execute-plan.md` | `execute-plan/SKILL.md` | `execution-format.md` |
+| Review | `review-execution.md` | `review-execution/SKILL.md` | `review-format.md` |
+| Triage | `review-triage.md` | `review-triage/SKILL.md` | `validation-format.md`, `review-guidance-format.md` |
+| Commit | `commit-task.md` | `commit-task/SKILL.md` | `commit-format.md` |
+| Push | `push-task.md` | `push-task/SKILL.md` | `push-format.md` |
+| Merge | `merge-task.md` | `merge-task/SKILL.md` | `merge-format.md` |
+| Publish | `publish-task.md` | `publish-task/SKILL.md` | `publish-format.md` |
+| Close | `close-task.md` | `close-task/SKILL.md` | `task-archive/archive-format.md` |
+
+### Close helpers (no subagent)
+
+| Skill | Role |
+| ----- | ---- |
+| `task-archive/` | `summary.yaml` + `report.md` + suggestions |
+| `close-scope/` | Paths, unregister, worktree delete |
 
 ### Shared
 
@@ -334,95 +367,32 @@ Review findings that are valid but out-of-scope become `current-task/next-steps/
 | ---- | ---- |
 | `.cursor/skills/conflict-resolution/SKILL.md` | Shared merge conflict protocol for push and merge |
 | `.cursor/skills/next-step-spec/SKILL.md` | Follow-up spec format (same schema as spec) |
-| `.cursor/skills/start-task/scripts/start-worktrees.sh` | Worktree creation script |
+| `.cursor/skills/start-task/scripts/start-worktrees.sh` | Worktree creation |
+| `.cursor/skills/close-scope/scripts/unregister-global-status.sh` | Registry unregister (close-task only) |
 | `CONTRIBUTING.md` | Full contributor workflow documentation |
 
 ---
 
-## Tool permission pattern
+## Tool permissions
 
-Cursor subagent frontmatter supports only `name`, `description`, `model`, `readonly`, and `is_background` ([Subagents docs](https://cursor.com/docs/subagents)). Per-tool restrictions live in each skill's `metadata.tools` block (`.cursor/skills/<agent>/SKILL.md`) and in the agent prompt body. Agents must not use tools marked `false`.
-
-| Agent | read | write | delete | shell | grep/glob/search | task |
-| ----- | ---- | ----- | ------ | ----- | ---------------- | ---- |
-| Nicki | yes | no | no | no | no | yes |
-| current-task-update | yes | yes (context only) | no | no | no | no |
-| start-task | yes | no | no | yes | no | no |
-| spec-maker | yes | yes | no | no | yes | no |
-| subtask-maker | yes | yes | no | no | yes | no |
-| execute-plan | yes | yes | yes | yes | yes | no |
-| review-execution | yes | yes (review YAML) | no | yes | yes | no |
-| review-triage | yes | yes | no | no | yes | no |
-| commit-task | yes | yes | no | yes | yes | no |
-| push-task | yes | yes | no | yes | yes | no |
-| merge-task | yes | yes | no | yes | yes | no |
-| close-task | yes | yes (archive only) | yes (current-task/) | yes (delete only) | glob | no |
-
-Per-tool `true`/`false` is prompt-enforced today; Cursor native support is limited to `readonly`.
+Enforced by `.cursor/hooks/enforce-agent-tools.sh` from `.cursor/hooks/agent-permissions.json`. See `.cursor/skills/hook-contract/SKILL.md`.
 
 ---
 
-## Quick invocation example
+## Quick invocation
 
-```bash
-# 1. Create worktree (slug or short label is enough)
-/start-task hero-section
-
-# 2. Nicki initializes context, asks for job description if needed,
-#    drafts a Gherkin user story, then continues through the pipeline
-/spec-maker worktrees/hero-section
-/subtask-maker worktrees/hero-section @current-task/specs/hero-section.yaml
-/execute-plan worktrees/hero-section @current-task/subtasks/hero-section.md
-/review-execution worktrees/hero-section
-/review-triage worktrees/hero-section
-/commit-task worktrees/hero-section
-/push-task worktrees/hero-section @current-task/commits/hero-section.yaml
-/merge-task worktrees/hero-section target: main
-
-# 3. Nicki asks "Time for the feedback woof! Want?" then:
-/close-task worktrees/hero-section
+```text
+nicki hero-section
+nicki continue
 ```
 
-When orchestrated by Nicki, you invoke Nicki once and confirm each transition. The slash commands above remain usable directly without Nicki.
+Nicki Task-spawns `start-task`, then `current-task-update`, describe, and each leaf step after confirmation. Ad-hoc: attach a skill path; do not run the pipeline inline in the parent agent.
 
 ---
 
-## Cursor mode picker (future)
+## Compaction + mode picker
 
-Cursor 2.1+ removed user-defined custom modes from the chat mode dropdown (Plan, Agent, Build, etc.). Today Nicki is only available as `.cursor/agents/nicki.md` — a subagent the parent invokes via Task, not a selectable primary mode.
-
-**Add when Cursor supports repo-defined custom modes again** (or Copilot-style `.agent.md` / `user-invocable` agents in the mode picker):
-
-| Goal | Notes |
-| ---- | ----- |
-| Nicki in the mode dropdown | Same persona as `.cursor/agents/nicki.md`; user picks Nicki like Plan or Agent |
-| Read-only orchestrator tools | `read`, `task`, `ask_question`, `todo_write` only — no write, shell, or source search |
-| Not a slash command | Mode selection starts a Nicki-governed conversation; leaf steps still use `/start-task`, `/spec-maker`, etc. |
-| Optional handoffs | Copilot-style buttons after each step (e.g. “Run spec-maker”, “Update context”) if the platform supports `handoffs` |
-
-Until then, run Nicki by invoking the subagent or asking the parent agent to follow `.cursor/agents/nicki.md`.
-
----
-
-## Surviving context compaction (Cursor 3.7+)
-
-Cursor **3.7.27** still compacts parent chats automatically when the context window fills. Summarization is **lossy**: early turns, exact tool output, unpersisted yes/no approvals, and in-flight describe drafts may vanish from what the model sees. Raw bubbles remain on disk in Cursor storage; orchestration must not depend on them.
-
-| Survives compaction | Does not survive (unless persisted) |
-| ------------------- | ----------------------------------- |
-| `current-task/current-task-context.yaml` | Chat memory of `current_step` / `next_step` |
-| Step artifacts (`specs/`, `subtasks/`, executions, etc.) | Unapproved describe drafts |
-| `.cursor/agents/nicki.md` on disk | Parent chat following nicki rules from memory |
-| Rules injected every turn (if configured) | Pending git-transition confirmations |
-
-**Patterns:**
-
-1. **Disk-first** — `current-task-context.yaml` and artifacts are the source of truth (design decision #4).
-2. **Reload on activation** — Nicki re-reads context YAML before every transition; see **Session bootstrap** in `.cursor/agents/nicki.md`.
-3. **Re-invoke Nicki as a subagent** — each Task spawn reloads the full `.cursor/agents/nicki.md` prompt; prefer this over long inline parent orchestration.
-4. **Re-confirm transitions** — treat chat approvals as lost unless recorded in `history` or `open_questions` on disk.
-
-Custom modes: Cursor 3.7 still has internal `modes4` storage and **Export Custom Modes**, but no **Add custom mode** UI — mode-picker entry for Nicki remains future work (see above).
+Cursor compacts chats — disk wins: `global-status.json`, `status.json`, artifacts, `readiness` in validation YAML. Re-read on every Nicki activation; re-confirm git unless `history` records consent. Nicki = subagent via Task today; custom mode picker future when Cursor supports repo-defined modes.
 
 ---
 
@@ -430,5 +400,5 @@ Custom modes: Cursor 3.7 still has internal `modes4` storage and **Export Custom
 
 - Full contributor workflow: [`CONTRIBUTING.md`](CONTRIBUTING.md) — agent workflow pipeline section
 - Nicki agent definition: [`.cursor/agents/nicki.md`](.cursor/agents/nicki.md)
-- Context schema: [`.cursor/skills/current-task-update/current-task-context-format.md`](.cursor/skills/current-task-update/current-task-context-format.md)
-- Archive schema: [`.cursor/skills/close-task/archive-format.md`](.cursor/skills/close-task/archive-format.md)
+- Status schemas: [`.cursor/skills/current-task-update/status-format.md`](.cursor/skills/current-task-update/status-format.md), [`.cursor/skills/current-task-update/global-status-format.md`](.cursor/skills/current-task-update/global-status-format.md)
+- Archive format: [`.cursor/skills/task-archive/archive-format.md`](.cursor/skills/task-archive/archive-format.md)

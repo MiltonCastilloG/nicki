@@ -1,0 +1,84 @@
+meta:
+  worktree: git-tail-workspace
+  generated_by: spec-maker
+  task: 01-1 track — nicki-contruction/01/01-1-stories.md. Slice 00 JSON status baseline.
+
+title: Git tail, workspace layout, and docs
+type: feature
+
+summary: >
+  Git tail after merge — publish-task leaf (user confirm push), merge/publish handoffs in
+  task worktree, status pointers. Close validates tail or archive override; archive then
+  worktree delete + registry unregister. Paths → projects/<project>/worktrees/<slug>.
+  Docs = subagent entry, layout match, CONTRIBUTING optional.
+
+requirements:
+  - id: publish-pipeline
+    description: >
+      publish-task leaf after merge-task, before close-task. User confirm push. Writes
+      publish handoff under current-task; status pointer set.
+  - id: merge-handoff
+    description: >
+      merge-task writes merge handoff in task worktree current-task; status pointer on
+      complete.
+  - id: close-tail
+    description: >
+      close validates merge + publish handoffs or explicit override in archive. Archive
+      summary + caveman report first; whole worktree delete; registry unregister last.
+  - id: project-worktrees
+    description: >
+      Layout projects/<project>/worktrees/<slug>. start-task registers worktree_path +
+      status_path; no single host-repo hardcode.
+  - id: handoff-meta-scopes
+    description: >
+      Docs + handoff meta distinguish workspace, project, task worktree, target branch roots.
+  - id: operator-docs
+    description: >
+      README/NICKI/PLAN — project-local examples, .cursor/ layout match, Nicki = subagent
+      not /nicki unless command exists; future custom mode noted not promised.
+  - id: optional-contributing
+    description: >
+      spec-maker + agents OK without CONTRIBUTING.md; inline assumptions when conventions
+      needed.
+  - id: nicki-tail-routing
+    description: >
+      Nicki routes merge → publish → close from status pointers; disk over chat.
+  - id: status-pointer-chain
+    description: >
+      status artifacts include merge + publish pointers; YAML/MD handoff bodies unchanged.
+  - id: caveman-md
+    description: >
+      New/changed MD handoffs this slice = caveman full; schema keys stay normal.
+
+scope:
+  in:
+    - publish-task agent/skill/command, merge/close alignment, start paths, registry fields
+    - README/NICKI/PLAN, optional CONTRIBUTING, caveman MD this slice
+  out:
+    - Slice 00 redo, 01-0 readiness/fix/acceptance, /nicki command, host app, 01-0 artifacts
+
+constraints:
+  - no-new-deps
+  - global-registry-start-close-only
+  - nicki-read-only-orchestrator
+  - leaf-agents-atomic
+  - publish-after-merge-before-close
+  - caveman-md-default-full
+  - baseline-slice-00-done
+
+acceptance:
+  - Merge + publish handoffs in task worktree; status pointers set
+  - Close blocks or overrides without tail handoffs; archive before delete
+  - start-task uses project-local paths; docs + spec-maker OK sans CONTRIBUTING
+  - Nicki tail sequence from status; new MD = caveman full
+
+assumptions:
+  - Slice 00 baseline; push-task precedes merge; publish handoff parallels merges/commits
+  - worktree_layout projects/<project>/worktrees/<slug>
+  - publish_position after merge before close; contributing optional
+
+resolved_defaults:
+  nicki_entry: subagent; slash only if command file exists
+  close_override: archive records skip when tail handoffs missing
+
+open_questions: []

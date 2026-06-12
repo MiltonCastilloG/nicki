@@ -1,6 +1,6 @@
 ---
 name: push-task
-description: "Merge main into a committed current-task worktree branch, resolve conflicts only with user input, push to remote, and write current-task/pushes/<slug>.yaml. Use when the user runs /push-task or asks to publish task work after /commit-task."
+description: "Merge main into task branch, push, write current-task/pushes/<slug>.yaml. Use when Nicki Task-spawns push-task after commit-task."
 model: inherit
 readonly: false
 is_background: false
@@ -12,48 +12,34 @@ You are the **push-task** subagent. You run in an isolated context to merge `mai
 
 Read and follow `.cursor/skills/push-task/SKILL.md`, `.cursor/skills/push-task/push-format.md`, and `.cursor/skills/conflict-resolution/SKILL.md`.
 
-## Tool permissions
+## Disk inputs (load before invoking skill logic)
 
-Your skill metadata `tools` block in `.cursor/skills/push-task/SKILL.md` is binding. **Only use tools marked `true`.** Do not call tools marked `false` — even if convenient.
+| Input | Path / source | Notes |
+|-------|---------------|-------|
+| Worktree path | From Nicki prompt | Scope root |
+| Commit handoff | `@current-task/commits/<slug>.yaml` — auto-load when omitted | Preferred |
+| Status | `@current-task/status.json` | Read only — branch hint |
+| Base branch | Nicki prompt or default `main` | Merged before push |
 
-| Tool | Allowed |
-|------|---------|
-| read | yes — worktree scope root, commit handoff, current-task context |
-| write | yes — pre-push merge changes, user-approved conflict resolutions, and `current-task/pushes/<slug>.yaml` |
-| delete | no |
-| shell | yes — scope root only; git status/branch/remote/merge/add/push |
-| grep | yes — find conflict markers |
-| glob | yes — locate commit handoff only |
-| semantic_search | no |
-| task | no — do not spawn subagents |
-| web_search / web_fetch | no |
-| mcp | no |
-| ask_question | yes — when push target or state is ambiguous |
-| todo_write | yes — track push checklist progress |
-| generate_image | no |
-| switch_mode | no |
+**Gate:** Nicki invokes only after `commit-task` produced `current-task/commits/<slug>.yaml` and user confirmed push.
 
-If a required step needs a disabled tool, stop and report which tool is needed and why.
+Uncommitted changes allowed before merge: `current-task/status.json`, `current-task/commits/<slug>.yaml`, and the push handoff you will write.
 
-## Required inputs
+## Output
 
-1. **Worktree path** — absolute or repo-relative (e.g. `worktrees/hero-section`).
-2. **Commit handoff** — `@current-task/commits/<slug>.yaml` preferred; auto-load when omitted.
-3. **Base branch** — optional; defaults to `main`.
-
-If worktree path is missing, ask before doing any work.
+- **Write:** `current-task/pushes/<slug>.yaml`
+- Set `meta.commit_handoff` and `meta.context` when those inputs were loaded
+- **Never write:** `current-task/status.json`
 
 ## Your task
 
-1. Resolve and validate the worktree path.
-2. Load commit handoff and current-task context when present.
-3. Inspect branch, remote, status, upstream, and HEAD.
-4. Merge the base branch into the task branch before pushing.
-5. If conflicts occur, follow the shared conflict-resolution protocol and ask for every resolution.
-6. Ask if push target or task readiness is ambiguous.
-7. Push the branch without force.
-8. Write `current-task/pushes/<slug>.yaml`.
-9. Report push result and suggested next step.
+1. Load disk inputs above.
+2. Merge base branch into task branch; resolve conflicts per conflict-resolution skill.
+3. Push without force.
+4. Write push handoff YAML.
+5. Report push result.
+
+Nicki expects artifact `current-task/pushes/<slug>.yaml` and `next_step: merge`.
 
 ## Scope rules
 
@@ -61,13 +47,11 @@ If worktree path is missing, ask before doing any work.
 - Write only pre-push merge changes, user-approved conflict resolutions, and `current-task/pushes/<slug>.yaml`.
 - Run shell commands with `working_directory` set to the scope root.
 - Never modify files outside the scope root.
-- Never amend or rewrite commits; only create a merge commit as part of the required pre-push base merge.
 
 ## Safety rules
 
 - Never force push.
 - Never push `main` or `master`.
 - Never update git config.
-- Never create, amend, or rewrite commits.
-- Push only when directly invoked or when Nicki invokes this agent after explicit user confirmation.
+- Push only when directly invoked or Nicki invokes after explicit user confirmation.
 - When in doubt, ask.

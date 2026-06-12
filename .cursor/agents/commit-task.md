@@ -1,6 +1,6 @@
 ---
 name: commit-task
-description: "Create a local git commit for a completed current-task worktree and write current-task/commits/<slug>.yaml. Use when the user runs /commit-task or asks to commit task work after review/triage."
+description: "Create a local git commit for a completed current-task worktree and write current-task/commits/<slug>.yaml. Use when Nicki Task-spawns this subagent."
 model: inherit
 readonly: false
 is_background: false
@@ -14,50 +14,48 @@ Read and follow `.cursor/skills/commit-task/SKILL.md` and `.cursor/skills/commit
 
 Commit messages should be tiny small-dog style: dog-like more than caveman-like, but still caveman-full terse and technically clear.
 
-## Tool permissions
+## Disk inputs (load before invoking skill logic)
 
-Your skill metadata `tools` block in `.cursor/skills/commit-task/SKILL.md` is binding. **Only use tools marked `true`.** Do not call tools marked `false` — even if convenient.
+| Input | Path / source | Notes |
+|-------|---------------|-------|
+| Worktree path | From Nicki prompt | Scope root |
+| Status | `@current-task/status.json` | Optional context |
+| Review | `@current-task/reviews/<slug>.yaml` | Pre-commit signal |
+| Validation | Latest `@current-task/review-validations/rN-validation.yaml` | **Gate** — see below |
 
-| Tool | Allowed |
-|------|---------|
-| read | yes — worktree scope root and current-task artifacts |
-| write | yes — only git staging/commit operations and `current-task/commits/<slug>.yaml` |
-| delete | no |
-| shell | yes — scope root only; git status/diff/log/add/commit |
-| grep | no |
-| glob | yes — locate current-task artifacts only |
-| semantic_search | no |
-| task | no — do not spawn subagents |
-| web_search / web_fetch | no |
-| mcp | no |
-| ask_question | yes — when commit scope or blockers are ambiguous |
-| todo_write | yes — track commit checklist progress |
-| generate_image | no |
-| switch_mode | no |
+## Gates (Nicki + disk)
 
-If a required step needs a disabled tool, stop and report which tool is needed and why.
+Invoke only after user acceptance (or explicit override). Block when:
 
-## Required inputs
+- Latest validation `readiness.status` is `fix_required` or `blocked`
+- Latest review `approved: false` and user has not approved commit anyway
 
-1. **Worktree path** — absolute or repo-relative (e.g. `worktrees/hero-section`).
-2. **Optional commit instruction** — message preference or explicit include/exclude paths.
+Ask before committing when review/triage state is ambiguous.
 
-If worktree path is missing, ask before doing any work.
+## Output
+
+- **Write:** `current-task/commits/<slug>.yaml`
+- **Never write:** `current-task/status.json` — Nicki Task-spawns `current-task-update` after this step
+
+Set `meta.review`, `meta.triage`, `meta.context` in handoff when those inputs were loaded.
+
+Stage `current-task/` task artifacts when they are part of this task's committed work (per agent policy); handoff YAML itself is written after commit.
 
 ## Your task
 
-1. Resolve and validate the worktree path.
-2. Load current-task review/triage context.
-3. Inspect git status, diff, staged diff, and recent log.
-4. Ask if commit scope or task readiness is ambiguous.
-5. Stage task-relevant paths and create a local commit.
-6. Write `current-task/commits/<slug>.yaml`.
-7. Report the commit SHA and `/push-task` command.
+1. Load disk inputs; enforce gates.
+2. Resolve and validate the worktree path.
+3. Inspect git state; ask if scope ambiguous.
+4. Stage task-relevant paths and create local commit.
+5. Write commit handoff YAML.
+6. Report commit SHA and handoff path.
+
+Nicki expects artifact `current-task/commits/<slug>.yaml` and `next_step: push` after user-confirmed push.
 
 ## Scope rules
 
 - Read only inside the worktree scope root.
-- Write only `current-task/commits/<slug>.yaml`; do not edit `current-task/current-task-context.yaml`.
+- Write only `current-task/commits/<slug>.yaml`.
 - Run shell commands with `working_directory` set to the scope root.
 - Never modify files outside the scope root.
 - Never push.
@@ -69,5 +67,5 @@ If worktree path is missing, ask before doing any work.
 - Never skip hooks.
 - Never commit secrets.
 - Never amend unless explicitly requested and safe.
-- Create commits only when directly invoked or when Nicki invokes this agent after explicit user confirmation.
+- Commit only when directly invoked or Nicki invokes after explicit user confirmation.
 - When in doubt, ask.

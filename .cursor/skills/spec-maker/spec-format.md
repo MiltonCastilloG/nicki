@@ -1,27 +1,10 @@
 # Spec format
 
-Specs drive `/subtask-maker`. **YAML only** — both `/spec-maker` output and `/subtask-maker` input use this schema.
+**YAML only** — spec-maker output and subtask-maker input share this schema.
 
-Store specs in the worktree under `current-task/specs/` (e.g. `current-task/specs/hero-section.yaml`) or paste inline YAML in the command.
+Default path: `current-task/specs/<slug>.yaml` under the worktree scope root.
 
-All agent YAML artifacts for the active task live under `current-task/`:
-
-```
-current-task/
-  current-task-context.yaml # workflow context from /current-task-update
-  specs/              # spec-maker output
-  subtasks/           # subtask-maker output
-  executions/         # execute-plan handoff output
-  reviews/            # review-execution output
-  review-validations/ # review-triage output
-  review-inputs/      # review guidance input for review-execution
-  next-steps/         # follow-up specs consumable by subtask-maker
-  merges/             # merge-task output
-  commits/            # commit-task output
-  pushes/             # push-task output
-```
-
-Specs define **what** to build (requirements, scope, acceptance). They do **not** name implementation subtasks or file paths — that is subtask-maker's job.
+Specs define **what** to build (requirements, scope, acceptance). They do **not** name implementation subtasks or file paths.
 
 ## Top-level fields
 
@@ -33,23 +16,23 @@ Specs define **what** to build (requirements, scope, acceptance). They do **not*
 | `summary` | Yes | One-paragraph description of the goal |
 | `requirements` | Yes | Ordered list of what must be delivered |
 | `scope` | No | `in` and `out` lists bounding the work |
-| `constraints` | No | Rules for downstream agents (e.g. `no-commit`, `no-new-deps`) |
+| `constraints` | No | Rules for downstream work (e.g. `no-commit`, `no-new-deps`) |
 | `acceptance` | Yes | Testable criteria for done |
-| `assumptions` | No | Defaults spec-maker applied when the task was silent |
-| `open_questions` | No | Unresolved decisions — subtask-maker must ask before writing subtasks |
+| `assumptions` | No | Defaults applied when the task was silent |
+| `open_questions` | No | Unresolved decisions — must be empty before subtask breakdown |
 
 ## `meta` block
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `worktree` | Yes | Worktree slug (e.g. `hero-section`) |
-| `generated_by` | Yes | `spec-maker` for original task specs; `review-triage` for next-step specs |
-| `task` | Yes | Original task description from the user — prefer the Gherkin `task.story` from context when orchestrated by Nicki |
+| `generated_by` | Yes | `spec-maker` for original task specs; `review-triage` for follow-up specs |
+| `task` | Yes | Original task description — Gherkin story or user text |
 | `branch` | No | Git branch (e.g. `feature/hero-section`) |
-| `context` | No | Path to task context (e.g. `current-task/current-task-context.yaml`) |
+| `context` | No | Optional traceability path when the loading agent sets one |
 | `source_review` | No | Review path when generated from review triage |
 | `source_validation` | No | Validation path when generated from review triage |
-| `source_finding` | No | Original review finding that triggered a next-step spec |
+| `source_finding` | No | Original review finding that triggered a follow-up spec |
 
 ## Requirement fields
 
@@ -68,7 +51,6 @@ meta:
   generated_by: spec-maker
   task: "redesign hero section with headline, subcopy, and CTA"
   branch: feature/hero-section
-  context: current-task/current-task-context.yaml
 
 title: Hero section redesign
 type: feature
@@ -125,35 +107,18 @@ open_questions: []
 
 **Don't:**
 
-- Name file paths or implementation subtasks (subtask-maker does that)
+- Name file paths or implementation subtasks
 - Use vague verbs without measurable outcomes (`improve`, `modernize`, `clean up`)
 - Duplicate subtask-level or execution detail (commands, step order, create/modify actions)
 - Leave silent on constraints — default to `no-commit` and `no-new-deps` unless the task requires otherwise
 
 ## Ambiguity → ask
 
-The spec-maker agent should ask the user before writing the spec when:
+Ask before writing the spec when:
 
 - The task has no measurable outcome
 - Scope is unclear and cannot be reasonably bounded
 - Multiple valid interpretations exist (e.g. which page, which component)
 - A design fork affects requirements (CTA destination, copy tone, etc.)
 
-Resolve questions first, then write `current-task/specs/<slug>.yaml` with `open_questions: []`.
-
-## Authoring for spec-maker
-
-When `/spec-maker` writes a spec:
-
-1. **Analyze the task** — parse user intent; ask if vague before writing.
-2. **Light context only** — read CONTRIBUTING.md and optionally skim project layout (app/, src/) to bound scope realistically. Do not explore file-by-file.
-3. **Default constraints** — include `no-commit` and `no-new-deps` unless the task requires otherwise.
-4. **Include `meta`** — set `worktree`, `generated_by: spec-maker`, `task`, `context: current-task/current-task-context.yaml` when present, and `branch` when known.
-5. **Write to `current-task/specs/<slug>.yaml`** — slug matches the worktree folder name.
-6. **Hand off to subtask-maker** — report the exact next command:
-
-   ```
-   /subtask-maker worktrees/<slug> @current-task/specs/<slug>.yaml
-   ```
-
-The spec-maker agent must not edit application code or write subtask files — only the YAML spec file.
+Resolve questions first, then write with `open_questions: []`.

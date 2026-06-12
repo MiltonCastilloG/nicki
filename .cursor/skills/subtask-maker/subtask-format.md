@@ -1,27 +1,10 @@
 # Subtask list format
 
-Subtask lists drive `/execute-plan`. **Markdown only** — `/subtask-maker` writes the file; `/execute-plan` reads it, implements unchecked items in order, and flips `- [ ]` to `- [x]` as each subtask completes.
+**Markdown only** — subtask-maker writes; execute-plan reads, implements unchecked items in order, and flips `- [ ]` to `- [x]` as each completes.
 
-Store subtask lists in the worktree under `current-task/subtasks/` (e.g. `current-task/subtasks/hero-section.md`).
+Default path: `current-task/subtasks/<slug>.md` under the worktree scope root.
 
-All agent artifacts for the active task live under `current-task/`:
-
-```
-current-task/
-  current-task-context.yaml   # workflow context from /current-task-update
-  specs/<slug>.yaml           # from /spec-maker
-  subtasks/<slug>.md          # from /subtask-maker
-  executions/<slug>.yaml      # from /execute-plan
-  reviews/<slug>.yaml         # from /review-execution
-  review-validations/         # from /review-triage
-  review-inputs/
-  next-steps/                 # follow-up specs consumable by /subtask-maker
-  merges/
-  commits/
-  pushes/
-```
-
-Subtask lists define **what to build**, one atomic sentence per line — not file paths or create/modify steps. `/execute-plan` decides how to implement each line.
+Subtask lists define **what to build**, one atomic sentence per line — not file paths or create/modify steps.
 
 ## File structure
 
@@ -35,10 +18,10 @@ Subtask lists define **what to build**, one atomic sentence per line — not fil
 |-------|----------|-------------|
 | `worktree` | Yes | Worktree slug (e.g. `hero-section`) |
 | `generated_by` | Yes | Always `subtask-maker` |
-| `spec` | Yes when a spec exists | Path to the spec file (e.g. `current-task/specs/hero-section.yaml`) |
-| `context` | No | Path to task context (e.g. `current-task/current-task-context.yaml`) |
+| `spec` | Yes when a spec exists | Path to the spec file |
+| `context` | No | Optional traceability path when the loading agent sets one |
 | `title` | No | Short task name from the spec |
-| `constraints` | No | Rules for downstream agents (default `no-commit`, `no-new-deps`) |
+| `constraints` | No | Rules for execution (default `no-commit`, `no-new-deps`) |
 
 ## Checklist line rules
 
@@ -71,7 +54,6 @@ Each subtask is exactly **one sentence** on its own line:
 worktree: hero-section
 generated_by: subtask-maker
 spec: current-task/specs/hero-section.yaml
-context: current-task/current-task-context.yaml
 title: Hero section redesign
 constraints:
   - no-commit
@@ -95,21 +77,5 @@ After partial execution:
 - [x] Replace the home page hero with the new Hero component above the fold.
 - [ ] Add unit tests asserting the Hero renders headline, subcopy, and CTA.
 ```
-
-## Authoring for subtask-maker
-
-When `/subtask-maker` writes a subtask list:
-
-1. **Load the spec** — stop if `open_questions` is non-empty.
-2. **Light exploration** — skim project layout so subtasks are realistic; do not draft file-level steps.
-3. **One sentence per line** — each line is an atomic build or verify unit.
-4. **Include tests** — separate subtasks for tests implied by requirements and acceptance.
-5. **End with verification** — lint/test subtasks from spec `acceptance`.
-6. **Write to `current-task/subtasks/<slug>.md`** — slug matches the worktree folder name.
-7. **Hand off to execute-plan**:
-
-   ```
-   /execute-plan worktrees/<slug> @current-task/subtasks/<slug>.md
-   ```
 
 Spec schema (input): [spec-format.md](../spec-maker/spec-format.md).

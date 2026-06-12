@@ -1,12 +1,14 @@
-# Current task context format
+# Current task context format (deprecated)
 
-`current-task/current-task-context.yaml` is the canonical task-local workflow context. It stores task identity, worktree scope, artifact paths, the current workflow step, blockers, and history so Nicki can orchestrate the leaf agents without relying on chat memory.
+> **Deprecated.** Use [status-format.md](status-format.md) (`current-task/status.json`) and [global-status-format.md](global-status-format.md) (`global-status.json`). Do not write this file for new tasks.
+
+`current-task/current-task-context.yaml` was the legacy task-local workflow context. It stores task identity, worktree scope, artifact paths, the current workflow step, blockers, and history so Nicki can orchestrate the leaf agents without relying on chat memory.
 
 The file lives inside the worktree:
 
 ```
 current-task/
-  current-task-context.yaml
+  status.json
   specs/<slug>.yaml
   subtasks/<slug>.md
   executions/<slug>.yaml
@@ -19,7 +21,7 @@ current-task/
   merges/<slug>.yaml
 ```
 
-`/current-task-update` is the only writer for this file. Nicki and leaf agents may read it, and leaf artifacts should reference it with `meta.context` when their schema allows metadata.
+`current-task-update` is the only writer for this file. Nicki and leaf agents may read it, and leaf artifacts should reference it with `meta.context` when their schema allows metadata.
 
 ## Top-level fields
 
@@ -115,7 +117,7 @@ Use paths relative to the worktree root.
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `context` | Yes | `current-task/current-task-context.yaml` |
+| `context` | Yes | `current-task/status.json` |
 | `spec` | No | `current-task/specs/<slug>.yaml` |
 | `subtasks` | No | `current-task/subtasks/<slug>.md` |
 | `execution` | No | `current-task/executions/<slug>.yaml` |
@@ -195,7 +197,7 @@ scope:
   worktree_path: worktrees/hero-section
 
 artifacts:
-  context: current-task/current-task-context.yaml
+  context: current-task/status.json
   spec: current-task/specs/hero-section.yaml
   subtasks: current-task/subtasks/hero-section.md
   execution: current-task/executions/hero-section.yaml
@@ -214,7 +216,7 @@ open_questions: []
 history:
   - step: start
     status: complete
-    artifact: current-task/current-task-context.yaml
+    artifact: current-task/status.json
     summary: Worktree was created and task context initialized.
   - step: describe
     status: complete

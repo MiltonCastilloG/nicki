@@ -1,43 +1,20 @@
 # Review triage validation format
 
-Review triage validations are the output of `/review-triage`. **YAML only** — write one compact artifact per triaged review.
+**YAML only** — one compact artifact per triaged review.
 
-Store validations in the worktree under `current-task/review-validations/` using sequential names:
-
-```
-current-task/review-validations/
-  r1-validation.yaml
-  r2-validation.yaml
-  r3-validation.yaml
-```
-
-All agent YAML artifacts for the active task live under `current-task/`:
-
-```
-current-task/
-  current-task-context.yaml
-  specs/<slug>.yaml
-  subtasks/<slug>.md
-  executions/<slug>.yaml
-  reviews/<slug>.yaml
-  review-validations/rN-validation.yaml
-  review-inputs/rN-review.yaml
-  next-steps/*.yaml
-  merges/<slug>.yaml
-  commits/<slug>.yaml
-  pushes/<slug>.yaml
-```
+Default path: `current-task/review-validations/rN-validation.yaml` (`r1`, `r2`, …) under the worktree scope root.
 
 ## Top-level fields
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `meta` | Yes | Source review and task context |
+| `meta` | Yes | Source review and scope inputs used |
 | `decision` | Yes | Overall result of triaging the review |
 | `valid_findings` | Yes | Review findings that are in-scope and correct |
 | `discarded_findings` | Yes | Findings rejected as wrong, duplicate, or out of scope |
 | `next_steps` | Yes | Follow-up specs written for important out-of-scope findings |
 | `review_inputs` | Yes | Review guidance files written when the review should be rerun |
+| `readiness` | Yes | Structured outcome for orchestration |
 | `summary` | Yes | Short human-readable explanation |
 
 ## `meta`
@@ -50,7 +27,7 @@ current-task/
 | `spec` | No | Spec path used as scope source |
 | `subtasks` | No | Subtask list path used as scope source |
 | `execution` | No | Execution handoff path used as scope source |
-| `context` | No | Task context path used as workflow source |
+| `context` | No | Optional traceability path when the loading agent sets one |
 
 ## `decision`
 
@@ -74,7 +51,7 @@ Use the same structure for `valid_findings` and `discarded_findings`.
 
 ## `next_steps`
 
-Each entry records an important out-of-scope finding that was converted into a separate spec YAML that `/subtask-maker` can consume directly.
+Each entry records an important out-of-scope finding converted into a separate spec YAML.
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -92,9 +69,27 @@ Each entry records review guidance written because the original review was inval
 |-------|----------|-------------|
 | `id` | Yes | Stable label |
 | `path` | Yes | Path written under `current-task/review-inputs/` |
-| `reason` | Yes | Why review-execution should consume the guidance |
+| `reason` | Yes | Why review should consume the guidance |
 
 Use an empty list when no review guidance was written.
+
+## `readiness`
+
+Required on every validation write.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `status` | Yes | `ready_for_acceptance`, `fix_required`, `rerun_review`, or `blocked` |
+| `recommended_next_step` | Yes | `acceptance`, `execute`, `review`, or `blocked` — must pair with `status` |
+| `blockers` | Yes | Non-empty **only** for `fix_required` or `blocked`; else `[]` |
+| `fix_subtasks` | No | One-line fix descriptions when `fix_required`; agent appends `## Fix` on subtask list |
+
+### When to set each `status`
+
+- `ready_for_acceptance` — no in-scope fix needed; scope clean.
+- `fix_required` — valid in-scope findings need code change; populate `blockers` and optional `fix_subtasks`.
+- `rerun_review` — review was discarded or mostly invalid; `review_inputs` non-empty.
+- `blocked` — user/spec ambiguity stops progress; populate `blockers`.
 
 ## YAML example
 
@@ -106,7 +101,6 @@ meta:
   spec: current-task/specs/hero-section.yaml
   subtasks: current-task/subtasks/hero-section.md
   execution: current-task/executions/hero-section.yaml
-  context: current-task/current-task-context.yaml
 
 decision: partially_valid
 
@@ -119,31 +113,33 @@ valid_findings:
 
 discarded_findings:
   - id: footer-redesign
-    source: "Footer should be redesigned to match the new hero."
     verdict: out_of_scope
-    reason: Spec scope is limited to the home page hero and explicitly excludes footer changes.
-    evidence: "spec.scope.out: Header, footer, and other pages"
+    reason: Outside spec scope.in.
+    evidence: spec.scope.out
 
 next_steps:
   - id: footer-redesign
     path: current-task/next-steps/r1-footer-redesign.yaml
-    reason: Potentially useful follow-up spec, but outside this task scope.
+    reason: Follow-up outside this task.
 
-review_inputs:
-  - id: rerun-review
-    path: current-task/review-inputs/r1-review.yaml
-    reason: Previous review mixed in out-of-scope footer blockers.
+review_inputs: []
+
+readiness:
+  status: fix_required
+  recommended_next_step: execute
+  blockers:
+    - "npm run lint failed — fix before acceptance"
+  fix_subtasks:
+    - "Fix lint errors from verify finding"
 
 summary: |
-  Review is partially valid. Keep the verify finding for this task.
-  Discard the footer redesign finding from this review and track it as a next-step spec.
+  Partially valid. Keep verify finding; footer → next-step spec.
 ```
 
 ## Triage rules
 
-- Keep findings that map to spec requirements, subtask lines, execution deviations, changed paths, verify failures, or relevant CONTRIBUTING constraints.
-- Discard findings about files, features, or improvements outside spec `scope.in`, inside spec `scope.out`, or unrelated to changed paths.
-- Discard plainly wrong findings when the current-task artifacts or code contradict them.
-- Convert important out-of-scope findings into `current-task/next-steps/*.yaml` specs instead of blocking the current task.
-- When the review is discarded or mostly invalid, write `current-task/review-inputs/rN-review.yaml` using [review-guidance-format.md](review-guidance-format.md).
-- Do not mutate the original review file.
+- Keep findings mapping spec, subtasks, execution, verify failures, changed paths.
+- Discard out-of-scope, wrong, duplicate, non-actionable findings.
+- Out-of-scope but important → `current-task/next-steps/*.yaml`.
+- Discarded/mostly invalid review → `review_inputs` + `readiness.status: rerun_review`.
+- Always emit `readiness`; never mutate original review file.

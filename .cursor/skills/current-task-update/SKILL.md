@@ -1,150 +1,102 @@
 ---
 name: current-task-update
-description: "Update current-task/current-task-context.yaml from a compact Nicki workflow summary. Use when Nicki finishes a workflow step and needs to persist the next step, artifact paths, blockers, or history."
+description: "Update current-task/status.json from a compact Nicki workflow summary. Status-update writer — never touches global-status.json. Use when Nicki finishes a workflow step."
 disable-model-invocation: true
 metadata:
   type: subagent
   subagent: current-task-update
-  tools:
-    read: true
-    write: true
-    delete: false
-    shell: false
-    grep: false
-    glob: false
-    semantic_search: false
-    task: false
-    web_search: false
-    web_fetch: false
-    mcp: false
-    ask_question: true
-    todo_write: true
-    generate_image: false
-    switch_mode: false
 ---
 
-# Current Task Update
+# Status update (current-task-update)
 
-Update the canonical task context file from Nicki's compact workflow summary. This agent writes exactly one file: `current-task/current-task-context.yaml` under the worktree scope root.
+Update per-task workflow state from Nicki summary. Also called **status-update**. Writes exactly one file: `current-task/status.json` under the task worktree.
 
-Schema: [current-task-context-format.md](current-task-context-format.md).
+**Never write `global-status.json`.** Registry is start-task / close-task only.
+
+Schemas:
+
+- Per-task: [status-format.md](status-format.md)
+- Global registry (read only): [global-status-format.md](global-status-format.md)
+- Legacy (deprecated): [current-task-context-format.md](current-task-context-format.md)
 
 ## When to use
 
-- Nicki has completed `start-task`, `describe`, `spec`, `subtasks`, `execute`, `review`, `triage`, `merge`, `commit`, `push`, or a fix-loop step.
-- Nicki needs to persist the next workflow step, artifact paths, open questions, or history.
-- A worktree already exists and Nicki needs to initialize missing `current-task/current-task-context.yaml`.
+- Nicki completed `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `triage`, `acceptance`, `commit`, `push`, `merge`, `publish`, or fix-loop routing.
+- Nicki needs next step, artifact pointers, open questions, or history persisted.
+- Worktree exists; need init missing `current-task/status.json`.
 
 ## Required inputs
 
 | Input | Required | Notes |
 |-------|----------|-------|
-| Worktree path | Yes | Absolute or repo-relative (e.g. `worktrees/hero-section`) |
-| Nicki summary | Yes | Compact YAML summary of the step result and next intended step |
-
-If either input is missing, ask before writing.
+| Worktree path | Yes | Absolute or repo-relative |
+| Nicki summary | Yes | Compact YAML summary of step result |
 
 ## Nicki summary format
 
 ```yaml
-worktree: worktrees/hero-section
+worktree: projects/foo/worktrees/hero-section
 completed_step: spec
 completed_status: complete
 artifact: current-task/specs/hero-section.yaml
 next_step: subtasks
 open_questions: []
-summary: Spec captured requirements and acceptance criteria.
+summary: Spec captured requirements and acceptance.
 ```
 
-Optional fields:
+Optional: `task` (slug, title, original, story_artifact, type), `git`, `artifacts`, `constraints`.
 
-- `task`: `slug`, `title`, `original`, `story`, `type`
-- `git`: `branch`, `base`
-- `artifacts`: paths to merge into the existing context
-- `constraints`: constraints to set or carry forward
+For describe: set `task.story_artifact: current-task/story.md` and write story body to that markdown file (caveman full per caveman skill) in same agent turn only if summary includes full story text — otherwise Nicki passes story for a dedicated write step.
 
 ## Workflow
 
-Copy this checklist and track progress:
-
 ```
 Task Progress:
-- [ ] Resolve and validate worktree scope
-- [ ] Load existing context if present
+- [ ] Resolve worktree scope
+- [ ] Load existing status.json if present
 - [ ] Parse Nicki summary
-- [ ] Validate transition and scope
-- [ ] Write current-task/current-task-context.yaml
+- [ ] Validate transition
+- [ ] Write current-task/status.json
 - [ ] Report updated step and next step
 ```
 
 ### Step 1: Resolve scope
 
-1. Resolve the worktree path to an absolute path.
-2. Confirm the directory exists.
-3. Derive `<slug>` from the final folder name.
-4. Context output path: `current-task/current-task-context.yaml` relative to the scope root.
+1. Resolve worktree to absolute path.
+2. Derive `<slug>` from folder name.
+3. Output: `current-task/status.json`.
 
 **Scope rules:**
 
-- Read only `current-task/current-task-context.yaml` and Nicki-provided artifact paths needed to validate the update.
-- Write only `current-task/current-task-context.yaml`.
-- Never edit specs, subtasks, executions, reviews, validations, source files, config, or files outside the scope root.
-- Do not run shell commands.
+- Read `current-task/status.json` and artifact paths needed to validate.
+- Write only `current-task/status.json`.
+- **Never write `global-status.json`.**
+- No shell commands.
 
 ### Step 2: Load and validate
 
-If `current-task/current-task-context.yaml` exists:
-
-- Validate it follows [current-task-context-format.md](current-task-context-format.md).
-- Validate `scope.worktree_path` matches the command worktree path or equivalent absolute path.
-- Preserve existing task fields unless Nicki summary explicitly updates them.
-
-If the file is missing:
-
-- Require enough Nicki summary data to initialize `task.slug`, `task.original`, `scope.worktree`, and `scope.worktree_path`.
-- Default `artifacts.context` to `current-task/current-task-context.yaml`.
-- Default `constraints` to `[no-commit, no-new-deps]` unless Nicki summary provides constraints.
-
-Stop and ask when summary and existing context conflict.
+- Validate against [status-format.md](status-format.md).
+- `scope.worktree_path` must match command worktree.
+- If missing: init from summary with `meta.schema: task-status.v1`, default `artifacts.status`, default `constraints: [no-commit, no-new-deps]`.
+- Ask when summary conflicts with existing status.
 
 ### Step 3: Apply update
 
-Update:
-
-- `meta.schema: current-task-context.v1`
-- `meta.generated_by: current-task-update` when creating the file
-- `meta.updated_by: current-task-update`
-- `task.current_step` to the completed step or current workflow position
-- `task.next_step` to Nicki's next intended step
-- `task.last_completed_step` when `completed_status: complete`
-- `artifacts` with any produced artifact paths
-- `open_questions` from the summary
-- `history` by appending one compact event for this update
-
-History event:
-
-```yaml
-- step: spec
-  status: complete
-  artifact: current-task/specs/hero-section.yaml
-  summary: Spec captured requirements and acceptance criteria.
-```
-
-Use `complete`, `blocked`, `failed`, or `skipped` for `history[].status`.
+- `meta.updated_by: status-update`
+- `task.current_step`, `task.next_step`, `task.last_completed_step` when complete
+- Merge `artifacts`; after triage set `artifacts.review_validation` to latest validation path from summary `artifact`
+- Mirror spec `open_questions` into status when summary includes them
+- Fix-loop: when `completed_step: fix` or triage reruns after fix, append `history` with `step: fix` and validation path
+- Acceptance: when `completed_step: acceptance`, record user accept/reject in `history`; reject may populate `open_questions`
+- `open_questions` from summary; blocked when non-empty
+- Append `history` event
 
 ### Step 4: Write and report
 
-1. Create `current-task/` under the scope root if needed.
-2. Write the full context YAML to `current-task/current-task-context.yaml`.
-3. Report:
-   - Context path
-   - Completed step and status
-   - Next step
-   - Open questions, if any
+Report status path, completed step, next step, open questions.
 
 ## Safety rules
 
-- Write only `current-task/current-task-context.yaml`.
-- Do not infer missing workflow transitions from code or git.
-- Do not invoke other agents (`task: false`).
-- Ask before writing if the summary conflicts with existing context.
+- Write only `current-task/status.json`.
+- Never write `global-status.json`.
+- Never write deprecated `status.json` for new tasks.

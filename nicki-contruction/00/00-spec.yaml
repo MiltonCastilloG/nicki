@@ -1,0 +1,164 @@
+meta:
+  worktree: status-architecture
+  generated_by: spec-maker
+  task: |
+    Feature: Workspace task registry and per-task JSON status
+
+    As a Nicki workflow operator
+    I want global-status.json at workspace root and per-task status.json in each worktree
+    So that hooks and Nicki resolve task id to project, worktree, and step state without chat memory or YAML context parsing
+
+    Derived from 00-status-task.md. Replace current-task-context.yaml orchestration role with JSON status; global registry touched only at start and close; YAML/Markdown handoff artifacts remain. All Markdown workflow output use caveman style per .cursor/skills/caveman/SKILL.md (default full).
+
+title: JSON status architecture migration
+type: refactor
+
+summary: >
+  Migrate Nicki orchestration state from YAML context to two-layer JSON: workspace
+  registry (start/close only) plus per-task status (every step). Hooks and Nicki read
+  JSON by task id. YAML handoffs stay; status holds pointers and step position only.
+  Every Markdown artifact this work adds or changes must use caveman style — terse,
+  no filler, technical terms exact — per caveman skill default full intensity.
+
+requirements:
+  - id: global-registry
+    description: >
+      Workspace-level task registry lists every active task with project, slug, worktree
+      location, and route to that task's per-task status store.
+  - id: global-write-boundary
+    description: >
+      Only task start and task close may create, update, or remove workspace registry
+      entries; no leaf step or status-update agent may touch registry.
+  - id: per-task-status
+    description: >
+      Per-task JSON status store records current step, next step, last completed step,
+      artifact pointers, open questions, and append-only history.
+  - id: per-task-write-boundary
+    description: >
+      Only status-update agent writes per-task status; Nicki and leaf agents read only,
+      never edit directly.
+  - id: replace-context-yaml
+    description: >
+      Deprecate current-task-context.yaml as canonical orchestration authority; runtime
+      treats JSON status model as source of truth for workflow position.
+  - id: nicki-bootstrap
+    description: >
+      Nicki bootstrap resolves task id via workspace registry, then reads per-task status
+      and artifact evidence from disk; chat not authoritative for step or git consent.
+  - id: hook-resolution
+    description: >
+      Hook with task id resolves project, worktree, status route, current step, and next
+      step using JSON only — no YAML parser.
+  - id: start-registration
+    description: >
+      Task start registers task in workspace registry and initializes per-task status with
+      start/describe pointers and empty blockers when unblocked.
+  - id: step-status-updates
+    description: >
+      After each orchestrated step except close deletion, status-update refreshes per-task
+      pointers, history, and open questions without touching workspace registry.
+  - id: close-unregister
+    description: >
+      Task close unregisters workspace registry entry after archive write; updates
+      active-task when multiple tasks open.
+  - id: artifact-pointer-chain
+    description: >
+      Per-task status stores paths to handoff artifacts (spec, subtasks, execution,
+      review, validation, commit, push, merge, publish, archive) without replacing
+      YAML or Markdown bodies.
+  - id: blocked-state
+    description: >
+      Blocked leaf step writes non-empty open questions and blocking next step until
+      resolved or user overrides explicitly.
+  - id: multi-project-paths
+    description: >
+      Registry and status paths support standalone Nicki workspace with project-local
+      worktrees under projects per project name.
+  - id: readiness-routing
+    description: >
+      Per-task status records latest review-validation pointer so Nicki and hooks consume
+      readiness routing for acceptance, fix loop, or commit without inferring from review
+      text alone.
+  - id: close-archive-before-delete
+    description: >
+      Close writes durable archive/report with task definition, process, decisions, outcomes
+      before destructive worktree removal; registry unregister only after archive succeeds.
+  - id: runtime-doc-alignment
+    description: >
+      NICKI.md, nicki agent, status-update skill, and related runtime docs describe JSON
+      status model, write boundaries, and bootstrap order explicitly.
+  - id: caveman-md-handoffs
+    description: >
+      All Markdown workflow artifacts created or updated by this migration use caveman
+      style per caveman skill: drop articles and filler, short synonyms OK, technical
+      terms and code exact, default intensity full; lite or ultra only when task or user
+      sets level explicitly.
+  - id: caveman-md-agents
+    description: >
+      Agents that write Markdown handoffs (subtask lists, story artifacts, archive or
+      report Markdown, workflow docs meant as handoff prose) load caveman skill before
+      write and follow it for body text; YAML and JSON schemas stay normal structured
+      format, not caveman inside keys.
+
+scope:
+  in:
+    - Nicki runtime agents, commands, and skills under workflow bundle
+    - Workspace registry schema and lifecycle (start/close only)
+    - Per-task JSON status schema and status-update writer behavior
+    - Nicki bootstrap and session-resume rules
+    - Hook contract and example JSON resolution
+    - Standalone workspace path model for multi-project worktrees
+    - Handoff meta.context pointers to per-task status
+    - Close/archive tied to registry unregister and worktree teardown policy
+    - Caveman style for all Markdown handoffs and Markdown sections agents add in this work
+    - Caveman skill wired into subtask-maker and other MD-writing workflow agents as constraint
+  out:
+    - Converting YAML handoffs (spec, review, execution) to JSON
+    - Caveman style inside JSON or YAML field keys and machine schemas
+    - Hook agents writing workspace registry during leaf steps
+    - Automatic remote task branch delete at close
+    - Requiring project CONTRIBUTING.md for migration
+    - Nicki custom mode or slash-command in Cursor UI
+    - Host application feature code outside Nicki runtime bundle
+
+constraints:
+  - no-new-deps
+  - global-registry-start-close-only
+  - nicki-read-only-orchestrator
+  - leaf-agents-atomic
+  - caveman-md-default-full
+  - caveman-skill-required-for-md-writes
+
+acceptance:
+  - Hook with task id resolves project, worktree, per-task status via JSON only
+  - Workspace registry changes only at task start or close success
+  - Per-task status changes after every orchestrated step except close deletion
+  - Nicki derives workflow position from disk status, not chat
+  - Runtime docs no longer call YAML context canonical orchestration authority
+  - YAML and Markdown handoff chain works with status as pointer layer
+  - Blocked tasks show non-empty open questions until cleared
+  - Multiple concurrent tasks = distinct registry entries and status routes
+  - Close archive exists before worktree delete when policy requires full teardown
+  - Documented jq path resolves status_path from registry by task id
+  - New or updated Markdown handoffs (subtasks, story, archive report prose) read as caveman full — no filler, technical terms exact
+  - subtask-maker and other MD-writing agents reference caveman skill in skill or agent docs
+  - Caveman auto-clarity rules apply — security, irreversible actions, ambiguous multi-step sequences use clear prose not compressed fragments
+
+assumptions:
+  - Workspace registry named global-status.json; per-task store status.json under each task current-task area unless open questions change names
+  - Task ids stable strings for hook input (numeric or slug-backed)
+  - status-update evolves from current-task-update; Nicki invokes after leaf steps except close
+  - Long Gherkin story lives in separate artifact with pointer in per-task status when not inlined
+  - Implementation may ship in slices before full acceptance; slice E from 00-status-task.md is end state
+  - Caveman skill at .cursor/skills/caveman/SKILL.md is canonical MD voice; full intensity default for workflow Markdown
+  - One-sentence subtask lines already terse — caveman makes them shorter still without losing build meaning
+
+resolved_defaults:
+  task_id: numeric string key; slug duplicated in registry entry
+  active_task: present in global-status.json when multiple tasks may be open
+  story: current-task/story.md artifact; status.json holds story_artifact pointer only
+  registry_filename: global-status.json at workspace root
+  close_teardown: delete whole worktree after archive succeeds; merge/publish handoffs required or explicit override in archive
+  caveman_md: full intensity for workflow Markdown handoffs per caveman skill
+
+open_questions: []

@@ -29,7 +29,13 @@ else
   echo "main is up to date ($after_sha)"
 fi
 
-mkdir -p worktrees
+# PROJECT env → projects/<project>/worktrees/<slug>; else legacy worktrees/<slug>
+if [[ -n "${PROJECT:-}" ]]; then
+  worktree_base="projects/${PROJECT}/worktrees"
+else
+  worktree_base="worktrees"
+fi
+mkdir -p "$worktree_base"
 
 created=()
 skipped=()
@@ -42,7 +48,7 @@ for pair in "$@"; do
 
   branch="${pair%%:*}"
   slug="${pair#*:}"
-  worktree_path="worktrees/$slug"
+  worktree_path="${worktree_base}/${slug}"
 
   if [[ -z "$branch" || -z "$slug" ]]; then
     echo "Error: invalid pair '$pair' (branch and slug must be non-empty)" >&2

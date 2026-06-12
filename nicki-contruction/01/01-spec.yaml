@@ -1,0 +1,72 @@
+meta:
+  worktree: report-follow-up-01
+  generated_by: spec-maker
+  task: Umbrella slice 01 — parallel tracks 01-0 + 01-1 from report.md on slice 00 baseline.
+
+title: Report follow-up slice 01 — umbrella
+type: refactor
+
+summary: >
+  Two parallel tracks close report open items on slice 00 JSON status. 01-0 = review
+  routing, fix loop, acceptance, partial review, spec gate. 01-1 = merge/publish/close,
+  project worktrees, docs. Umbrella = pointer ownership, shared constraints, combined done.
+
+requirements:
+  - id: slice-00-baseline
+    description: >
+      Slice 00 shipped + authoritative — registry start/close only, per-task status every
+      step, hook resolve by task id, caveman MD default.
+  - id: parallel-tracks
+    description: >
+      01-0 and 01-1 run concurrent. No serial block except status.json field name align.
+  - id: child-spec-handoff
+    description: >
+      Child specs 01-0-spec.yaml / 01-1-spec.yaml own track deliverables. Umbrella no dup.
+  - id: status-pointer-ownership
+    description: >
+      01-0 owns validation, acceptance, open_questions, fix-loop pointers. 01-1 owns
+      merge, publish, close, start path metadata. Only current-task-update writes status.
+  - id: pointer-coordination
+    description: >
+      Cross-track status changes additive per ownership. Shared renames need both tracks OK.
+  - id: report-coverage
+    description: >
+      Together close report open list — readiness, fix loop, acceptance, publish, paths,
+      docs, optional CONTRIBUTING, close tail validation.
+  - id: nicki-disk-routing
+    description: >
+      Nicki bootstrap + decision table read status + handoffs — not review prose, not chat.
+  - id: no-agents-for-sport
+    description: >
+      Tighten existing bundle. New leaf only where report requires (publish-task).
+
+scope:
+  in:
+    - Parallel 01-0 / 01-1 coordination, pointer split, slice 00 dependency
+    - End-to-end triage → acceptance → commit → merge → publish → close from disk
+  out:
+    - Child spec detail, slice 00 redo, handoff body JSON conversion, host app code
+    - Working /nicki command, mandatory CONTRIBUTING, remote branch delete at close
+
+constraints:
+  - no-new-deps
+  - slice-00-baseline-immutable
+  - global-registry-start-close-only
+  - status-update-only-writer
+  - nicki-read-only-orchestrator
+  - leaf-agents-atomic
+  - parallel-tracks-no-serial-block
+  - caveman-md-default-full
+
+acceptance:
+  - Both child specs pass independently; status pointers coexist, no duplicate writers
+  - Combined workflow exercisable without chat-inferred routing for report open items
+  - Slice 00 no regression to YAML context orchestration
+
+assumptions:
+  - Stories 01-0-stories.md, 01-1-stories.md; index 01-stories.md
+  - Child specs separate; tracks may use separate worktrees
+  - publish-task = expected new leaf for 01-1
+  - Close policy from slice 00 — archive then whole worktree delete
+
+open_questions: []

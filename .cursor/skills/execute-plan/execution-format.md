@@ -1,33 +1,16 @@
 # Execution format
 
-Executions are the handoff from `/execute-plan` to `/review-execution`. **YAML only** — write one compact artifact after executing, partially executing, or blocking on a subtask list.
+**YAML only** — compact evidence after executing, partially executing, or blocking on a subtask list.
 
-Store executions in the worktree under `current-task/executions/` (e.g. `current-task/executions/hero-section.yaml`).
+Default path: `current-task/executions/<slug>.yaml` under the worktree scope root.
 
-All agent artifacts for the active task live under `current-task/`:
-
-```
-current-task/
-  current-task-context.yaml              # workflow context from /current-task-update
-  specs/<slug>.yaml                    # from /spec-maker
-  subtasks/<slug>.md                   # from /subtask-maker; executor updates checkboxes
-  executions/<slug>.yaml               # from /execute-plan
-  reviews/<slug>.yaml                  # from /review-execution
-  review-validations/rN-validation.yaml # from /review-triage
-  review-inputs/rN-review.yaml         # optional guidance input for /review-execution
-  next-steps/*.yaml                    # follow-up specs consumable by /subtask-maker
-  merges/<slug>.yaml                   # from /merge-task
-  commits/<slug>.yaml                  # from /commit-task
-  pushes/<slug>.yaml                   # from /push-task
-```
-
-The execution file is a map for review, not an approval. `/review-execution` still reads the diff and reruns verification independently.
+The execution file maps what was done; reviewers still read the diff and rerun verification independently.
 
 ## Top-level fields
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `meta` | Yes | Routing, source subtask list, and execution status |
+| `meta` | Yes | Source subtask list and execution status |
 | `paths` | Yes | Touched paths grouped by change type |
 | `subtasks` | Yes | One result entry per checklist line, in list order |
 | `verify` | If verify ran | Command evidence from execution |
@@ -42,9 +25,9 @@ The execution file is a map for review, not an approval. `/review-execution` sti
 |-------|----------|-------------|
 | `worktree` | Yes | Worktree slug (e.g. `hero-section`) |
 | `generated_by` | Yes | Always `execute-plan` |
-| `subtasks` | Yes | Subtask list path used (e.g. `current-task/subtasks/hero-section.md`) |
+| `subtasks` | Yes | Subtask list path used |
 | `spec` | No | Spec path when known |
-| `context` | No | Path to task context (e.g. `current-task/current-task-context.yaml`) |
+| `context` | No | Optional traceability path when the loading agent sets one |
 | `status` | Yes | `complete`, `partial`, or `blocked` |
 | `constraints` | No | Constraints honored from the subtask list frontmatter |
 
@@ -76,7 +59,7 @@ Mirror checklist order. Do not copy the full subtask list; reference line index 
 
 ## `verify`
 
-Include one entry per command run by `/execute-plan`.
+Include one entry per command run during execution.
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -89,8 +72,6 @@ Include one entry per command run by `/execute-plan`.
 
 ### `deviations`
 
-Use when execution differed from the subtask list.
-
 | Field | Required | Description |
 |-------|----------|-------------|
 | `kind` | Yes | `user_approved`, `list_gap`, `blocked`, or `out_of_scope` |
@@ -99,16 +80,12 @@ Use when execution differed from the subtask list.
 
 ### `hotspots`
 
-Use for focused review attention, not for full explanations.
-
 | Field | Required | Description |
 |-------|----------|-------------|
 | `path` | Yes | File or area to review closely |
 | `reason` | Yes | Short reason (e.g. `semantic-tokens`, `i18n-strings`, `new-deps-risk`) |
 
 ### `review_scope`
-
-Use when review should be partial or focused.
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -124,7 +101,6 @@ meta:
   generated_by: execute-plan
   subtasks: current-task/subtasks/hero-section.md
   spec: current-task/specs/hero-section.yaml
-  context: current-task/current-task-context.yaml
   status: complete
   constraints: [no-commit, no-new-deps]
 
@@ -184,5 +160,5 @@ review_scope:
 **Don't:**
 
 - Include diffs, transcripts, or long logs.
-- Mark review approval here; that belongs only in `current-task/reviews/<slug>.yaml`.
+- Record review approval here — reviews use only `approved` and `content`.
 - Hide scope changes. If an unplanned path changed, list it under `paths.unplanned`.

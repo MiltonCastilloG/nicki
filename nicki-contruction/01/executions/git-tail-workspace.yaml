@@ -1,0 +1,154 @@
+meta:
+  worktree: git-tail-workspace
+  generated_by: execute-plan
+  subtasks: nicki-contruction/01/01-1-subtasks.md
+  spec: nicki-contruction/01/01-1-spec.yaml
+  status: complete
+  constraints: [no-commit, no-new-deps, caveman-md-default-full]
+
+paths:
+  created:
+    - .cursor/agents/publish-task.md
+    - .cursor/skills/publish-task/SKILL.md
+    - .cursor/skills/publish-task/publish-format.md
+    - .cursor/commands/publish-task.md
+    - .cursor/skills/publish-task/scripts/smoke-git-tail.sh
+  modified:
+    - .cursor/agents/merge-task.md
+    - .cursor/agents/close-task.md
+    - .cursor/agents/start-task.md
+    - .cursor/agents/nicki.md
+    - .cursor/skills/merge-task/SKILL.md
+    - .cursor/skills/merge-task/merge-format.md
+    - .cursor/skills/close-task/SKILL.md
+    - .cursor/skills/task-archive/SKILL.md
+    - .cursor/skills/task-archive/archive-format.md
+    - .cursor/skills/close-scope/SKILL.md
+    - .cursor/skills/start-task/SKILL.md
+    - .cursor/skills/start-task/scripts/start-worktrees.sh
+    - .cursor/skills/current-task-update/status-format.md
+    - .cursor/skills/spec-maker/SKILL.md
+    - .cursor/skills/execute-plan/execution-format.md
+    - .cursor/commands/merge-task.md
+    - .cursor/commands/close-task.md
+    - .cursor/hooks/agent-permissions.json
+    - README.md
+    - NICKI.md
+    - PLAN.md
+    - nicki-contruction/01/01-1-subtasks.md
+  deleted: []
+  unplanned: []
+
+subtasks:
+  - index: 1
+    text: Add publish-task leaf agent, skill, command — slot after merge, before close; user confirm push.
+    status: done
+    checked: true
+    paths: [.cursor/agents/publish-task.md, .cursor/skills/publish-task/SKILL.md, .cursor/commands/publish-task.md]
+    note: publish-task leaf created.
+  - index: 2
+    text: publish-task push target branch per policy; write publish handoff in task worktree; set status publish pointer.
+    status: done
+    checked: true
+    paths: [.cursor/skills/publish-task/publish-format.md, .cursor/skills/publish-task/SKILL.md]
+    note: publishes/<slug>.yaml + status-update contract documented.
+  - index: 3
+    text: Align merge-task finish: merge handoff in task worktree + status merge pointer on complete.
+    status: done
+    checked: true
+    paths: [.cursor/skills/merge-task/SKILL.md, .cursor/agents/merge-task.md]
+    note: Task worktree handoff + next publish.
+  - index: 4
+    text: Per-task status carry merge + publish artifact pointers; YAML/MD handoff bodies stay unchanged.
+    status: done
+    checked: true
+    paths: [.cursor/skills/current-task-update/status-format.md]
+    note: merge/publish pointers + scope table.
+  - index: 5
+    text: close-task gate: merge + publish handoffs exist or explicit archive override recorded.
+    status: done
+    checked: true
+    paths: [.cursor/skills/close-task/SKILL.md, .cursor/skills/task-archive/archive-format.md]
+    note: Tail gate + tail_override in archive.
+  - index: 6
+    text: Close sequence: archive summary + caveman report first, worktree delete, registry unregister last.
+    status: done
+    checked: true
+    paths: [.cursor/skills/close-task/SKILL.md, .cursor/skills/close-scope/SKILL.md]
+    note: Order fixed in close-task checklist.
+  - index: 7
+    text: start-task register project-local worktree_path + status_path; no single host-repo hardcode.
+    status: done
+    checked: true
+    paths: [.cursor/skills/start-task/SKILL.md, .cursor/agents/start-task.md]
+    note: register-global-status.sh unchanged; docs + agent aligned.
+  - index: 8
+    text: Layout standard: projects per name, worktrees per slug under each project.
+    status: done
+    checked: true
+    paths: [.cursor/skills/start-task/scripts/start-worktrees.sh]
+    note: PROJECT env → projects/<project>/worktrees/<slug>.
+  - index: 9
+    text: Handoff meta docs: workspace, project, task worktree, target branch roots clearly scoped.
+    status: done
+    checked: true
+    paths: [.cursor/skills/current-task-update/status-format.md]
+    note: Handoff meta scopes table.
+  - index: 10
+    text: README, NICKI, PLAN refresh: project-local examples, cursor layout match, Nicki = subagent not slash unless command file.
+    status: done
+    checked: true
+    paths: [README.md, NICKI.md, PLAN.md]
+    note: Project paths + Nicki invocation clarified.
+  - index: 11
+    text: Docs note future custom mode possible; don't imply it works today.
+    status: done
+    checked: true
+    paths: [README.md, NICKI.md]
+    note: Custom mode noted not promised.
+  - index: 12
+    text: spec-maker + agents OK without CONTRIBUTING; record inline assumptions when conventions needed.
+    status: done
+    checked: true
+    paths: [.cursor/skills/spec-maker/SKILL.md]
+    note: CONTRIBUTING optional.
+  - index: 13
+    text: Nicki tail route from status pointers: merge → publish → close; disk beats chat.
+    status: done
+    checked: true
+    paths: [.cursor/agents/nicki.md]
+    note: Steps 12–14 + disk routing rule.
+  - index: 14
+    text: Caveman full on all new/changed MD handoffs this slice; schema keys stay normal.
+    status: done
+    checked: true
+    paths: [.cursor/skills/publish-task/SKILL.md, .cursor/skills/close-task/SKILL.md]
+    note: New MD caveman full; YAML schema keys normal.
+  - index: 15
+    text: Smoke: merge + publish handoffs + pointers set; close blocks or override without tail evidence.
+    status: done
+    checked: true
+    note: smoke-git-tail.sh passes.
+  - index: 16
+    text: Verify start paths + doc examples use project-local layout; new MD handoffs caveman full.
+    status: done
+    checked: true
+    paths: [README.md, NICKI.md, .cursor/skills/start-task/SKILL.md]
+    note: Examples use projects/<project>/worktrees/<slug>.
+
+verify:
+  - command: .cursor/skills/publish-task/scripts/smoke-git-tail.sh .
+    exit: 0
+    passed: true
+
+deviations: []
+open_questions: []
+
+hotspots:
+  - path: .cursor/skills/publish-task/SKILL.md
+    reason: new-leaf-push-semantics
+  - path: .cursor/agents/nicki.md
+    reason: tail-routing-with-01-0-acceptance
+
+review_scope:
+  mode: full

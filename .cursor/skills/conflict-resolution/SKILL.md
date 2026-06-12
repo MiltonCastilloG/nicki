@@ -1,12 +1,12 @@
 ---
 name: conflict-resolution
-description: "Shared protocol for resolving git merge conflicts by asking the user for every conflicted file or hunk. Use when merge-task or push-task encounters conflict markers during a git merge."
+description: "Protocol for resolving git merge conflicts by asking the user for every conflicted file or hunk."
 disable-model-invocation: true
 ---
 
 # Conflict Resolution
 
-Use this skill whenever a workflow agent encounters git merge conflicts.
+Use whenever a git merge encounters conflict markers.
 
 This skill defines the **only** allowed conflict-resolution protocol. Agents may summarize conflicts, but they must not choose resolutions themselves.
 
@@ -63,4 +63,4 @@ user_resolutions:
     answer: "Keep current branch logic and incoming import order."
 ```
 
-Use the calling agent's own handoff schema for the rest of the artifact.
+Use the calling agent's handoff schema for the rest of the artifact.

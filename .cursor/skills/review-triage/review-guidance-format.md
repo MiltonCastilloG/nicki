@@ -1,26 +1,20 @@
 # Review guidance format
 
-Review guidance files are created by `/review-triage` when a prior review is not valid enough to act on. They are input for a later `/review-execution` run.
+Review guidance files are created when a prior review is not valid enough to act on. They are **input** for a later review run.
 
-Store guidance in the worktree under `current-task/review-inputs/`:
-
-```
-current-task/review-inputs/
-  r1-review.yaml
-  r2-review.yaml
-```
+Default path: `current-task/review-inputs/rN-review.yaml` under the worktree scope root.
 
 ## Top-level fields
 
-This is the review YAML shape plus one extra input-only key:
+Review YAML shape plus one extra input-only key:
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `approved` | Yes | Usually `false`; marks that the previous review should not be treated as approved |
 | `content` | Yes | Short explanation of why review should be rerun |
-| `important-considerations` | Yes | Context the next `/review-execution` must keep in mind |
+| `important-considerations` | Yes | Context the next review must keep in mind |
 
-`important-considerations` is **input-only**. `/review-execution` must read it, but still writes normal review output with only `approved` and `content`.
+`important-considerations` is **input-only**. Review output still has only `approved` and `content`.
 
 ## YAML example
 
@@ -38,7 +32,7 @@ important-considerations:
 
 ## Rules
 
-- Use this only when a review was `discarded` or mostly invalid and should be rerun.
+- Use only when a review was `discarded` or mostly invalid and should be rerun.
 - Keep considerations actionable and scoped to review behavior.
 - Do not include implementation instructions or subtask edits.
 - Do not use this to hide real in-scope blockers from the next review.

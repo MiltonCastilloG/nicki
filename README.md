@@ -2,9 +2,7 @@
 
 **Nicki is a good dog.**
 
-Nicki is a [Cursor](https://cursor.com) workflow system for structured, agent-driven development. It orchestrates a **current-task pipeline** — describe, spec, subtasks, execute, review, commit, push, merge, and close — using isolated git worktrees and handoff artifacts between steps.
-
-Nicki controls workflow order, not implementation. A read-only orchestrator subagent asks before each transition, invokes specialized leaf agents, and keeps task state in sync.
+Cursor workflow for structured agent-driven development. Nicki orchestrates the current-task pipeline (describe → close) in project-local worktrees with YAML/Markdown handoffs.
 
 ---
 
@@ -12,170 +10,103 @@ Nicki controls workflow order, not implementation. A read-only orchestrator suba
 
 | Component | Location | Role |
 | --------- | -------- | ---- |
-| Orchestrator | `.cursor/agents/nicki.md` | Read-only pipeline conductor |
-| Slash commands | `.cursor/commands/` | Launch isolated subagents per step |
-| Skills | `.cursor/skills/` | Workflow instructions, tool permissions, YAML schemas |
-| Worktree script | `.cursor/skills/start-task/scripts/start-worktrees.sh` | Pull `main` and create `worktrees/<slug>/` |
+| Orchestrator | `.cursor/agents/nicki.md` | Read-only conductor; Task-spawns leaf subagents; owns pipeline and gates |
+| Leaf subagents | `.cursor/agents/<step>.md` | Workflow binding — load disk inputs, enforce gates, invoke skills |
+| Skills | `.cursor/skills/<name>/` | Pure functionality — how to perform one job; artifact schemas |
+| Skill index | `.cursor/skills/README.md` | Skills vs agents rules and exceptions |
 
-Each workflow step produces a compact YAML artifact under `current-task/` inside the active worktree. Closed tasks archive to `task-archive/<slug>/summary.yaml` at the project root.
+Ad-hoc work outside the pipeline: attach a skill (e.g. `conflict-resolution`, `caveman`) — no slash commands.
+
+### Three layers
+
+```text
+Nicki (.cursor/agents/nicki.md)
+  └─ Task-spawns agent (.cursor/agents/<leaf>.md)
+       └─ loads current-task/* from disk
+       └─ follows skill (.cursor/skills/<name>/SKILL.md)
+```
+
+Leaf skills are **portable** — no `status.json`, no pipeline step names, no “spawn X next”. Agents own auto-load paths and Nicki handoff expectations.
 
 ---
 
 ## Quick start
 
-### 1. Install into a project
-
-Copy or symlink this repo's `.cursor/` directory into your target project's root:
+### 1. Install
 
 ```bash
 cp -r /path/to/nicki/.cursor /path/to/your-project/.cursor
 ```
 
-Worktrees inherit `.cursor/` from the branch they are created from, so commit the runtime to your default branch or reinstall after creating worktrees.
-
-Add to your project's `.gitignore`:
+Add to `.gitignore`:
 
 ```gitignore
 worktrees/
+projects/*/worktrees/
 task-archive/
+global-status.json
 ```
 
-### 2. Start a task
+### 2. Run with Nicki
 
-In Cursor, open your project and run:
+Open the project in Cursor. Address Nicki by name:
 
 ```text
-/start-task hero-section
+nicki hero-section
+nicki continue
 ```
 
-This pulls `main`, creates `worktrees/hero-section/`, and reports the branch and next steps. A full job description is optional here — Nicki collects it in the **describe** step and saves a Gherkin user story before spec.
+Parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`). Nicki asks before each leaf step and Task-spawns workers (`start-task`, `spec-maker`, `execute-plan`, …).
 
-Open a new Cursor window rooted at the worktree path for isolated agent work.
-
-### 3. Run the pipeline
-
-**With Nicki (recommended)** — invoke the Nicki subagent once and confirm each transition:
-
-```text
-/nicki worktrees/hero-section
-```
-
-Nicki asks for the job description if you did not provide one at start, drafts a Gherkin user story for approval, then continues through the pipeline.
-
-**Step by step** — run slash commands directly (after describe, spec-maker reads `task.story` from context):
-
-```text
-/spec-maker worktrees/hero-section
-/subtask-maker worktrees/hero-section @current-task/specs/hero-section.yaml
-/execute-plan worktrees/hero-section @current-task/subtasks/hero-section.md
-/review-execution worktrees/hero-section
-/review-triage worktrees/hero-section
-/commit-task worktrees/hero-section
-/push-task worktrees/hero-section @current-task/commits/hero-section.yaml
-/merge-task worktrees/hero-section target: main
-/close-task worktrees/hero-section
-```
-
-Git side effects (commit, push, merge) require explicit confirmation. Close asks: *Time for the feedback woof! Want?*
+Git steps (commit, push, merge, publish) need explicit confirmation. Close asks: *Time for the feedback woof! Want?*
 
 ---
 
-## Pipeline overview
+## Pipeline
 
 ```
-start → describe → spec → subtasks → execute → review → triage → [fix loop] → commit → push → merge → close
+start → describe → spec → subtasks → execute → review → triage → [fix] → acceptance → commit → push → merge → publish → close
 ```
 
-After every leaf step except close, `/current-task-update` writes `current-task/current-task-context.yaml`. The **describe** step is Nicki-only: after start, Nicki asks for the job description if needed, drafts a Gherkin user story, and persists it as `task.story` before spec.
+Nicki Task-spawns `current-task-update` after each leaf step except close. `start-task` / `close-task` own `global-status.json`; `current-task-update` owns per-task `status.json`.
 
-```mermaid
-flowchart LR
-  A[start-task] --> B[current-task-update]
-  B --> C[describe]
-  C --> D[current-task-update]
-  D --> E[spec-maker]
-  E --> F[subtask-maker]
-  F --> G[execute-plan]
-  G --> H[review-execution]
-  H --> I[review-triage]
-  I --> J{ready?}
-  J -->|blockers| F
-  J -->|ready| K[commit-task]
-  K --> L[push-task]
-  L --> M[merge-task]
-  M --> N[close-task]
-```
-
-| Step | Command | Writes code? | Primary output |
-| ---- | ------- | ------------ | -------------- |
-| Setup | `/start-task` | No | `worktrees/<slug>/` |
-| State | `/current-task-update` | Context only | `current-task/current-task-context.yaml` |
-| Describe | Nicki (no command) | No | `task.story` in context |
-| Spec | `/spec-maker` | No | `current-task/specs/<slug>.yaml` |
-| Subtasks | `/subtask-maker` | No | `current-task/subtasks/<slug>.md` |
-| Execute | `/execute-plan` | Yes | Code + updated subtasks + `current-task/executions/<slug>.yaml` |
-| Review | `/review-execution` | No | `current-task/reviews/<slug>.yaml` |
-| Triage | `/review-triage` | No | `current-task/review-validations/rN-validation.yaml` |
-| Commit | `/commit-task` | Git commit | `current-task/commits/<slug>.yaml` |
-| Push | `/push-task` | Pre-push merge + push | `current-task/pushes/<slug>.yaml` |
-| Merge | `/merge-task` | Merge into `main` | `current-task/merges/<slug>.yaml` |
-| Close | `/close-task` | Archive + delete | `task-archive/<slug>/summary.yaml` |
+| Step | Subagent | Agent loads (typical) | Primary output |
+| ---- | -------- | --------------------- | -------------- |
+| Setup | `start-task` | — (creates worktree + registry) | worktree + `global-status.json` entry |
+| Describe | Nicki only | `status.json` | `current-task/story.md` |
+| Spec | `spec-maker` | status, story | `current-task/specs/<slug>.yaml` |
+| Subtasks | `subtask-maker` | status, spec | `current-task/subtasks/<slug>.md` |
+| Execute | `execute-plan` | status, subtasks, spec | code + `current-task/executions/<slug>.yaml` |
+| Review | `review-execution` | spec, subtasks, execution, optional guidance | `current-task/reviews/<slug>.yaml` |
+| Triage | `review-triage` | review, spec, subtasks, execution, status | `current-task/review-validations/rN-validation.yaml` |
+| Commit / push / merge / publish | git leaf agents | prior handoffs + status | handoffs under `current-task/` |
+| Close | `close-task` | status, merge/publish handoffs | `task-archive/<slug>/` |
 
 ---
 
-## Repository layout
+## State on disk
+
+```text
+global-status.json                    # workspace root; start-task / close-task only
+  tasks[<id>].status_path → current-task/status.json
+    artifacts.* → YAML/Markdown handoffs under current-task/
+```
+
+Authoritative schemas: `.cursor/skills/current-task-update/status-format.md`, `global-status-format.md`.
+
+---
+
+## Layout
 
 ```text
 nicki/
-├── README.md                        # this file
-├── NICKI.md                         # workflow semantics and design decisions
-├── PLAN.md                          # multi-project workspace roadmap
-├── nicki-workspace.example.yaml     # workspace registry stub
+├── README.md
+├── NICKI.md
+├── PLAN.md
 └── .cursor/
-    ├── agents/                      # subagent definitions (nicki, start-task, …)
-    ├── commands/                    # slash commands (/start-task, /spec-maker, …)
-    └── skills/                      # per-step skills, YAML schemas, scripts
-        ├── start-task/
-        ├── spec-maker/
-        ├── subtask-maker/
-        ├── execute-plan/
-        ├── review-execution/
-        ├── review-triage/
-        ├── commit-task/
-        ├── push-task/
-        ├── merge-task/
-        ├── close-task/
-        ├── current-task-update/
-        ├── conflict-resolution/     # shared merge conflict protocol
-        └── next-step-spec/          # follow-up spec format
+    ├── agents/          # workflow binding per leaf step
+    ├── rules/
+    └── skills/          # pure functionality + README.md
 ```
 
----
-
-## Design principles
-
-- **Nicki is read-only** — only `/current-task-update` writes task context YAML.
-- **Leaf agents are atomic** — no nested delegation; Nicki is the sole orchestrator.
-- **YAML handoffs, not chat memory** — each step produces inspectable artifacts.
-- **Worktree scope is hard** — `/execute-plan` never edits outside `worktrees/<slug>/`.
-- **Git safety** — `main` is untouched until `/merge-task`; conflicts require user input for every resolution (see `conflict-resolution` skill).
-- **Commands launch subagents** — slash commands delegate to isolated agent contexts, not inline parent work.
-
-Full rationale and invariants: [`NICKI.md`](NICKI.md).
-
----
-
-## Multi-project workspace (planned)
-
-[`PLAN.md`](PLAN.md) describes extracting Nicki into a standalone workspace that manages many git projects under `projects/<name>/worktrees/<slug>/`. See [`nicki-workspace.example.yaml`](nicki-workspace.example.yaml) for the registry format.
-
-Planned CLI commands include `nicki workspace init`, `nicki project clone`, `nicki runtime install`, and `nicki task start`.
-
----
-
-## Further reading
-
-- [`NICKI.md`](NICKI.md) — orchestrator rules, artifact chain, tool permissions, transition discipline
-- [`PLAN.md`](PLAN.md) — standalone workspace architecture and implementation phases
-- [`.cursor/agents/nicki.md`](.cursor/agents/nicki.md) — Nicki subagent definition
-- [`.cursor/skills/current-task-update/current-task-context-format.md`](.cursor/skills/current-task-update/current-task-context-format.md) — context schema
+Design rationale: [`NICKI.md`](NICKI.md). Multi-project workspace: [`PLAN.md`](PLAN.md). Skills/agents audit: [`report-2.md`](report-2.md).

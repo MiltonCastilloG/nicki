@@ -1,25 +1,8 @@
 # Review format
 
-Reviews are the output of `/review-execution`. **YAML only** — output reviews have exactly two top-level keys: `approved` and `content`.
+**YAML only** — output reviews have exactly two top-level keys: `approved` and `content`.
 
-Store reviews in the worktree under `current-task/reviews/` (e.g. `current-task/reviews/hero-section.yaml`) or consume inline YAML from the subagent report.
-
-All agent YAML artifacts for the active task live under `current-task/`:
-
-```
-current-task/
-  current-task-context.yaml              # workflow context from /current-task-update
-  specs/<slug>.yaml                    # from /spec-maker
-  subtasks/<slug>.md                   # from /subtask-maker
-  executions/<slug>.yaml               # from /execute-plan
-  reviews/<slug>.yaml                  # from /review-execution
-  review-validations/rN-validation.yaml # from /review-triage
-  review-inputs/rN-review.yaml         # optional guidance input for /review-execution
-  next-steps/*.yaml                    # follow-up specs consumable by /subtask-maker
-  merges/<slug>.yaml                   # from /merge-task
-  commits/<slug>.yaml                  # from /commit-task
-  pushes/<slug>.yaml                   # from /push-task
-```
+Default path: `current-task/reviews/<slug>.yaml` under the worktree scope root.
 
 ## Top-level fields
 
@@ -28,28 +11,19 @@ current-task/
 | `approved` | Yes | `true` if the implementation passes review; `false` if blocking issues remain |
 | `content` | Yes | Pass summary (`approved: true`) or actionable issue list (`approved: false`) |
 
-**Output reviews have no other top-level keys.** Do not add `meta`, `title`, or routing hints to `current-task/reviews/<slug>.yaml` — downstream consumers read only `approved` and `content`.
+**Output reviews have no other top-level keys.** Do not add `meta`, `title`, or routing hints.
 
-## Optional review-execution input
+## Optional review input (guidance)
 
-When `/review-triage` discards an invalid review, it may write a guidance file under `current-task/review-inputs/rN-review.yaml`. That input uses review YAML plus one extra key:
+Review guidance files use review YAML plus one extra input-only key. See [review-guidance-format.md](../review-triage/review-guidance-format.md).
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `approved` | Yes | Usually `false`; explains that previous review should not be treated as approved |
 | `content` | Yes | Why the previous review should be rerun |
-| `important-considerations` | Yes | Scope or correctness notes `/review-execution` must keep in mind |
+| `important-considerations` | Yes | Scope or correctness notes to keep in mind while reviewing |
 
-`important-considerations` is input-only. `/review-execution` must use it while reviewing, but must still write output with only `approved` and `content`.
-
-```yaml
-approved: false
-content: |
-  Previous review was discarded because it treated footer redesign as a hero-task blocker.
-important-considerations:
-  - Do not block the hero task on footer redesign; footer is outside spec.scope.in.
-  - Still report build, lint, test, safety, or correctness issues.
-```
+`important-considerations` is input-only. Output must still have only `approved` and `content`.
 
 ## `approved`
 
@@ -106,17 +80,16 @@ content: |
 **Don't:**
 
 - Suggest fixes or checklist rewrites — only report what failed review
-- Include non-blocking nits unless the user asked for strict review
+- Include non-blocking nits unless strict review was requested
 - Add keys beyond `approved` and `content`
-- Mention downstream agents or routing logic
 
 ## Ambiguity → ask
 
-The review-execution agent should ask the user before writing the review when:
+Ask before writing the review when:
 
 - Spec or subtask list is missing and partial review is insufficient
 - A requirement is subjective and pass/fail is unclear
 - Verify commands cannot run (missing deps, wrong branch base)
 - Git history makes change discovery unreliable
 
-Resolve or get user direction, then write `current-task/reviews/<slug>.yaml`.
+Resolve or get user direction, then write the review file.

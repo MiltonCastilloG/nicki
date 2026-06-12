@@ -1,40 +1,25 @@
 ---
 name: start-task
-description: "Pull main and create git worktrees for parallel task work under worktrees/. Use when the user runs /start-task or asks to start task branches with worktrees."
+description: "Pull main and create git worktrees for parallel task work."
 disable-model-invocation: true
 metadata:
   type: subagent
   subagent: start-task
-  tools:
-    read: true
-    write: false
-    delete: false
-    shell: true
-    grep: false
-    glob: false
-    semantic_search: false
-    task: false
-    web_search: false
-    web_fetch: false
-    mcp: false
-    ask_question: true
-    todo_write: false
-    generate_image: false
-    switch_mode: false
 ---
 
 # Start Task
 
-Set up isolated git worktrees for one or more work items. Always pull `main` first, then create worktrees under `worktrees/<slug>`.
+Set up git worktrees. Pull `main` first. Path: `projects/<project>/worktrees/<slug>` when `PROJECT` env set; else legacy `worktrees/<slug>`.
 
-## When to use
+## Inputs
 
-- User invokes `/start-task` with one or more work items
-- User asks to start parallel task work with worktrees
+| Input | Required | Notes |
+|-------|----------|-------|
+| Work items | Yes | One or more tasks — slug-level labels are enough |
+| `PROJECT` env | No | Selects `projects/<project>/worktrees/<slug>` |
+| Workspace root | For registry | Agent passes when registering tasks |
 
-## Workflow
-
-Copy this checklist and track progress:
+## Procedure
 
 ```
 Task Progress:
@@ -42,16 +27,16 @@ Task Progress:
 - [ ] Classify each item and choose branch prefix + slug
 - [ ] Confirm ambiguous classifications with the user
 - [ ] Run start-worktrees.sh with branch:slug pairs
-- [ ] Report results and next steps (full job description comes later in the describe step)
+- [ ] Report results
 ```
 
 ### Step 1: Parse work items
 
-Split the user's message into distinct work items (comma-separated, line breaks, or explicit prefixes like `fix:` / `chore:`).
+Split the message into distinct work items (comma-separated, line breaks, or explicit prefixes like `fix:` / `chore:`).
 
-A work item may be **minimal** — enough to classify the branch and derive a slug (e.g. `hero-section`, `fix footer`). A full job description is **not** required here. Nicki collects and formats the Gherkin user story in the `describe` step after the worktree and context file exist.
+A work item may be **minimal** — enough to classify the branch and derive a slug (e.g. `hero-section`, `fix footer`). A full job description is not required at start.
 
-If the user provides a fuller description at start, pass it through in the handoff as `original task text` for Nicki to convert later.
+If the user provides a fuller description, pass it through in the report as original task text.
 
 ### Step 2: Classify and name branches
 
@@ -69,16 +54,16 @@ Pick a prefix and kebab-case slug for each item:
 
 **Slug rules:** lowercase, hyphens, no spaces. Derive from the description (e.g. "footer bug" → slug `footer-bug`, branch `fix/footer-bug`).
 
-**Worktree path:** `worktrees/<slug>` (prefix omitted from folder name).
+**Worktree path:** `projects/<project>/worktrees/<slug>` (preferred) or `worktrees/<slug>` (legacy). Prefix omitted from folder name.
 
 If classification is ambiguous, ask before creating worktrees.
 
 ### Step 3: Run the script
 
-From the repository root, run:
+From project repo root (or workspace project checkout), run:
 
 ```bash
-.cursor/skills/start-task/scripts/start-worktrees.sh \
+PROJECT=castlemill-landing .cursor/skills/start-task/scripts/start-worktrees.sh \
   "feature/hero-section:hero-section" \
   "fix/footer-bug:footer-bug"
 ```
@@ -86,46 +71,25 @@ From the repository root, run:
 Pass one `branch:slug` argument per work item. The script:
 
 1. Checks out `main` and runs `git pull origin main`
-2. Creates `worktrees/<slug>` for each item
+2. Creates `projects/<project>/worktrees/<slug>` when `PROJECT` set, else `worktrees/<slug>`
 3. Skips items where the path or branch already exists (no overwrite)
 
 Make the script executable first if needed: `chmod +x .cursor/skills/start-task/scripts/start-worktrees.sh`
 
-### Step 4: Report and next steps
+### Step 4: Report
 
 Summarize:
 
 - Whether `main` was updated (before/after SHA if changed)
 - Created worktrees (path → branch)
 - Skipped items (if any)
-- For each created worktree, report a compact handoff summary for Nicki:
-  - `worktree`
-  - `slug`
-  - `branch`
-  - original task text (may be slug-level only)
-  - task type
-  - next expected step: `describe` (Gherkin user story), then `current-task/current-task-context.yaml`
-
-Remind the user:
-
-1. `cd worktrees/<slug> && npm install` in each **new** worktree (worktrees do not share `node_modules`)
-2. Open a new Cursor window rooted at the worktree path for isolated agent sessions
-3. When orchestrated by Nicki, it will call `/current-task-update` to initialize context, then run the **describe** step — ask for the job description if needed and persist a Gherkin user story before spec
-4. Run `/spec-maker worktrees/<slug>` (Nicki passes `task.story` from context when orchestrated) to write `current-task/specs/<slug>.yaml`
-5. Run `/subtask-maker worktrees/<slug> @current-task/specs/<slug>.yaml` then `/execute-plan worktrees/<slug> @current-task/subtasks/<slug>.md` to write `current-task/executions/<slug>.yaml`
-6. Run `/review-execution worktrees/<slug>` to review the diff with spec, subtask list, execution handoff, and write `current-task/reviews/<slug>.yaml`
-7. Run `/review-triage worktrees/<slug>` to filter review findings against task scope and write `current-task/review-validations/rN-validation.yaml`
-8. Run `/commit-task worktrees/<slug>` to create a local commit and write `current-task/commits/<slug>.yaml`
-9. Run `/push-task worktrees/<slug> @current-task/commits/<slug>.yaml` to merge `main`, publish the branch, and write `current-task/pushes/<slug>.yaml`
-10. Run `/merge-task worktrees/<slug> target: main` to merge the pushed task branch into `main`, with user input for every conflict resolution
-11. Run `/close-task worktrees/<slug>` after Nicki asks `Time for the feedback woof! Want?` to write `task-archive/<slug>/summary.yaml` and delete `current-task/`
-12. Verify the archive exists and the task context folder was removed
+- Per created worktree: path, slug, branch, original task text, task type
 
 ## Safety rules
 
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
 - If a worktree or branch already exists, report it and skip — do not overwrite
-- Only operate on this repository (`castlemill-landing`)
+- No single host-repo hardcode; `PROJECT` selects `projects/<project>/worktrees/`
 - Do not commit or push unless the user explicitly asks
 
 ## Examples

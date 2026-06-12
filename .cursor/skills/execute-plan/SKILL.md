@@ -1,26 +1,10 @@
 ---
 name: execute-plan
-description: "Execute a markdown subtask checklist inside a git worktree with strict path scope. Use when the user runs /execute-plan, asks to implement subtasks in a worktree, or wants checklist-driven code generation without improvisation."
+description: "Execute a markdown subtask checklist inside a git worktree with strict path scope."
 disable-model-invocation: true
 metadata:
   type: subagent
   subagent: execute-plan
-  tools:
-    read: true
-    write: true
-    delete: true
-    shell: true
-    grep: true
-    glob: true
-    semantic_search: true
-    task: false
-    web_search: false
-    web_fetch: false
-    mcp: false
-    ask_question: true
-    todo_write: true
-    generate_image: false
-    switch_mode: false
 ---
 
 # Execute Plan
@@ -30,26 +14,20 @@ Implement work by following a **subtask checklist** inside one worktree — Open
 The worktree path is a hard boundary: never modify files outside it.
 
 Subtask schema: [subtask-format.md](../subtask-maker/subtask-format.md).
+Execution schema: [execution-format.md](execution-format.md).
 
-## When to use
-
-- User invokes `/execute-plan` with a worktree path and a subtask list
-- User asks to implement a pre-written subtask checklist in an isolated worktree
-- A parent workflow created a worktree via `/start-task` and now needs implementation
-
-## Required inputs
+## Inputs
 
 | Input | Required | Notes |
 |-------|----------|-------|
 | Worktree path | Yes | Absolute or repo-relative (e.g. `worktrees/hero-section`) |
-| Subtask list | Yes | `@current-task/subtasks/<slug>.md`, inline markdown, or path |
-| Task context | Optional | `current-task/current-task-context.yaml` when orchestrated by Nicki |
+| Subtask list | Yes | Path, `@` reference, or inline markdown |
+| Linked spec | No | Path when agent passes one — used for scope checks |
+| Execution output path | No | Default `current-task/executions/<slug>.yaml` under scope root |
 
-If either is missing, ask before starting.
+If either worktree or subtask list is missing, ask before starting.
 
-## Workflow
-
-Copy this checklist and track progress:
+## Procedure
 
 ```
 Task Progress:
@@ -66,8 +44,7 @@ Task Progress:
 1. Resolve the worktree path to an **absolute** path.
 2. Confirm the directory exists and is a git worktree (or at minimum a directory the user designated).
 3. Set the **scope root** to that absolute path. All subsequent work happens here.
-4. Derive `<slug>` from the final folder name and set the execution handoff path to `current-task/executions/<slug>.yaml` under the scope root.
-5. Load `current-task/current-task-context.yaml` when present and validate its `scope.worktree_path` matches the worktree path.
+4. Derive `<slug>` from the final folder name. Default execution output: `current-task/executions/<slug>.yaml`.
 
 **Scope rules (non-negotiable):**
 
@@ -79,7 +56,7 @@ Task Progress:
 
 ### Step 2: Parse the subtask list
 
-Load from `@current-task/subtasks/<slug>.md`, a path, or inline markdown. Full schema: [subtask-format.md](../subtask-maker/subtask-format.md).
+Load from path or inline markdown. Full schema: [subtask-format.md](../subtask-maker/subtask-format.md).
 
 Extract:
 
@@ -89,9 +66,9 @@ Extract:
 **Before executing**, check for:
 
 - Missing or vague subtasks ("improve the footer", "clean up code")
-- Subtasks outside spec `scope.out` when a linked spec exists
+- Subtasks outside linked spec `scope.out` when a spec path is available
 - `meta.worktree` / frontmatter `worktree` that does not match the worktree slug
-- No verification subtasks at the end when spec `acceptance` exists
+- No verification subtasks at the end when linked spec `acceptance` exists
 
 If anything is unclear, **stop and ask** with a specific question. Do not guess or fill gaps with your own design choices.
 
@@ -101,7 +78,7 @@ Work through **unchecked** subtasks top to bottom:
 
 1. Read the next `- [ ]` line.
 2. Implement what that one sentence requires — explore the worktree as needed to decide files and approach.
-3. When the subtask is done, change that line to `- [x]` and **save** `current-task/subtasks/<slug>.md` immediately.
+3. When the subtask is done, change that line to `- [x]` and **save** the subtask markdown file immediately.
 4. Continue until all subtasks are checked or execution blocks.
 
 **Execution discipline:**
@@ -119,9 +96,9 @@ If a subtask fails (tool error, test failure, missing context), stop and report.
 
 ### Step 4: Write execution handoff
 
-Write `current-task/executions/<slug>.yaml` under the scope root using [execution-format.md](execution-format.md).
+Write the execution YAML under the scope root using [execution-format.md](execution-format.md).
 
-Write this file whenever execution reaches a terminal state:
+Write whenever execution reaches a terminal state:
 
 - `status: complete` when all subtasks are checked and verification subtasks passed or were explicitly skipped by user direction.
 - `status: partial` when some subtasks completed but the list did not finish.
@@ -139,23 +116,10 @@ Summarize:
 - Remaining unchecked subtasks, if any
 - Any questions left for the user
 
-Remind the user to run:
-
-```
-/review-execution worktrees/<slug>
-```
-
-Replace `worktrees/<slug>` with the actual worktree path the user provided.
-
 ## Safety rules
 
 - Never modify files outside the scope root
-- Never edit `current-task/current-task-context.yaml`; Nicki updates it through `/current-task-update`
-- May edit `current-task/subtasks/<slug>.md` only to flip checklist completion state
+- May edit the subtask markdown file only to flip checklist completion state
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
 - Do not commit or push unless the user explicitly asks
 - When in doubt, ask — improvisation is a last resort, not a default
-
-## Examples
-
-See [subtask-format.md](../subtask-maker/subtask-format.md) for copy-paste subtask list templates.

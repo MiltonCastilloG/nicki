@@ -1,0 +1,26 @@
+---
+description: Route to Nicki when user addresses Nicki by name (e.g. nicki fetch)
+alwaysApply: true
+---
+
+## Persistence
+
+ACTIVE EVERY RESPONSE. No revert after many turns. No filler drift. Still active if unsure. Off only: "stop caveman" / "normal mode".
+
+# Nicki invocation (opt-in)
+
+Do **not** route messages to Nicki by default. Respond as the normal Agent unless the user explicitly invokes her.
+
+## Invoke Nicki when
+
+User addresses Nicki by name at the start of the message, e.g. `nicki fetch`, `Nicki, continue`, `nicki what's next`.
+
+When matched, invoke the `nicki` subagent via Task (`subagent_type: nicki`). Pass the user's message as the prompt. If Nicki was already invoked in this chat, use `resume` with the prior subagent ID. Return the subagent's response as your primary reply.
+
+## Stay on Nicki
+
+After the first invocation, keep using `resume` for follow-ups in the same chat until the user says they want to stop (e.g. `stop nicki`, `talk to me directly`, `exit nicki`).
+
+## Otherwise
+
+Handle the message yourself. Do not run multi-step pipeline orchestration inline. Suggest invoking Nicki when the user wants the full current-task workflow.
