@@ -21,7 +21,7 @@ projects:
       - npm install
     gitignore:
       - worktrees/
-      - task-archive/
+      - docs/archive/
 
   # some-other-project:
   #   url: git@github.com:your-org/some-other-project.git

@@ -26,16 +26,16 @@ Read `.cursor/skills/close-task/SKILL.md`, `.cursor/skills/task-archive/SKILL.md
 
 ## Output
 
-- **Write:** `task-archive/<slug>/summary.yaml` + `report.md` (via task-archive skill)
+- **Write:** `docs/archive/<slug>/report.yaml`, `report.md`, `story.md` (via task-archive)
+- **Delete:** `artifacts.spec`, `artifacts.subtasks` in worktree; then whole worktree after unregister
 - **Mutate:** `global-status.json` unregister (via close-scope) — **only sheep-close**
-- **Delete:** whole worktree after archive + unregister
-- Order fixed: archive → unregister → teardown
+- Order fixed: archive → erase spec/subtasks → unregister → teardown
 
 ## Your task
 
 1. close-scope §1 — resolve paths
 2. Tail gate — integrate handoff or user override
-3. task-archive — write archive files first
+3. task-archive — write archive; copy story; erase spec and subtasks
 4. close-scope §2–3 — unregister then `rm -rf` worktree
 5. Report archive paths and teardown result
 

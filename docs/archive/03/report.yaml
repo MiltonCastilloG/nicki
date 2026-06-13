@@ -1,0 +1,46 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: nicki-contruction/03/ (spec, subtasks, stories)
+  tail_override: construction-slice — no worktree integrate handoff; artifacts in-repo
+
+task:
+  slug: "03"
+  title: Skills lock + sheep agents
+  original: Separate portable skills from Nicki-only workflow binding; rename leaf agents to sheep-*
+  type: refactor
+  branch: main
+
+story: pipeline skills unlocked · workflow skills locked · sheep-* agents · routing.yaml step map · sync-task + integrate-task git tail · validation fold · pure leaf skills · sheep write boundaries · agent-permissions sheep keys · caveman lite default
+
+outcome:
+  status: archived
+  target: main
+  pushed_branch: null
+  final_artifact: docs/archive/03/report.yaml
+
+process:
+  - step: spec
+    summary: 03-spec.yaml — Phase 1 skill lock + Phase 2 sheep rename and git tail simplification.
+  - step: subtasks
+    summary: 61/61 subtasks in 03-subtasks.md across both phases.
+  - step: execute
+    summary: Nine sheep agents, routing.yaml, sync/integrate tail, validation fold, pure skills, docs and smoke updates.
+  - step: close
+    summary: Archived to docs/archive/03/; construction source torn down.
+
+decisions:
+  - Users attach pipeline skills ad-hoc; only Nicki sends sheep via Task
+  - Git tail simplified to sync-task + integrate-task; commit/push/merge/publish removed
+  - review-triage folded into validation skill loaded by sheep-review
+  - Caveman default lite; workflow-only skills stay locked
+
+open_questions: []
+
+suggestions:
+  - area: spec
+    suggestion: Continue stripping pipeline leakage from workflow-exception skills per report-2 audit.
+    evidence: "nicki-contruction/report-2.md — partial skills/agents separation"
+  - area: orchestration
+    suggestion: Prove close/archive on first real production worktree close.
+    evidence: "report.md remain list — slice 03 shipped runtime, real close unproven"

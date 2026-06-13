@@ -103,7 +103,7 @@ steps:
     sheep: sheep-close
     nicki_only: false
     artifact_key: archive
-    expected_artifact: task-archive/<slug>/summary.yaml
+    expected_artifact: docs/archive/<slug>/report.yaml
     default_next_step: done
     gate: integrate recorded or tail override; user confirmed close
     user_confirm: archive worktree and delete scope

@@ -1,12 +1,12 @@
 ---
 name: close-scope
-description: "Close path resolution, global-status unregister, worktree teardown. close-task only — after archive written."
+description: "Close path resolution, global-status unregister, worktree teardown. close-task only — after report.yaml, report.md, story.md exist."
 disable-model-invocation: true
 ---
 
 # Close Scope
 
-Paths + registry teardown + worktree delete. Run **after** [task-archive](../task-archive/SKILL.md) writes both files.
+Paths + registry teardown + worktree delete. Run **after** [task-archive](../task-archive/SKILL.md) writes `report.yaml`, `report.md`, and `story.md`.
 
 ## 1. Resolve paths
 
@@ -20,13 +20,13 @@ Missing → ask. Stop.
 2. `slug` = final folder name.
 3. `repo_root` — project git root: parent of `projects/<project>/worktrees/<slug>`, or parent of legacy `worktrees/<slug>`. Ambiguous → ask.
 4. `workspace_root` — dir with `global-status.json`.
-5. `archive_dir` = `task-archive/<slug>/` under `repo_root`.
+5. `archive_dir` = `docs/archive/<slug>/` under `repo_root`.
 
 ## 2. Unregister
 
 **Only sheep-close** mutates `global-status.json`. Schema: [global-status-format.md](../current-task-update/global-status-format.md).
 
-Prereq: `task-archive/<slug>/summary.yaml` + `report.md` exist.
+Prereq: `docs/archive/<slug>/report.yaml`, `report.md`, and `story.md` exist.
 
 ```bash
 .cursor/skills/close-scope/scripts/unregister-global-status.sh "<workspace_root>" "<task_id>"
@@ -46,7 +46,7 @@ Whole worktree gone — not only `current-task/`.
 
 ## Never delete
 
-`task-archive/`, repo workflow docs, other worktrees.
+`docs/archive/`, repo workflow docs, other worktrees.
 
 ## Report
 

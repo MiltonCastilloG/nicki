@@ -68,7 +68,7 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
 | `next_steps` | No | Array of follow-up spec paths |
 | `sync` | No | Sync handoff path (`current-task/syncs/<slug>.yaml`) |
 | `integrate` | No | Integrate handoff path (`current-task/integrates/<slug>.yaml`) |
-| `archive` | No | Archive path at project root |
+| `archive` | No | `docs/archive/<slug>/report.yaml` (dir also holds `report.md`, `story.md`) |
 
 ## `open_questions`
 
@@ -191,7 +191,7 @@ When spec handoff has non-empty `open_questions`, status-update mirrors into `op
 
 | Root | Role |
 |------|------|
-| Workspace | `global-status.json`, `task-archive/` |
+| Workspace | `global-status.json`, `docs/archive/` |
 | Project | `projects/<project>/` git repo root |
 | Task worktree | `projects/<project>/worktrees/<slug>/`, `current-task/*` |
 | Target branch | project checkout for integrate (`main` default) |

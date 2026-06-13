@@ -70,7 +70,7 @@ flowchart TB
     │   │       │   ├── specs/
     │   │       │   └── …
     │   │       └── … app files …
-    │   └── task-archive/            # optional; repo-root archives
+    │   └── docs/archive/            # closed task archives per slug
     └── some-other-project/
         └── worktrees/
 ```
@@ -94,8 +94,9 @@ Everything Nicki-related is bundled here so you can move it into a new repo as-i
 
 ```text
 nicki/
-├── PLAN.md                          # this file
-├── NICKI.md                         # workflow semantics + design decisions
+├── docs/
+│   ├── PLAN.md                      # this file
+│   └── NICKI.md                     # workflow semantics + design decisions
 ├── nicki-workspace.example.yaml     # workspace registry stub
 └── .cursor/
     ├── agents/                      # subagent definitions (incl. nicki.md)
@@ -108,8 +109,9 @@ When you create the Nicki repo, suggested target:
 ```text
 nicki/                               # new git repo root
 ├── README.md
-├── PLAN.md
-├── NICKI.md
+├── docs/
+│   ├── PLAN.md
+│   └── NICKI.md
 ├── nicki-workspace.example.yaml
 ├── bin/nicki                        # CLI (later)
 └── package/.cursor/                 # ← copy from repo .cursor/
@@ -132,14 +134,14 @@ Or symlink if your OS/setup supports it. Worktrees inherit `.cursor/` from the b
 - Agent, command, skill, and schema source files (see `runtime/.cursor/`)
 - Workspace registry format (`nicki-workspace.yaml`)
 - CLI: workspace init, project clone/register, runtime install/update, task start, doctor
-- Portable docs: `NICKI.md`, `PLAN.md`
+- Portable docs: `docs/NICKI.md`, `docs/PLAN.md`
 
 ### Each managed project owns
 
 - App source and git history
 - Local `.cursor/` runtime (installed/updated by Nicki)
 - Its own `worktrees/` directory
-- Task archives (`task-archive/` at project root, unless centralized later)
+- Task archives (`docs/archive/` under repo docs, unless centralized later)
 - Optional project-local extensions (e.g. extra skills under `.cursor/skills-local/` — never overwritten by Nicki update)
 
 ### Nicki does not own
@@ -151,7 +153,7 @@ Or symlink if your OS/setup supports it. Worktrees inherit `.cursor/` from the b
 
 ## Workspace registry
 
-`nicki-workspace.yaml` lives at the workspace root. See [`nicki-workspace.example.yaml`](nicki-workspace.example.yaml).
+`nicki-workspace.yaml` lives at the workspace root. See [`nicki-workspace.example.yaml`](../nicki-workspace.example.yaml).
 
 It should track:
 
@@ -215,7 +217,7 @@ Each project should ignore:
 
 ```gitignore
 worktrees/
-task-archive/    # if archives stay local-only
+docs/archive/    # closed task archives (tracked in nicki repo)
 ```
 
 Nicki `doctor` can verify this.
@@ -267,7 +269,7 @@ Full detail: [`NICKI.md`](NICKI.md).
 | File | Role |
 | ---- | ---- |
 | `runtime/.cursor/agents/nicki.md` | Nicki subagent definition |
-| `NICKI.md` | Workflow semantics |
+| `docs/NICKI.md` | Workflow semantics |
 
 ### State
 

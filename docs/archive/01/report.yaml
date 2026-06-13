@@ -1,0 +1,42 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: nicki-contruction/01/ (umbrella + 01-0 + 01-1 tracks, executions)
+  tail_override: construction-slice — no worktree integrate handoff; artifacts in-repo
+
+task:
+  slug: "01"
+  title: Report follow-up slice 01 — umbrella
+  original: Close report open items on slice 00 baseline via parallel 01-0 and 01-1 tracks
+  type: refactor
+  branch: main
+
+story: parallel 01-0 / 01-1 tracks · readiness in validation YAML · fix-loop subtask append · acceptance gate · publish-task leaf · project-local worktrees · pointer ownership doc · close tail validation · disk routing
+
+outcome:
+  status: archived
+  target: main
+  pushed_branch: null
+  final_artifact: docs/archive/01/report.yaml
+
+process:
+  - step: spec
+    summary: Umbrella 01-spec.yaml plus child 01-0-spec.yaml and 01-1-spec.yaml.
+  - step: subtasks
+    summary: 12/12 umbrella subtasks; child tracks executed separately.
+  - step: execute
+    summary: review-routing (01-0) and git-tail-workspace (01-1); pointer ownership doc.
+  - step: close
+    summary: Archived to docs/archive/01/; construction source torn down.
+
+decisions:
+  - 01-0 owns validation, acceptance, open_questions, fix-loop pointers
+  - 01-1 owns merge, publish, close, start path metadata
+  - publish-task added as new leaf for 01-1 (superseded by sync/integrate in slice 03)
+
+open_questions: []
+
+suggestions:
+  - area: orchestration
+    suggestion: When simplifying git tail, archive slice 01 publish-task model explicitly in migration notes.
+    evidence: "slice 03 removed commit/push/merge/publish; 01-1 shipped publish-task"

@@ -4,4 +4,3 @@ projects/*
 
 # Per-project task artifacts (when present under a managed clone)
 worktrees/
-task-archive/

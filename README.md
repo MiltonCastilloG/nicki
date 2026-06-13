@@ -44,7 +44,6 @@ Add to `.gitignore`:
 ```gitignore
 worktrees/
 projects/*/worktrees/
-task-archive/
 global-status.json
 ```
 
@@ -80,7 +79,7 @@ Nicki sends `sheep-status` after each sheep except close. `sheep-start` / `sheep
 | Execute | `sheep-execute` | status, subtasks, spec | code + `current-task/executions/<slug>.yaml` |
 | Review | `sheep-review` | spec, subtasks, execution, validation skill | `reviews/<slug>.yaml` + `review-validations/rN-validation.yaml` + optional `next-steps/*.yaml` |
 | Sync / integrate | `sheep-sync`, `sheep-integrate` | status, review validation | `syncs/`, `integrates/` handoffs |
-| Close | `sheep-close` | status, integrate handoff | `task-archive/<slug>/` |
+| Close | `sheep-close` | status, integrate handoff | `docs/archive/<slug>/` |
 
 ---
 
@@ -101,12 +100,14 @@ Authoritative schemas: `.cursor/skills/current-task-update/status-format.md`, `g
 ```text
 nicki/
 ├── README.md
-├── NICKI.md
-├── PLAN.md
+├── docs/
+│   ├── NICKI.md         # workflow semantics
+│   ├── PLAN.md          # multi-project workspace plan
+│   └── archive/         # closed task archives (00, 01, …)
 └── .cursor/
     ├── agents/          # sheep workflow binding (Nicki only)
     ├── rules/
     └── skills/          # pure functionality + README.md
 ```
 
-Design rationale: [`NICKI.md`](NICKI.md). Multi-project workspace: [`PLAN.md`](PLAN.md). Skills/agents audit: [`nicki-contruction/report-2.md`](nicki-contruction/report-2.md).
+Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Multi-project workspace: [`docs/PLAN.md`](docs/PLAN.md). Skills/agents audit: [`nicki-contruction/report-2.md`](nicki-contruction/report-2.md).

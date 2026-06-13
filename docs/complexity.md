@@ -25,7 +25,7 @@ Agent spawns use `sheep-*` names; skills keep legacy folder names (`subtask-make
 | **sheep-review** | 4 | 409 | **4** | Verify diff; review + `validation-format.md` in one spawn. |
 | **sheep-sync** | 3 | 333 | **3** | Commit, merge `main` into feature, push feature branch. |
 | **sheep-integrate** | 3 | 320 | **3** | Merge feature into `main`, push `main`. |
-| **sheep-close** | 3 | 187 | **3** | Archive, unregister, delete worktree. |
+| **sheep-close** | 3 | **185** | **3** | Archive (report + story), erase spec/subtasks, unregister, delete worktree. |
 | **sheep-status** | 3 | **372** | **3** | Writes only `status.json`; schema-heavy. |
 
 ### Skill-only (not a separate spawn)
@@ -33,7 +33,7 @@ Agent spawns use `sheep-*` names; skills keep legacy folder names (`subtask-make
 | Skill | Lines | Notes |
 |-------|-------|-------|
 | `validation/validation-format.md` | 77 | Loaded by `sheep-review` — readiness + out-of-scope next-steps |
-| `task-archive/archive-format.md` | 98 | Referenced by `task-archive/SKILL.md`; not in `sheep-close` load list |
+| `task-archive/archive-format.md` | 106 | Loaded via task-archive/SKILL.md in close flow |
 
 ---
 
@@ -128,7 +128,7 @@ Nicki-only: `describe`, `acceptance`, `fix`. Validation (readiness + next-steps)
 | Agent | Lines | Why |
 |-------|------:|-----|
 | **sheep-review** | 409 | Reference implementation; validation merged |
-| **sheep-close** | 187 | Lean; consider adding `archive-format.md` to load list |
+| **sheep-close** | 185 | Archive = `docs/archive/<slug>/` (report.yaml, report.md, story.md) |
 | **sheep-start** | 175 | Single SKILL; agent-only registry script |
 | **sheep-sync** / **sheep-integrate** | 333 / 320 | `conflict-resolution` intentionally duplicated |
 
@@ -140,7 +140,8 @@ Nicki-only: `describe`, `acceptance`, `fix`. Validation (readiness + next-steps)
 2. **Load list, not folder size** — writer vs reader docs; disk artifact is the contract.
 3. **Git tail** — sync + integrate halved confirms and agents.
 4. **No out-of-scope sheep** — deferred `[scope]` handled in validation step inside review.
-5. **Cumulative trim** — subtask −231, nicki −166, execute/spec/status −67 combined.
+5. **Close archive** — three files under `docs/archive/<slug>/`; spec and subtasks erased, not copied.
+6. **Cumulative trim** — subtask −231, nicki −166, execute/spec/status −67 combined.
 
 ---
 

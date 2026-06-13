@@ -81,7 +81,7 @@ Close confirm:
 Archive and delete worktree?
 ```
 
-Show archive paths and delete scope.
+Show archive paths (`docs/archive/<slug>/`) and delete scope.
 
 ## Context
 

@@ -1,6 +1,6 @@
 ---
 name: close-task
-description: "Archive task, unregister global-status, delete worktree. After integrate + status-update + Nicki close confirm."
+description: "Archive to docs/archive/<slug>/, unregister global-status, delete worktree. After integrate + status-update + Nicki close confirm."
 disable-model-invocation: true
 ---
 
@@ -10,7 +10,7 @@ Two helpers. Order fixed.
 
 | Helper | Role |
 |--------|------|
-| [task-archive](../task-archive/SKILL.md) | `summary.yaml` + `report.md` |
+| [task-archive](../task-archive/SKILL.md) | Write `docs/archive/<slug>/` — `report.yaml`, `report.md`, `story.md`; erase spec + subtasks |
 | [close-scope](../close-scope/SKILL.md) | unregister + delete worktree |
 
 ## When
@@ -34,9 +34,9 @@ Before archive, verify via `status.json` `artifacts` + disk:
 
 - `current-task/integrates/<slug>.yaml` exists (or `artifacts.integrate` resolves)
 
-Missing integrate handoff → **block** unless user approves override. Record override in `summary.yaml` `meta.tail_override` + `report.md`. Then proceed archive → unregister → teardown.
+Missing integrate handoff → **block** unless user approves override. Record override in `report.yaml` `meta.tail_override` + `report.md`. Then proceed archive → unregister → teardown.
 
-Order fixed: archive files first, unregister, `rm -rf` worktree last.
+Order fixed: `docs/archive/<slug>/` written → story copied → spec/subtasks erased → unregister → teardown.
 
 ## Checklist
 
@@ -51,6 +51,6 @@ Order fixed: archive files first, unregister, `rm -rf` worktree last.
 ## Safety
 
 - No close without Nicki confirm.
-- No teardown before archive files exist.
+- No teardown before `docs/archive/<slug>/report.yaml`, `report.md`, and `story.md` exist.
 - No `task: true`.
 - No full logs/diffs/transcripts in archive.

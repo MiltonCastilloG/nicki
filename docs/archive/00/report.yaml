@@ -1,0 +1,43 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: nicki-contruction/00/ (spec, subtasks, stories, execution)
+  tail_override: construction-slice — no worktree integrate handoff; artifacts in-repo
+
+task:
+  slug: "00"
+  title: JSON status architecture migration
+  original: Workspace task registry and per-task JSON status replacing current-task-context.yaml
+  type: refactor
+  branch: main
+
+story: global-status.json registry · per-task status.json · hook task-id resolution · registry start/close write boundary · status-update sole writer · artifact pointers only · deprecated context YAML · blocked open_questions · close archive before delete · smoke boundary scripts
+
+outcome:
+  status: archived
+  target: main
+  pushed_branch: null
+  final_artifact: docs/archive/00/report.yaml
+
+process:
+  - step: spec
+    summary: 00-spec.yaml — two-layer JSON status, write boundaries, caveman MD default.
+  - step: subtasks
+    summary: 26/26 subtasks in 00-subtasks.md.
+  - step: execute
+    summary: status-architecture execution — schemas, agents, skills, hooks, smoke scripts, examples.
+  - step: close
+    summary: Archived to docs/archive/00/; construction source torn down.
+
+decisions:
+  - global-status.json at workspace root; per-task status.json under current-task/
+  - Only start/close mutate registry; only status-update writes per-task status
+  - YAML/Markdown handoffs unchanged; status holds pointers only
+  - current-task-context.yaml deprecated as orchestration authority
+
+open_questions: []
+
+suggestions:
+  - area: orchestration
+    suggestion: Prove close/archive teardown on first real production worktree close.
+    evidence: "report.md remain list item 2 — docs/skills done, real close unproven"

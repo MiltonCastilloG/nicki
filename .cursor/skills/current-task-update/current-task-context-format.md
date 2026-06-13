@@ -126,7 +126,7 @@ Use paths relative to the worktree root.
 | `next_steps` | No | List of follow-up specs under `current-task/next-steps/` |
 | `sync` | No | `current-task/syncs/<slug>.yaml` |
 | `integrate` | No | `current-task/integrates/<slug>.yaml` |
-| `archive` | No | Root archive path, e.g. `task-archive/<slug>/summary.yaml` |
+| `archive` | No | Root archive path, e.g. `docs/archive/<slug>/report.yaml` |
 
 ## `open_questions`
 

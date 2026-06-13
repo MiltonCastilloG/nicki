@@ -98,7 +98,7 @@ flowchart LR
   R --> S[sheep-integrate]
   S --> T[sheep-status]
   T --> Y[sheep-close]
-  Y --> Z[task-archive]
+  Y --> Z[docs/archive]
 ```
 
 ---
@@ -118,7 +118,7 @@ Each sheep produces YAML handoff under `projects/<project>/worktrees/<slug>/curr
 | Review | `sheep-review` | No | `reviews/<slug>.yaml` + `review-validations/rN-validation.yaml` + optional `next-steps/*.yaml` |
 | Sync | `sheep-sync` | Yes (commit + pre-push merge + push feature) | `current-task/syncs/<slug>.yaml` |
 | Integrate | `sheep-integrate` | Yes (merge into `main` + push `main`) | `current-task/integrates/<slug>.yaml` |
-| Close | `sheep-close` | Archive + delete | `task-archive/<slug>/`; needs integrate or override |
+| Close | `sheep-close` | Archive + delete | `docs/archive/<slug>/`; needs integrate or override |
 
 ### Artifact handoff chain
 
@@ -133,12 +133,15 @@ sync ──→ integrate ──→ archive
 - **Execution** is an evidence map for review, not an approval.
 - **Review** has `approved` and `content`; **validation** skill emits readiness and out-of-scope next-steps in same spawn.
 - **Sync / integrate** — two git steps; handoffs in task worktree; status pointers only in JSON.
-- **Archive** — compact `summary.yaml` + terse `report.md` at repo root; whole worktree removed after close.
+- **Archive** — `report.yaml`, `report.md`, `story.md` at repo root; spec and subtasks erased from worktree; whole worktree removed after close.
 
 Closed tasks are stored at:
 
 ```
-task-archive/<slug>/summary.yaml
+docs/archive/<slug>/
+  report.yaml
+  report.md
+  story.md
 ```
 
 ---
@@ -219,7 +222,7 @@ Archive and delete worktree?
 
 And shows:
 
-- Archive: `task-archive/<slug>/summary.yaml` + `report.md`
+- Archive: `docs/archive/<slug>/report.yaml`, `report.md`, `story.md`; spec and subtasks erased
 - Delete scope: whole `<worktree>/` after archive
 
 ---
@@ -303,7 +306,7 @@ All subtasks done or no `review_scope` → full review. `review_scope.mode: part
 | File | Role |
 | ---- | ---- |
 | `.cursor/agents/nicki.md` | Nicki subagent definition |
-| `NICKI.md` | This context overview |
+| `docs/NICKI.md` | This context overview |
 
 ### State
 
@@ -331,7 +334,7 @@ All subtasks done or no `review_scope` → full review. `review_scope.mode: part
 
 | Skill | Role |
 | ----- | ---- |
-| `task-archive/` | `summary.yaml` + `report.md` + suggestions |
+| `docs/archive/` | `report.yaml`, `report.md`, `story.md` |
 | `close-scope/` | Paths, unregister, worktree delete |
 
 ### Shared
@@ -371,7 +374,7 @@ Cursor compacts chats — disk wins: `global-status.json`, `status.json`, artifa
 
 ## Further reading
 
-- Full contributor workflow: [`CONTRIBUTING.md`](CONTRIBUTING.md) — agent workflow pipeline section
-- Nicki agent definition: [`.cursor/agents/nicki.md`](.cursor/agents/nicki.md)
-- Status schemas: [`.cursor/skills/current-task-update/status-format.md`](.cursor/skills/current-task-update/status-format.md), [`.cursor/skills/current-task-update/global-status-format.md`](.cursor/skills/current-task-update/global-status-format.md)
-- Archive format: [`.cursor/skills/task-archive/archive-format.md`](.cursor/skills/task-archive/archive-format.md)
+- Full contributor workflow: [`CONTRIBUTING.md`](../CONTRIBUTING.md) — agent workflow pipeline section
+- Nicki agent definition: [`.cursor/agents/nicki.md`](../.cursor/agents/nicki.md)
+- Status schemas: [`.cursor/skills/current-task-update/status-format.md`](../.cursor/skills/current-task-update/status-format.md), [`.cursor/skills/current-task-update/global-status-format.md`](../.cursor/skills/current-task-update/global-status-format.md)
+- Archive format: [`.cursor/skills/task-archive/archive-format.md`](../.cursor/skills/task-archive/archive-format.md)

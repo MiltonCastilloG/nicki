@@ -1,0 +1,42 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: nicki-contruction/02/ (spec, subtasks, stories)
+  tail_override: construction-slice — no worktree integrate handoff; artifacts in-repo
+
+task:
+  slug: "02"
+  title: Task-spawn orchestration without leaf commands
+  original: Retire leaf slash commands; Nicki invokes every pipeline step via Task subagent_type only
+  type: refactor
+  branch: main
+
+story: Task subagent_type spawn only · leaf slash commands removed · thin agent shells · skills canonical · nicki-default rule entry · ad-hoc skill attachment · agent + skill docs aligned
+
+outcome:
+  status: archived
+  target: main
+  pushed_branch: null
+  final_artifact: docs/archive/02/report.yaml
+
+process:
+  - step: spec
+    summary: 02-spec.yaml — Task spawn only, thin agents, skills canonical.
+  - step: subtasks
+    summary: 20/20 subtasks in 02-subtasks.md.
+  - step: execute
+    summary: Removed leaf pipeline commands; Nicki doc uses Task spawn language; docs aligned.
+  - step: close
+    summary: Archived to docs/archive/02/; construction source torn down.
+
+decisions:
+  - Nicki entry via Task subagent_type and nicki-default rule — no slash-command path required
+  - Helper skills attach ad-hoc without new command files
+  - Agent docs thin shells pointing to skills only
+
+open_questions: []
+
+suggestions:
+  - area: orchestration
+    suggestion: Keep routing.yaml as single spawn map when renaming agents (slice 03 did this).
+    evidence: "02 removed commands; 03 added routing.yaml with sheep keys"
