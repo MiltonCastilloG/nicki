@@ -2,5 +2,5 @@
 # Bump version when you change .cursor/ (agents, skills, rules, hooks).
 
 name: nicki
-version: 0.1.0
+version: 0.1.1
 description: Cursor workflow orchestrator for structured agent-driven development

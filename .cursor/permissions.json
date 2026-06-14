@@ -1,0 +1,54 @@
+{
+  "terminalAllowlist": [
+    "bash .cursor/skills/start-task/scripts/start-worktrees.sh",
+    "bash .cursor/skills/start-task/scripts/register-global-status.sh",
+    "bash .cursor/skills/close-scope/scripts/unregister-global-status.sh",
+    ".cursor/skills/start-task/scripts/start-worktrees.sh",
+    ".cursor/skills/start-task/scripts/register-global-status.sh",
+    ".cursor/skills/close-scope/scripts/unregister-global-status.sh",
+
+    "git status",
+    "git diff",
+    "git log",
+    "git branch",
+    "git remote",
+    "git rev-parse",
+    "git show-ref",
+    "git worktree list",
+    "git worktree add",
+    "git checkout",
+    "git pull",
+    "git fetch",
+    "git merge",
+    "git add",
+    "git commit",
+    "git push",
+
+    "jq",
+    "mkdir -p",
+
+    "npm install",
+    "npm run lint",
+    "npm test",
+    "pnpm install",
+    "pnpm run lint",
+    "pnpm test",
+
+    "rm -rf --"
+  ],
+  "autoRun": {
+    "allow_instructions": [
+      "Allow Nicki sheep workflow: read-only git (status, diff, log, branch, remote, rev-parse, show-ref, worktree list) in task worktrees.",
+      "Allow Nicki start scripts: bash or direct invocation of .cursor/skills/start-task/scripts/start-worktrees.sh and register-global-status.sh, including PROJECT= prefixed runs.",
+      "Allow Nicki close scripts: bash or direct invocation of .cursor/skills/close-scope/scripts/unregister-global-status.sh and rm -rf -- on confirmed worktree paths.",
+      "Allow Nicki sync and integrate git: fetch, merge, add, commit, push on feature or target branches after user confirmed the step.",
+      "Allow npm and pnpm install, lint, and test for execute and review verification subtasks in worktrees.",
+      "Allow jq and mkdir used by Nicki workflow shell scripts."
+    ],
+    "block_instructions": [
+      "Block chmod; invoke Nicki scripts with bash instead.",
+      "Block git push --force, git reset --hard, git merge --abort, and git checkout -- unless the user explicitly approved.",
+      "Block destructive commands outside Nicki close/sync/integrate steps the user already confirmed."
+    ]
+  }
+}

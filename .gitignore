@@ -2,6 +2,15 @@
 projects/*
 !projects/.gitkeep
 
-# Per-project task artifacts (when present under a managed clone)
+# Task worktrees
 worktrees/
-saved_games/
+projects/*/worktrees/
+
+# Workspace runtime (schema examples stay tracked)
+global-status.json
+nicki-workspace.yaml
+
+# Dependencies and caches (worktrees, managed clones, legacy paths)
+**/node_modules/
+**/saved_games/
+.pnpm-store/

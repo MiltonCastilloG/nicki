@@ -30,7 +30,7 @@ Task Progress:
 
 Split the message into distinct work items (comma-separated, line breaks, or explicit prefixes like `fix:` / `chore:`).
 
-A work item may be **minimal** — enough to classify the branch and derive a slug (e.g. `hero-section`, `fix footer`). A full job description is not required at start.
+A work item may be **minimal** — enough to classify the branch and derive a slug (e.g. `hero-section`, `fix footer`). A full job description is not required at start.f
 
 If the user provides a fuller description, pass it through in the report as original task text.
 
@@ -70,7 +70,6 @@ Pass one `branch:slug` argument per work item. The script:
 2. Creates `projects/<project>/worktrees/<slug>` when `PROJECT` set, else `worktrees/<slug>`
 3. Skips items where the path or branch already exists (no overwrite)
 
-Make the script executable first if needed: `chmod +x .cursor/skills/start-task/scripts/start-worktrees.sh`
 
 ### Step 4: Report
 

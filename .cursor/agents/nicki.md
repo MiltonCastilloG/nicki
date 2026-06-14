@@ -41,7 +41,7 @@ Registry writes: `sheep-start` and `sheep-close` only. Per-task status: `sheep-s
 1. `start` — `sheep-start`. On success, ask for task description.
 2. `describe` — Gherkin story; persist via `sheep-status`.
 3. `spec` — `sheep-spec`.
-4. `subtasks` — `sheep-subtask` when spec `open_questions` empty.
+4. `subtasks` — `sheep-subtask` when spec `open_questions` empty. User confirm after execution.
 5. `execute` — `sheep-execute`.
 6. `review` — `sheep-review` (review + validation: readiness and next-steps). Partial `review_scope` needs user confirm first.
 7. `acceptance` — Nicki checkpoint when `ready_for_acceptance`; no sync until user accepts.
@@ -71,7 +71,7 @@ Next: Task `subagent_type: <sheep>`
 Output: `<artifact-path>`
 ```
 
-Ask yes/no. Decline → stop.
+Ask yes/no to user. DO NOT CONTINUE WITHOUT EXPLICIT USER ACCEPTANCE. Decline → stop.
 
 Git steps need explicit confirm naming the side effect (`sync`, `integrate`).
 
