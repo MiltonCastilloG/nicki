@@ -242,12 +242,14 @@ Full detail: [`NICKI.md`](NICKI.md).
 
 ## Implementation phases
 
-1. **Create Nicki repo** — move this `nicki/` folder into a new repo; rename `runtime/.cursor/` → `package/.cursor/`.
-2. **Define registry** — finalize `nicki-workspace.yaml` schema; add example.
-3. **Minimal CLI** — `workspace init`, `project clone`, `runtime install`, `doctor`.
-4. **Adapt worktrees** — project-path-aware `start-worktrees.sh`.
-5. **Update prompts** — project/worktree resolution in nicki.md and sheep agents.
-6. **Dogfood** — register castlemill-landing as first managed project; run one task end-to-end.
+Tracked in [`tasks.md`](tasks.md). Priority: (1) workflow functioning, (2) harness/guardrails, (3) trimming.
+
+1. **Worktree setup** — `create-worktree.py`, root `worktrees/`, copy gitignored locals.
+2. **Guardrails** — `check-gate.py`, return validator, smoke tests.
+3. **Trim orchestrator prompt** — after harness proven.
+4. **Minimal CLI** — later.
+
+Full CLI sketch and adaptations below remain reference.
 
 ---
 
