@@ -1,0 +1,160 @@
+meta:
+  worktree: gherkin-spec-mutual-understanding
+  generated_by: spec-maker
+  branch: feature/gherkin-spec-mutual-understanding
+  context: current-task/status.json
+  task: |
+    P1-6 — Gherkin and spec mutual understanding (approved story in current-task/story.md).
+
+    Feature: Describe step asks before inventing — Nicki probes the human user for
+    task details before drafting Gherkin; revises in chat until explicit approval;
+    persists story.md only once via sheep-status after approval; does not advance with
+    unresolved scope, actor, or acceptance gaps; pauses when the user is silent.
+
+    Feature: Spec step asks before writing YAML — sheep-spec blocks without writing a
+    spec file when the approved story still has vague requirements or design forks;
+    returns open_questions for Nicki to relay in chat; writes the spec only when
+    open_questions would be empty; subtasks remain gated on empty spec open_questions.
+
+    Touch: nicki.md (Describe), sheep-spec.md, spec-maker/SKILL.md — minimal diffs.
+    Out of scope: check-gate.py, routing.yaml, status-read.md, status-format.md,
+    current-task-update/SKILL.md, story-format.md, spec gate smoke fixtures.
+    Blocked-return contract prose deferred to P2 harness work.
+
+title: Gherkin and spec mutual understanding
+type: feature
+
+summary: >
+  Tighten the describe and spec pipeline so Nicki and sheep-spec ask the human user
+  about ambiguities before persisting story.md or writing a spec YAML file. Nicki
+  gathers and approves Gherkin meaning in chat only; sheep-spec blocks with
+  open_questions when requirements fork or stay vague. Subtasks may proceed only
+  after a written spec with empty open_questions exists.
+
+requirements:
+  - id: describe-ask-before-draft
+    description: >
+      Nicki asks the human user organized questions in chat when task.original lacks
+      detail needed for testable Gherkin scenarios, before showing any Gherkin draft.
+
+  - id: describe-no-first-draft-persist
+    description: >
+      Nicki does not persist current-task/story.md on a first draft alone; drafts stay
+      in chat until the human user explicitly approves story meaning.
+
+  - id: describe-revise-until-approval
+    description: >
+      Nicki revises Gherkin in chat across multiple rounds until the human user
+      approves with explicit signals such as approve, continue, or go, or confirms
+      when Nicki has no remaining gaps to fill.
+
+  - id: describe-scenario-by-scenario
+    description: >
+      When the human user approves some scenarios but not others, Nicki iterates only
+      on unapproved scenarios in chat and does not persist story.md until all
+      scenarios are approved or explicitly waived by the user.
+
+  - id: describe-no-advance-with-gaps
+    description: >
+      Nicki does not show a downstream sheep transition card or advance past describe
+      while unanswered questions about scope, actors, or acceptance remain.
+
+  - id: describe-pause-on-silence
+    description: >
+      When the human user is silent during describe, Nicki pauses and does not
+      speculate or burn tokens inventing specifics.
+
+  - id: describe-persist-once-approved
+    description: >
+      After explicit approval, Nicki sends sheep-status to write current-task/story.md
+      once and set task.story_artifact to that path.
+
+  - id: describe-no-reopen-after-spec
+    description: >
+      After the spec step begins, describe is not re-run; gaps discovered later are
+      repaired in spec, not by reopening describe.
+
+  - id: spec-ask-before-write
+    description: >
+      sheep-spec reads the approved story and, when requirements are vague or fork,
+      does not write current-task/specs/<slug>.yaml and returns a blocked handoff
+      with open_questions populated for Nicki to relay.
+
+  - id: spec-relay-and-rerun
+    description: >
+      Nicki presents sheep-spec open_questions to the human user in chat, allows
+      multiple resolution rounds, and re-sends sheep-spec after the user answers and
+      grants permission to persist resolutions via sheep-status as needed.
+
+  - id: spec-write-when-clear
+    description: >
+      sheep-spec writes the spec file only when all open_questions would be empty;
+      the written spec must include open_questions as an empty list.
+
+  - id: spec-fork-as-options
+    description: >
+      When the approved story allows multiple valid implementations, sheep-spec lists
+      each option in open_questions and waits for the human user to pick one before
+      writing the spec file.
+
+  - id: spec-pause-on-silence
+    description: >
+      When the human user is silent during spec, the pipeline stays blocked at spec
+      with no spec file written and no advance to subtasks.
+
+  - id: spec-no-force-subtasks
+    description: >
+      There is no user override to force subtasks while spec open_questions is
+      non-empty; Nicki does not send sheep-subtask until open_questions is empty.
+
+  - id: spec-maker-ask-first
+    description: >
+      spec-maker/SKILL.md enforces ask-first behavior and prohibits writing a spec
+      file while open_questions remain unresolved.
+
+  - id: priority-on-conflict
+    description: >
+      When goals conflict during implementation, priority is correct functioning first,
+      then harness and guardrails, then trimming.
+
+  - id: minimal-touch-surface
+    description: >
+      Changes are limited to nicki.md (Describe section and spec-relay behavior),
+      sheep-spec.md (minimal alignment for block-without-write), and
+      spec-maker/SKILL.md, with minimal diffs and no new dependencies.
+
+scope:
+  in:
+    - nicki.md Describe workflow and spec question relay behavior
+    - sheep-spec.md minimal alignment for blocked spec without file write
+    - spec-maker/SKILL.md ask-first and no-spec-while-questions rules
+    - Documented expected behavior for tetris ghost piece describe and spec verification scenarios
+  out:
+    - check-gate.py and routing.yaml changes
+    - status-read.md, status-format.md, current-task-update/SKILL.md
+    - story-format.md and spec gate smoke fixtures
+    - Full blocked-return contract prose (deferred to P2 harness)
+    - Application code in managed projects
+    - New npm or Python dependencies
+    - Automated smoke or gate script implementation for these rules
+
+constraints:
+  - no-commit
+  - no-new-deps
+
+acceptance:
+  - nicki.md documents ask-before-draft describe behavior, no first-draft story.md persistence, explicit approval, scenario-by-scenario iteration, no advance with gaps, pause on user silence, and relay of sheep-spec open_questions in chat
+  - sheep-spec.md documents that no spec YAML is written when requirements are vague or forked and that blocked handoff returns populated open_questions
+  - spec-maker/SKILL.md documents ask-first behavior and prohibits writing a spec file while open_questions remain
+  - No changes to check-gate.py, routing.yaml, status-read.md, status-format.md, current-task-update/SKILL.md, story-format.md, or spec gate smoke fixtures
+  - Manual verification of the tetris ghost piece describe flow shows Nicki asks about unstated details (e.g. ghost alpha, wiring, recompute triggers) before inventing them and persists story.md only after user approval
+  - Manual verification of the tetris ghost piece spec flow shows sheep-spec blocks with open_questions for remaining ambiguities, writes spec only after resolution with open_questions empty, and pipeline can reach subtasks without execute
+
+assumptions:
+  - Chat is the primary channel for questions during describe and spec; disk open_questions in status.json is secondary for compaction or new-chat recovery and updated via sheep-status only with user permission
+  - Blocked-return YAML field details beyond open_questions populated and no spec artifact are deferred to P2; minimal prose in sheep-spec.md is sufficient for this task
+  - Tetris ghost piece verification scenarios define expected behavior for manual checks; passing them is recommended but automated enforcement is out of scope for P1-6
+  - Human user explicit waiver of unapproved scenarios counts as approval for those scenarios
+  - Existing subtasks gate in sheep-subtask.md and nicki.md spec gate prose remain unchanged; this task aligns describe and spec behavior with those gates rather than adding harness scripts
+
+open_questions: []

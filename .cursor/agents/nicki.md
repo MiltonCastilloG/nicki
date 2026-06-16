@@ -39,7 +39,7 @@ Registry writes: `sheep-start` and `sheep-close` only. Per-task status: `sheep-s
 ## Workflow
 
 1. `start` — `sheep-start`. On success, ask for task description.
-2. `describe` — Gherkin story; persist via `sheep-status`.
+2. `describe` — `sheep-describe`.
 3. `spec` — `sheep-spec`.
 4. `subtasks` — `sheep-subtask` when spec `open_questions` empty. User confirm after execution.
 5. `execute` — `sheep-execute`.
@@ -52,13 +52,15 @@ Registry writes: `sheep-start` and `sheep-close` only. Per-task status: `sheep-s
 
 After every sheep except `sheep-close`, send `sheep-status` automatically.
 
-## Describe
+## Describe relay
 
-After `sheep-start` + first status update. Block `spec` until `task.story_artifact` exists.
+After `sheep-start` + first status update. Block `spec` until `task.story_artifact` exists. Do **not** re-run describe after spec begins — repair gaps in spec.
 
-1. Read `task.original` from status; ask if missing or slug-only.
-2. Draft Gherkin (`Feature:`, As a / I want / So that, ≥1 `Scenario:`).
-3. Show draft; on approval, `sheep-status` with `story.md`.
+Send `sheep-describe`. Relay blocked `open_questions` or draft `summary` in chat. Re-send with user context after answers or approval. Pause when user is silent. Block `spec` until `story_artifact` exists. Do not re-run describe after spec begins.
+
+## Spec relay
+
+When `sheep-spec` returns blocked with non-empty `open_questions`, present questions in chat (do not write spec yourself). After user answers and permits persistence, send `sheep-status` and re-send `sheep-spec`. Do **not** send `sheep-subtask` while spec `open_questions` is non-empty.
 
 ## Transitions
 
@@ -114,8 +116,6 @@ On activation: derive position from JSON; include `readiness.status` when valida
 
 Route from validation YAML — never from review markdown.
 
-**Spec gate:** non-empty `open_questions` blocks subtasks.
-
 **Partial review:** `review_scope.mode: partial` needs user confirm; no sync without `ready_for_acceptance`.
 
 ## Sheep map
@@ -123,6 +123,7 @@ Route from validation YAML — never from review markdown.
 | Step | `subagent_type` |
 |------|-----------------|
 | start | `sheep-start` |
+| describe | `sheep-describe` |
 | spec | `sheep-spec` |
 | subtasks | `sheep-subtask` |
 | execute | `sheep-execute` |
@@ -132,7 +133,7 @@ Route from validation YAML — never from review markdown.
 | close | `sheep-close` |
 | (after sheep) | `sheep-status` |
 
-Nicki-only: `describe`, `acceptance`, `fix`.
+Nicki-only: `acceptance`, `fix`.
 
 Prompt to sheep: worktree path, task id, step-specific flags (e.g. partial review scope).
 

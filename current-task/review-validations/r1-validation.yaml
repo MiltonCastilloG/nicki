@@ -1,0 +1,27 @@
+meta:
+  worktree: gherkin-spec-mutual-understanding
+  generated_by: validation
+  review: current-task/reviews/gherkin-spec-mutual-understanding.yaml
+decision: valid
+valid_findings: []
+deferred_findings:
+  - id: d1
+    source: "[scope] .cursor/skills/nicki/routing.yaml modified (describe wired to sheep-describe) — intentional post-execute change; original spec/story listed routing out of scope."
+    prefix: scope
+    reason: Intentional refactor wiring; non-blocking per review approval.
+  - id: d2
+    source: "[scope] .cursor/skills/README.md updated to list story-maker in pipeline leaf skills."
+    prefix: scope
+    reason: Minor doc alignment for new story-maker skill; non-blocking.
+discarded_findings: []
+next_steps: []
+review_inputs: []
+readiness:
+  status: ready_for_acceptance
+  recommended_next_step: acceptance
+  blockers: []
+  deferred_scope: true
+summary: >
+  Review approved. All requirements and subtasks verified via focus-path traceability;
+  two deferred scope notes (routing.yaml wiring and README.md) do not block acceptance.
+  readiness.status is ready_for_acceptance.

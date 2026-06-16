@@ -13,13 +13,13 @@ steps:
     prompt: work items / slugs from user message
 
   describe:
-    sheep: null
-    nicki_only: true
+    sheep: sheep-describe
+    nicki_only: false
     artifact_key: story
     expected_artifact: current-task/story.md
     default_next_step: spec
     gate: after start + first sheep-status; task.original present or collected in chat
-    prompt: null
+    prompt: worktree path, task id, relayed user answers feedback and approval when applicable
 
   spec:
     sheep: sheep-spec

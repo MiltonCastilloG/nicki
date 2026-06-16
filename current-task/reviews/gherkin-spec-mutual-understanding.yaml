@@ -1,0 +1,16 @@
+approved: true
+content: |
+  All spec requirements satisfied. Describe ask-first, chat-only drafts, scenario-by-scenario
+  revision, pause-on-silence, and no describe reopen after spec are in story-maker/SKILL.md
+  and nicki.md Describe relay. Spec ask-first, block-without-write, fork-as-options,
+  open_questions gate, and subtasks withhold are in spec-maker/SKILL.md, sheep-spec.md,
+  nicki.md Spec relay, and routing.yaml subtasks gate.
+  Post-execute refactor (sheep-describe + story-maker, routing describe → sheep-describe)
+  preserves behavioral guarantees; mirrors sheep-spec + spec-maker pattern.
+  Traceability review PASS for story.md tetris ghost-piece describe and spec acceptance
+  scenarios (unstated alpha/wiring/triggers; spec blocks until open_questions []).
+  Subtasks 1–10 and 27–30 complete; verify commands passed; check-gate.py, status docs,
+  story-format.md unchanged; no-commit and no-new-deps confirmed.
+  [scope] .cursor/skills/nicki/routing.yaml modified (describe wired to sheep-describe) —
+  intentional post-execute change; original spec/story listed routing out of scope.
+  [scope] .cursor/skills/README.md updated to list story-maker in pipeline leaf skills.

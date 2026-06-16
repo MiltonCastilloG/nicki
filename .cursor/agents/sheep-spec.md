@@ -28,10 +28,8 @@ Read and follow `.cursor/skills/spec-maker/SKILL.md` and `.cursor/skills/spec-ma
 
 ## Output
 
-- **Write:** `current-task/specs/<slug>.yaml` (create `current-task/specs/` if needed).
-- **Set in spec:** `meta.context: current-task/status.json` when status was loaded.
-- **Never write:** `current-task/status.json` — Nicki sends `sheep-status` after this step.
-
-## Return
-
-`artifact` = spec path; `completed_step: spec`; `next_step: subtasks` when `open_questions` empty.
+- **Write** `current-task/specs/<slug>.yaml` only when `open_questions` would be empty.
+- **Block without write** when vague or forked — populated `open_questions` for Nicki relay; list fork options until user picks.
+- Written specs: `meta.context: current-task/status.json` when status loaded; `open_questions: []`.
+- **Never write** `current-task/status.json`.
+- **Return:** blocked → `completed_step: spec`, populated `open_questions`; clear → `artifact`, `completed_step: spec`, `next_step: subtasks`.
