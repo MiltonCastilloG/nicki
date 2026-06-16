@@ -1,41 +1,21 @@
 #!/usr/bin/env bash
 # Register task in global-status.json. Only sheep-start should call this.
-# Usage: register-global-status.sh <workspace_root> <task_id> <project> <slug> <worktree_path>
+# Delegates to register-global-status.py for per-project task id auto-increment.
+# Usage: register-global-status.sh <workspace_root> <project> <slug> <worktree_path> [task_id]
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 ROOT="${1:?workspace root}"
-TASK_ID="${2:?task id}"
-PROJECT="${3:?project}"
-SLUG="${4:?slug}"
-WORKTREE_PATH="${5:?worktree path}"
+PROJECT="${2:?project}"
+SLUG="${3:?slug}"
+WORKTREE_PATH="${4:?worktree path}"
+TASK_ID="${5:-}"
 
-GLOBAL="${ROOT}/global-status.json"
-STATUS_PATH="${WORKTREE_PATH}/current-task/status.json"
-
-mkdir -p "$(dirname "$GLOBAL")"
-
-if [[ -f "$GLOBAL" ]]; then
-  EXISTING=$(jq -r --arg id "$TASK_ID" '.tasks[$id] // empty' "$GLOBAL")
-  if [[ -n "$EXISTING" && "$EXISTING" != "null" ]]; then
-    echo "skip: task $TASK_ID already registered"
-    exit 0
-  fi
-  jq --arg id "$TASK_ID" \
-     --arg project "$PROJECT" \
-     --arg slug "$SLUG" \
-     --arg wp "$WORKTREE_PATH" \
-     --arg sp "$STATUS_PATH" \
-     '.tasks[$id] = {project: $project, slug: $slug, worktree_path: $wp, status_path: $sp} | .active_task = $id' \
-     "$GLOBAL" > "${GLOBAL}.tmp" && mv "${GLOBAL}.tmp" "$GLOBAL"
+if [[ -n "$TASK_ID" ]]; then
+  exec python3 "$SCRIPT_DIR/register-global-status.py" \
+    "$ROOT" "$PROJECT" "$SLUG" "$WORKTREE_PATH" "$TASK_ID"
 else
-  jq -n \
-     --arg id "$TASK_ID" \
-     --arg project "$PROJECT" \
-     --arg slug "$SLUG" \
-     --arg wp "$WORKTREE_PATH" \
-     --arg sp "$STATUS_PATH" \
-     '{version: 1, active_task: $id, tasks: {($id): {project: $project, slug: $slug, worktree_path: $wp, status_path: $sp}}}' \
-     > "$GLOBAL"
+  exec python3 "$SCRIPT_DIR/register-global-status.py" \
+    "$ROOT" "$PROJECT" "$SLUG" "$WORKTREE_PATH"
 fi
-
-echo "registered: task $TASK_ID -> $STATUS_PATH"

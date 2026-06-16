@@ -43,8 +43,8 @@ Add to `.gitignore`:
 
 ```gitignore
 worktrees/
-projects/*/worktrees/
 global-status.json
+nicki-workspace.yaml
 ```
 
 ### 2. Run with Nicki

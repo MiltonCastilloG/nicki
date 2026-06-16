@@ -105,11 +105,11 @@ flowchart LR
 
 ## Sheep and artifacts
 
-Each sheep produces YAML handoff under `projects/<project>/worktrees/<slug>/current-task/` (legacy `worktrees/<slug>/` OK).
+Each sheep produces YAML handoff under `worktrees/<project>-<slug>/current-task/` (workspace root; single hyphen between project and slug).
 
 | Step | Sheep | Writes code? | Primary output |
 | ---- | ----- | ------------ | -------------- |
-| Setup | `sheep-start` | No | `projects/<project>/worktrees/<slug>/` |
+| Setup | `sheep-start` | No | `worktrees/<project>-<slug>/` |
 | State | `sheep-status` | No (status JSON only) | `current-task/status.json` |
 | Describe | Nicki only | No | `task.story` in context (Gherkin user story) |
 | Spec | `sheep-spec` | No | `current-task/specs/<slug>.yaml` |
