@@ -1,0 +1,33 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: validation
+  source_validation: task-2-deferred
+  source_finding: NEXT_STEPS item 12 — add phone controls for touch play
+title: Phone touch game controls
+type: feature
+summary: >
+  Add on-screen touch controls so players can move, rotate, hard-drop, and hold
+  pieces on phones. Keyboard input remains for desktop; mobile needs dedicated
+  touch input mapped to existing game actions.
+requirements:
+  - Touch controls for left, right, rotate, hard drop, and hold on ≤720px
+  - Map to existing game input handlers without duplicating game logic
+  - Controls positioned for thumbs; do not obscure playfield or hold preview
+  - touch-action none on playfield canvas preserved; control bar uses manipulation
+  - Support portrait and landscape orientations
+scope: >
+  Touch input layer and on-screen control UI for piece movement. Out of scope:
+  playfield sizing, upcoming queue layout, pause/upload UI, lines score display.
+constraints:
+  - no-new-deps
+acceptance:
+  - Player can complete a full game on phone using only touch controls
+  - All five actions (move L/R, rotate, hard drop, hold) work reliably
+  - No conflict with page scroll or accidental double-tap zoom on controls
+  - Desktop keyboard play unchanged
+assumptions:
+  - D-pad + action button layout or swipe gestures are both valid; pick one
+  - Hold may be a dedicated button or long-press on rotate
+open_questions:
+  - Preferred control layout — fixed button bar vs gesture zones?
+  - Should soft drop be a separate touch action?

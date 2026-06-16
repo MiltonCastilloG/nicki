@@ -167,7 +167,7 @@ When spec handoff has non-empty `open_questions`, status-update mirrors into `op
   },
   "scope": {
     "worktree": "hero-section",
-    "worktree_path": "projects/castlemill-landing/worktrees/hero-section"
+    "worktree_path": "worktrees/castlemill-landing-hero-section"
   },
   "artifacts": {
     "status": "current-task/status.json",
@@ -193,5 +193,5 @@ When spec handoff has non-empty `open_questions`, status-update mirrors into `op
 |------|------|
 | Workspace | `global-status.json`, `docs/archive/` |
 | Project | `projects/<project>/` git repo root |
-| Task worktree | `projects/<project>/worktrees/<slug>/`, `current-task/*` |
+| Task worktree | `worktrees/<project>-<slug>/`, `current-task/*` |
 | Target branch | project checkout for integrate (`main` default) |

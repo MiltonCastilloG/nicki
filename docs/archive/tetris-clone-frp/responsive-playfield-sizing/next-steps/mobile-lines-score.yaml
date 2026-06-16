@@ -1,0 +1,30 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: validation
+  source_validation: current-task/review-validations/r5-validation.yaml
+  source_finding: Fix-3 hides lines count on mobile ≤720px
+title: Mobile lines score display
+type: feature
+summary: >
+  Surface the lines-cleared count on mobile after Fix-3 hid the dedicated lines
+  score element. Players should still see progress without restoring the full
+  right-side panel.
+requirements:
+  - Display current lines cleared on viewports ≤720px
+  - Integrate with existing score UI or a compact mobile stats area
+  - Keep mobile HUD minimal — playfield, hold, and primary score remain primary
+  - Update lines count in real time as lines clear
+scope: >
+  Mobile presentation of lines-cleared stat only. Out of scope: scoring logic,
+  playfield sizing, upcoming queue, pause/upload, touch movement controls.
+constraints:
+  - no-new-deps
+acceptance:
+  - Lines cleared visible on ≤720px without horizontal scroll
+  - Value matches game state and desktop lines count
+  - Does not crowd hold or primary score below playfield
+assumptions:
+  - Merging into score block (e.g. "Score / Lines") is acceptable
+  - Desktop lines display (>720px) stays unchanged
+open_questions:
+  - Combined score+lines label vs separate compact lines badge?

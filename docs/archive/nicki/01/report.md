@@ -10,7 +10,7 @@ parallel 01-0 / 01-1 tracks · readiness in validation YAML · fix-loop subtask 
 
 ## Outcome
 
-Shipped. Archived at `docs/archive/01/`.
+Shipped. Archived at `docs/archive/nicki/01/`.
 
 ## Process
 
@@ -20,7 +20,7 @@ Shipped. Archived at `docs/archive/01/`.
 
 **Execute** shipped readiness in validation YAML, fix-loop append, acceptance gate, publish-task leaf, project-local worktree paths, and close tail docs.
 
-**Close** archived to `docs/archive/01/`; construction source torn down.
+**Close** archived to `docs/archive/nicki/01/`; construction source torn down.
 
 ## Decisions
 

@@ -1,0 +1,51 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: board-renderer-state
+  title: Richer board renderer state
+  original: "Extend board.js render state (lockedMap, fallingBlocks, fallingColor, ghostBlocks, flashRows, flashUntilMs, cached board metrics); keep exported function names for game.js"
+  type: refactor
+  branch: feature/board-renderer-state
+
+story: playfieldRenderState · lockedMap · fallingBlocks · ghostBlocks · flashRows · cached DPR metrics · stable game.js exports · render-only refactor
+
+outcome:
+  status: merged
+  target: master
+  pushed_branch: feature/board-renderer-state
+  final_artifact: current-task/integrates/board-renderer-state.yaml
+
+process:
+  - step: start
+    summary: Worktree pre-existed; task 1 registered on feature/board-renderer-state.
+  - step: describe
+    summary: User approved Gherkin story for structured render state with stable game.js exports.
+  - step: spec
+    summary: Richer board render-state spec — locked/falling/ghost/flash layers plus cached DPR metrics.
+  - step: subtasks
+    summary: Twelve subtasks covering render-state refactor and export stability.
+  - step: execute
+    summary: Refactored board.js into playfieldRenderState with layer helpers; eslint passed.
+  - step: review
+    summary: Approved; game.js untouched; caveman SKILL.md out-of-scope change flagged for revert before sync.
+  - step: acceptance
+    summary: User accepted at ready_for_acceptance; authorized sync and integrate.
+  - step: sync
+    summary: Reverted caveman SKILL.md; committed board.js d7cc32e; merged origin/master; pushed feature branch.
+  - step: integrate
+    summary: Merged feature/board-renderer-state into master; pushed origin/master 9856100.
+  - step: close
+    summary: Archived to docs/archive/tetris-clone-frp/board-renderer-state/; worktree torn down; task 1 unregistered.
+
+decisions: []
+
+open_questions: []
+
+suggestions:
+  - area: execute
+    suggestion: Keep execute scope to spec paths only; avoid incidental .cursor/skills edits during board work.
+    evidence: "review flagged .cursor/skills/caveman/SKILL.md outside scope.out; reverted at sync."

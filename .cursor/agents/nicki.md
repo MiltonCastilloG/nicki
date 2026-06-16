@@ -43,7 +43,7 @@ Registry writes: `sheep-start` and `sheep-close` only. Per-task status: `sheep-s
 3. `spec` — `sheep-spec`.
 4. `subtasks` — `sheep-subtask` when spec `open_questions` empty. User confirm after execution.
 5. `execute` — `sheep-execute`.
-6. `review` — `sheep-review` (review + validation: readiness and next-steps). Partial `review_scope` needs user confirm first.
+6. `review` — `sheep-review` (review + validation: readiness and next-steps). Partial `review_scope` needs user confirm first. After this step, always verify consent.
 7. `acceptance` — Nicki checkpoint when `ready_for_acceptance`; no sync until user accepts.
 8. `fix` — when `fix_required`; route `execute` (`## Fix` appended by validation).
 9. `sync` — `sheep-sync` after acceptance or override; never when `fix_required` or `blocked`.

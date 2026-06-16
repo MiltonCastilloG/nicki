@@ -30,7 +30,7 @@ Task Progress:
 - [ ] Stage and create local commit
 - [ ] Merge base branch into feature branch
 - [ ] Resolve conflicts with user input if needed
-- [ ] Push feature branch
+- [ ] Push feature branch (HTTPS then SSH, or vice versa)
 - [ ] Write sync handoff YAML
 - [ ] Report summary
 ```
@@ -107,9 +107,9 @@ If merge succeeds but push not yet run, record progress in handoff — use `stat
 git push -u origin HEAD
 ```
 
-Do not force push. Do not push `main` or `master`. Do not push tags.
+On auth failure, retry the other transport without changing `origin` (HTTPS ↔ `git@github.com:OWNER/REPO.git`). Record `push.transport` in handoff.
 
-If push fails, write handoff with `status: partial` (commit + merge done, push blocked).
+No force push. No `main`/`master`. If both fail: `status: partial`.
 
 ### Step 6: Write handoff
 

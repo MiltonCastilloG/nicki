@@ -10,15 +10,47 @@ version: 1
 # nicki_runtime_version: 0.1.0
 
 projects:
+  # Nicki self-tasks (workspace repo itself)
+  nicki:
+    path: .
+    git:
+      default_branch: main
+      remote: origin
+    # Paths copied from workspace root into each new nicki worktree (glob * supported)
+    copy:
+      - .env
+      - .env.*
+      - node_modules
+    post_create: []
+
   castlemill-landing:
     url: git@github.com:your-org/castlemill-landing.git
     path: projects/castlemill-landing
     git:
       default_branch: main
       remote: origin
-    # Run in project root after clone, and optionally in each new worktree
+    copy:
+      - .env
+      - .env.*
+      - node_modules
     post_create:
       - npm install
+    gitignore:
+      - worktrees/
+      - docs/archive/
+
+  tetris-clone-frp:
+    url: git@github.com:your-org/tetris-clone-frp.git
+    path: projects/tetris-clone-frp
+    git:
+      default_branch: master
+      remote: origin
+    copy:
+      - .env
+      - .env.*
+      - node_modules
+    post_create:
+      - pnpm install
     gitignore:
       - worktrees/
       - docs/archive/
@@ -29,4 +61,7 @@ projects:
   #   git:
   #     default_branch: main
   #     remote: origin
+  #   copy:
+  #     - .env
+  #     - node_modules
   #   post_create: []

@@ -14,7 +14,7 @@ Use [`NICKI.md`](NICKI.md) for workflow semantics (orchestrator rules, artifact 
 | ----- | ------ |
 | Nicki lives inside one app repo (e.g. castlemill-landing) | Nicki is its own repo |
 | Workflow files committed in host `.cursor/` | Nicki owns source; installs runtime into managed projects |
-| Worktrees under repo root `worktrees/` | `projects/<name>/worktrees/<slug>/` (`PROJECT` env in start-worktrees.sh) |
+| Worktrees under repo root `worktrees/<project>-<slug>/` | Workspace-root `worktrees/<project>-<slug>/` via `create-worktree.py` |
 | Single-repo scope | Nicki workspace holds many cloned projects in parallel |
 
 Nicki still does **not** implement features. It orchestrates sheep via Task, passes artifacts, and sends `sheep-status` after each step.
@@ -75,16 +75,18 @@ flowchart TB
         └── worktrees/
 ```
 
-### Key design choice: project-local worktrees
+### Key design choice: workspace-root worktrees
 
-Use `[workspace]/projects/<project>/worktrees/<task-slug>`, not a global flat list of worktrees beside all projects.
+Use `[workspace]/worktrees/<project>-<slug>` at the workspace root (single hyphen between project and slug).
 
 Why:
 
-- Each project keeps its own git worktree namespace.
-- Existing `start-worktrees.sh` logic stays mostly the same — only the repo root path changes.
+- One flat namespace under workspace root; paths are predictable for hooks and `global-status.json`.
+- `create-worktree.py` handles nicki self-tasks (`nicki-<slug>`) and managed projects (`<project>-<slug>`) uniformly.
 - Cursor opens a task worktree as a normal workspace; `.cursor/` must exist there (installed from Nicki runtime).
 - `current-task/` stays inside the active worktree, matching the model in `NICKI.md`.
+
+Legacy `projects/<project>/worktrees/<slug>/` is deprecated; do not create new worktrees there.
 
 ---
 
@@ -242,12 +244,14 @@ Full detail: [`NICKI.md`](NICKI.md).
 
 ## Implementation phases
 
-1. **Create Nicki repo** — move this `nicki/` folder into a new repo; rename `runtime/.cursor/` → `package/.cursor/`.
-2. **Define registry** — finalize `nicki-workspace.yaml` schema; add example.
-3. **Minimal CLI** — `workspace init`, `project clone`, `runtime install`, `doctor`.
-4. **Adapt worktrees** — project-path-aware `start-worktrees.sh`.
-5. **Update prompts** — project/worktree resolution in nicki.md and sheep agents.
-6. **Dogfood** — register castlemill-landing as first managed project; run one task end-to-end.
+Tracked in [`tasks.md`](tasks.md). Priority: (1) workflow functioning, (2) harness/guardrails, (3) trimming.
+
+1. **Worktree setup** — `create-worktree.py`, root `worktrees/`, copy gitignored locals.
+2. **Guardrails** — `check-gate.py`, return validator, smoke tests.
+3. **Trim orchestrator prompt** — after harness proven.
+4. **Minimal CLI** — later.
+
+Full CLI sketch and adaptations below remain reference.
 
 ---
 

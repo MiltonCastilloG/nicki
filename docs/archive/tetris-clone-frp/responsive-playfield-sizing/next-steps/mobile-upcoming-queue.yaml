@@ -1,0 +1,30 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: validation
+  source_validation: current-task/review-validations/r5-validation.yaml
+  source_finding: Fix-3 hides right-side upcoming queue on mobile ≤720px
+title: Mobile upcoming piece queue
+type: feature
+summary: >
+  Restore visibility of the next pieces on narrow viewports without crowding the
+  playfield. Fix-3 hid the right-side container; players still need upcoming
+  piece preview on phones.
+requirements:
+  - Show at least the next piece (ideally next three) on viewports ≤720px
+  - Do not reduce playfield scale below current minimum readable cell size
+  - Reuse existing upcoming canvas render logic; layout-only change preferred
+  - Work in portrait and landscape; respect safe-area insets
+scope: >
+  Mobile layout for upcoming piece preview only. Out of scope: playfield sizing
+  math, game logic, keyboard controls, pause/upload buttons.
+constraints:
+  - no-new-deps
+acceptance:
+  - On ≤720px width, player can see upcoming piece(s) without horizontal scroll
+  - Upcoming previews match desktop piece order and appearance
+  - Playfield + hold + score layout from Fix-3 remains usable
+assumptions:
+  - Overlay, swipe panel, or compact strip are acceptable UX patterns
+  - Desktop layout (>720px) stays unchanged
+open_questions:
+  - Preferred UX pattern — overlay vs swipe panel vs compact strip below playfield?

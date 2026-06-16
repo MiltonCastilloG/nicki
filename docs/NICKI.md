@@ -43,38 +43,7 @@ See `.cursor/skills/README.md` for rules and workflow exceptions.
 
 ## Canonical workflow
 
-Nicki knows this step sequence:
-
-```
-start → describe → spec → subtasks → execute → review → acceptance → sync → integrate → close
-                                      ↑ fix loop (readiness.fix_required → execute)
-```
-
-With automatic context updates after each sheep step:
-
-```
-sheep-start
-sheep-status
-describe              ← Nicki-only: ask if needed, draft Gherkin user story, persist task.story
-sheep-status
-sheep-spec
-sheep-status
-sheep-subtask
-sheep-status
-sheep-execute
-sheep-status
-sheep-review           ← review + validation skill (readiness + next-steps)
-sheep-status
-acceptance             ← Nicki-only; readiness.ready_for_acceptance
-sheep-status
-sheep-sync             ← user confirmation required
-sheep-status
-sheep-integrate        ← user confirmation required; merge into main + push main
-sheep-status
-sheep-close            ← user confirms archive + delete
-```
-
-`fix` not separate agent. Validation skill emits `readiness` and writes `next-steps/*.yaml` for deferred `[scope]` findings in the same review spawn. Nicki routes from validation — not review prose. `fix_required` → execute with `## Fix` appended. `ready_for_acceptance` → acceptance before sync.
+Step order, automatic `sheep-status` after each sheep (except close), and post-review readiness branching are in the diagram below. Nicki routes from validation readiness (`fix_required` → execute with `## Fix`, `ready_for_acceptance` → acceptance, `blocked` → ask user); sync and integrate require explicit user confirmation.
 
 ```mermaid
 flowchart LR
@@ -105,11 +74,11 @@ flowchart LR
 
 ## Sheep and artifacts
 
-Each sheep produces YAML handoff under `projects/<project>/worktrees/<slug>/current-task/` (legacy `worktrees/<slug>/` OK).
+Each sheep produces YAML handoff under `worktrees/<project>-<slug>/current-task/` (workspace root; single hyphen between project and slug).
 
 | Step | Sheep | Writes code? | Primary output |
 | ---- | ----- | ------------ | -------------- |
-| Setup | `sheep-start` | No | `projects/<project>/worktrees/<slug>/` |
+| Setup | `sheep-start` | No | `worktrees/<project>-<slug>/` |
 | State | `sheep-status` | No (status JSON only) | `current-task/status.json` |
 | Describe | Nicki only | No | `task.story` in context (Gherkin user story) |
 | Spec | `sheep-spec` | No | `current-task/specs/<slug>.yaml` |
