@@ -1,0 +1,30 @@
+meta:
+  worktree: responsive-playfield-sizing
+  generated_by: validation
+  source_validation: current-task/review-validations/r5-validation.yaml
+  source_finding: Fix-3 hides pause and upload buttons on mobile ≤720px
+title: Mobile game controls (pause and upload)
+type: feature
+summary: >
+  Provide pause and upload actions on mobile after Fix-3 hid the right-side
+  button column. Players must pause mid-game and upload scores without desktop
+  chrome.
+requirements:
+  - Pause and resume game on viewports ≤720px
+  - Upload score action reachable during or after a game on mobile
+  - Controls must not overlap playfield or block touch game input
+  - Touch targets meet minimum size (~44px) with safe-area awareness
+scope: >
+  Mobile-accessible pause and upload UI only. Out of scope: playfield sizing,
+  upcoming queue, lines score display, piece movement controls.
+constraints:
+  - no-new-deps
+acceptance:
+  - Player can pause and resume on a phone without keyboard
+  - Player can trigger score upload from mobile UI
+  - No accidental pause/upload during normal touch play
+assumptions:
+  - Icon toolbar, floating action button, or header bar are acceptable patterns
+  - Existing pause/upload handlers in JS can be wired to new mobile triggers
+open_questions:
+  - Should upload live in a post-game modal or stay always visible?

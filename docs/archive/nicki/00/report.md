@@ -10,7 +10,7 @@ global-status.json registry · per-task status.json · hook task-id resolution �
 
 ## Outcome
 
-Shipped to `main`. Archived at `docs/archive/00/`. All 26 subtasks complete.
+Shipped to `main`. Archived at `docs/archive/nicki/00/`. All 26 subtasks complete.
 
 ## Process
 
@@ -20,7 +20,7 @@ Shipped to `main`. Archived at `docs/archive/00/`. All 26 subtasks complete.
 
 **Execute** created `global-status-format.md`, `status-format.md`, hook-contract skill, register/unregister scripts, example JSON files, and updated Nicki bootstrap chain.
 
-**Close** archived to `docs/archive/00/`; construction source torn down.
+**Close** archived to `docs/archive/nicki/00/`; construction source torn down.
 
 ## Decisions
 

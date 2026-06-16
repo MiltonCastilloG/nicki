@@ -17,7 +17,7 @@ outcome:
   status: archived
   target: main
   pushed_branch: null
-  final_artifact: docs/archive/01/report.yaml
+  final_artifact: docs/archive/nicki/01/report.yaml
 
 process:
   - step: spec
@@ -27,7 +27,7 @@ process:
   - step: execute
     summary: review-routing (01-0) and git-tail-workspace (01-1); pointer ownership doc.
   - step: close
-    summary: Archived to docs/archive/01/; construction source torn down.
+    summary: Archived to docs/archive/nicki/01/; construction source torn down.
 
 decisions:
   - 01-0 owns validation, acceptance, open_questions, fix-loop pointers

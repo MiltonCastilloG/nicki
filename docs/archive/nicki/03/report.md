@@ -10,7 +10,7 @@ pipeline skills unlocked · workflow skills locked · sheep-* agents · routing.
 
 ## Outcome
 
-Shipped. Archived at `docs/archive/03/`. All 61 subtasks complete.
+Shipped. Archived at `docs/archive/nicki/03/`. All 61 subtasks complete.
 
 ## Process
 
@@ -20,7 +20,7 @@ Shipped. Archived at `docs/archive/03/`. All 61 subtasks complete.
 
 **Docs** moved `report.md` and `report-2.md` to `nicki-contruction/`; added `complexity.md` agent load analysis.
 
-**Close** archived to `docs/archive/03/`; construction source torn down.
+**Close** archived to `docs/archive/nicki/03/`; construction source torn down.
 
 ## Decisions
 

@@ -1,0 +1,66 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: responsive-playfield-sizing
+  title: Responsive playfield sizing (desktop + mobile)
+  original: "Task #2 — viewport/container scale, visualViewport, DPR backing store, debounced resize, safe-area, mobile column stack ≤720px, desktop baseline restore"
+  type: feature
+  branch: feature/responsive-playfield-sizing
+
+story: viewport scale · visualViewport · DPR canvas · debounced resize · safe-area · mobile stack ≤720px · desktop baseline restore · isMobileLayout gate
+
+outcome:
+  status: merged
+  target: master
+  pushed_branch: feature/responsive-playfield-sizing
+  final_artifact: current-task/integrates/responsive-playfield-sizing.yaml
+  merge_sha: d8bb555
+
+process:
+  - step: start
+    summary: Worktree on feature/responsive-playfield-sizing from master @ 9856100; task 2 registered.
+  - step: describe
+    summary: User approved mobile-aware Gherkin story for responsive playfield sizing.
+  - step: spec
+    summary: Fourteen requirements for viewport/container scale, DPR, safe-area, touch-action, debounced resize, cached hot-path metrics.
+  - step: subtasks
+    summary: Seventeen subtask checklist covering mobile viewport, safe-area, visualViewport, DPR, and layout gates.
+  - step: execute
+    summary: Implemented responsive sizing in board.js and index.css; eslint passed.
+  - step: review
+    summary: Approved all requirements; ready for acceptance.
+  - step: acceptance
+    summary: User accepted after review and playtest.
+  - step: sync
+    summary: Committed 29219ac; merged origin/master; pushed feature branch.
+  - step: integrate
+    summary: Merged feature into master (45da06f); pushed origin/master.
+  - step: fix
+    summary: Four fix rounds — compact panels, mobile hide right panel, menu scroll collapse, desktop baseline restore; four mobile follow-ups deferred as next-step specs.
+  - step: sync
+    summary: Pushed fix commits 1b62e41 and ec1a250; merged origin/master; pushed feature branch.
+  - step: integrate
+    summary: Re-integrated fix rounds into master (d8bb555); pushed origin/master.
+  - step: close
+    summary: Archived to docs/archive/tetris-clone-frp/responsive-playfield-sizing/; next-steps copied; worktree torn down; task 2 unregistered.
+
+decisions:
+  - Desktop >720px restored to fixed 300×600 board, 180px panels, 90px previews; mobile uses isMobileLayout() gate.
+  - Fix-3 hid right-side container on ≤720px; upcoming queue, pause/upload, lines score deferred to follow-up specs.
+
+open_questions: []
+
+suggestions:
+  - area: spec
+    suggestion: Capture mobile UI hide/show trade-offs in spec before execute so deferred follow-ups are expected, not surprise fix rounds.
+    evidence: "Fix-3 hid right panel; four next-step specs deferred from r5-validation."
+  - area: execute
+    suggestion: Separate desktop baseline restore from mobile responsive path early to avoid post-integrate desktop regression.
+    evidence: "Parent-agent desktop repair after acceptance superseded prior sign-off."
+  - area: review
+    suggestion: Include browser playtest checklist for orientation, DPR, and menu scroll in acceptance gate for layout tasks.
+    evidence: "Multiple fix rounds triggered by user playtest after static review passed."
