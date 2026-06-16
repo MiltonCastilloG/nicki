@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "meta": {
+    "schema": "task-status.v1",
+    "generated_by": "status-update",
+    "updated_by": "status-update"
+  },
+  "task": {
+    "id": "6",
+    "slug": "gherkin-spec-mutual-understanding",
+    "project": "nicki",
+    "original": "P1-6: Gherkin + spec mutual understanding\n\nGoal: Nicki and sheep do not advance past describe / spec until user and agent share the same understanding — not just formatted output.\n\ndescribe (Nicki): Draft Gherkin; ask on ambiguity (scope, actors, acceptance). Revise until user explicitly approves story meaning. No story.md on first draft alone.\n\nspec (sheep-spec): Read approved story; ask (via open_questions + blocked return) when requirements fork or stay vague. No spec file until resolved or user confirms trade-offs.\n\nGate (Harness): routing.yaml / check-gate.py — block spec without story_artifact; block subtasks while spec open_questions non-empty.\n\nTouch: nicki.md (Describe), sheep-spec.md, spec-maker/SKILL.md, optional story-format.md / spec gate smoke.\n\nToday: one-shot approval on describe; spec-maker asks internally but sheep may write spec with lingering open_questions — tighten loop so Nicki relays questions to user until clear.",
+    "story_artifact": "current-task/story.md",
+    "type": "feature",
+    "current_step": "sync",
+    "next_step": "sync",
+    "last_completed_step": "acceptance"
+  },
+  "scope": {
+    "worktree": "gherkin-spec-mutual-understanding",
+    "worktree_path": "worktrees/gherkin-spec-mutual-understanding"
+  },
+  "artifacts": {
+    "status": "current-task/status.json",
+    "story": "current-task/story.md",
+    "spec": "current-task/specs/gherkin-spec-mutual-understanding.yaml",
+    "subtasks": "current-task/subtasks/gherkin-spec-mutual-understanding.md",
+    "execution": "current-task/executions/gherkin-spec-mutual-understanding.yaml",
+    "review": "current-task/reviews/gherkin-spec-mutual-understanding.yaml",
+    "review_validation": "current-task/review-validations/r1-validation.yaml"
+  },
+  "constraints": ["no-commit", "no-new-deps"],
+  "open_questions": [],
+  "history": [
+    {
+      "step": "start",
+      "status": "complete",
+      "artifact": "current-task/status.json",
+      "summary": "Worktree created from main @ 06e9211; task 6 registered; status.json initialized for describe."
+    },
+    {
+      "step": "describe",
+      "status": "complete",
+      "artifact": "current-task/story.md",
+      "summary": "User approved Gherkin story meaning with \"continue\". Two Features — describe asks before inventing; spec asks before writing YAML. Acceptance test anchor is tetris NEXT_STEPS task 3 ghost piece."
+    },
+    {
+      "step": "spec",
+      "status": "complete",
+      "artifact": "current-task/specs/gherkin-spec-mutual-understanding.yaml",
+      "summary": "Spec written from approved P1-6 story with 17 testable requirements covering describe ask-before-draft, spec block-without-write, Nicki relay of open_questions, and subtasks gate on empty spec open_questions. Touch surface limited to nicki.md, sheep-spec.md, and spec-maker/SKILL.md; harness enforcement deferred to P2."
+    },
+    {
+      "step": "subtasks",
+      "status": "complete",
+      "artifact": "current-task/subtasks/gherkin-spec-mutual-understanding.md",
+      "summary": "Wrote 13-line OpenSpec checklist from approved spec with empty open_questions. Covers nicki.md describe ask-before-draft, chat-only revision, scenario-by-scenario iteration, pause-on-silence, spec open_questions relay, sheep-subtask gate; sheep-spec.md block-without-write and fork-as-options; spec-maker/SKILL.md ask-first and no-spec-while-questions; out-of-scope file confirmation; and manual tetris ghost-piece describe and spec verification flows."
+    },
+    {
+      "step": "execute",
+      "status": "complete",
+      "artifact": "current-task/executions/gherkin-spec-mutual-understanding.yaml",
+      "summary": "Implemented all 13 subtasks with minimal diffs to nicki.md (Describe ask-before-draft, chat-only revision, pause-on-silence, no describe reopen; Spec relay for open_questions), sheep-spec.md (block-without-write, fork-as-options, empty open_questions on write), and spec-maker/SKILL.md (ask-first gate, no spec while questions remain). Confirmed no edits to check-gate.py, routing.yaml, status docs, story-format.md, or smoke fixtures. Tetris ghost-piece describe/spec flows verified via traceability review against story acceptance scenarios and NEXT_STEPS.MD item 3 — full Nicki pipeline not run. No commit; no new deps."
+    },
+    {
+      "step": "review",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r1-validation.yaml",
+      "summary": "Review approved. All 17 spec requirements met via story-maker/sheep-describe refactor and spec relay prose; traceability PASS for tetris ghost-piece describe/spec scenarios. readiness.status: ready_for_acceptance. Deferred scope: routing.yaml describe wiring, README.md story-maker listing — non-blocking."
+    },
+    {
+      "step": "acceptance",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r1-validation.yaml",
+      "summary": "User accepted at ready_for_acceptance with \"yes\". P1-6 gherkin-spec-mutual-understanding approved for sync. Deferred scope notes (routing.yaml, README) acknowledged non-blocking."
+    }
+  ]
+}

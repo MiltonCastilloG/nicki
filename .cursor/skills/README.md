@@ -8,9 +8,11 @@ Skills are **pure functionality** — portable operation manuals with no knowled
 | **Sheep** (`.cursor/agents/sheep-*.md`) | Workflow binding: disk paths to load, gates, handoffs | **Nicki only** — Task `subagent_type: sheep-*` |
 | **Nicki** (`.cursor/agents/nicki.md`) | Full pipeline, transitions, user confirmations | User says `nicki …` |
 
+Pipeline leaf skills: `story-maker`, `spec-maker`, `subtask-maker`, `execute-plan`, `review-execution`, …
+
 ## Invocation policy
 
-1. **Users use skills** — pipeline skills (`spec-maker`, `execute-plan`, …) have model invocation enabled; attach the skill for one-off work outside the full pipeline.
+1. **Users use skills** — pipeline skills (`story-maker`, `spec-maker`, `execute-plan`, …) have model invocation enabled; attach the skill for one-off work outside the full pipeline.
 2. **Users do not send sheep** — parent agent must not Task-spawn `sheep-*`; only Nicki sends sheep.
 3. **Nicki sends sheep** — full current-task workflow goes through Nicki (`nicki fetch`, `nicki continue`, …).
 4. **Workflow-only skills stay internal** — `current-task-update`, `close-task`, `close-scope`, `task-archive`, `hook-contract`, `validation` keep `disable-model-invocation: true`.

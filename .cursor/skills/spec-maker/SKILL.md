@@ -58,7 +58,7 @@ Otherwise extract what the user wants built or fixed. Ask if:
 - Multiple valid interpretations exist and the user has not chosen one
 - A design fork affects requirements (CTA link, copy, visual approach)
 
-Do not write the spec until requirements are clear enough to list testable `requirements` and `acceptance` criteria.
+**Ask-first:** Do not write the spec file while `open_questions` remain; list forks and stop or relay via Nicki until `open_questions: []`.
 
 ### Step 3: Light context read
 
@@ -93,6 +93,8 @@ Include:
 - Guess on design forks — ask first or list in `open_questions`
 
 ### Step 5: Write the spec file
+
+Written file **must** include `open_questions: []` (Step 2 gate).
 
 1. Create the output directory under the scope root if it does not exist.
 2. Write the complete YAML to the output path.
