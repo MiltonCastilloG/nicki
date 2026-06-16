@@ -1,0 +1,52 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: create-worktree-py
+  title: create-worktree.py — worktree creation and registration
+  original: "P1 #1–3: scripted worktree creation at workspace root, unified worktrees/<project>-<slug> layout, registry copy/post_create"
+  type: chore
+  branch: chore/create-worktree-py
+
+story: create-worktree.py · register-global-status.py · unified worktrees/<project>-<slug> · registry copy/post_create · structured JSON handoff · failure-path WORKFLOW.md
+
+outcome:
+  status: merged
+  target: main
+  pushed_branch: main
+  final_artifact: current-task/integrates/create-worktree-py.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story with user Q&A; unified path rule worktrees/<project>-<slug>.
+  - step: spec
+    summary: 17 requirements; reduce-agent-workload; failure-path-manual-recovery on script failure only.
+  - step: execute
+    summary: create-worktree.py + register-global-status.py; nicki/tetris/castlemill dogfood E2E.
+  - step: review
+    summary: Three incremental dogfood rounds; tetris master branch + pnpm post_create fixes; failure-path structured stderr verified.
+  - step: sync
+    summary: Merged main; pushed via SSH fallback; docs/tasks.md option-3 combine.
+  - step: integrate
+    summary: Merged chore/create-worktree-py into main @ cee192e; pushed main via SSH.
+  - step: close
+    summary: Dogfood worktrees removed; archived; task 3 unregistered; worktree deleted.
+
+decisions:
+  - Unified path worktrees/<project>-<slug> for all projects including nicki
+  - Happy path needs no workflow knowledge; agent reads WORKFLOW.md only on script failure
+  - global-status registration separate script; per-project incremental task ids
+  - sync-task push tries HTTPS then SSH without changing git config
+
+open_questions: []
+
+suggestions:
+  - area: orchestration
+    suggestion: Wire sheep-start to call create-worktree.py (P1-5) and retire start-worktrees.sh fully.
+    evidence: "scope.out P1-5 deferred from this task"
+  - area: push
+    suggestion: sync-task SSH fallback already added after HTTPS auth failure in agent environment.
+    evidence: "sync partial then SSH push succeeded"
