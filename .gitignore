@@ -3,8 +3,10 @@ projects/*
 !projects/.gitkeep
 
 # Task worktrees
-worktrees/
-projects/*/worktrees/
+worktrees/*
+!worktrees/.gitkeep
+projects/*/worktrees/*
+!projects/*/worktrees/.gitkeep
 
 # Workspace runtime (schema examples stay tracked)
 global-status.json
