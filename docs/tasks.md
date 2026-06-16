@@ -28,12 +28,16 @@ When goals **align**, do all three — e.g. add `check-gate.py` and trim duplica
 
 | # | Task | Notes |
 |---|------|-------|
-| 1 | `create-worktree.py` | Pull base branch, `git worktree add`, workspace `worktrees/<slug>` (or `<project>--<slug>`), copy gitignored locals (`.env`, `.env.*`), `post_create` from registry, register `global-status.json`. |
-| 2 | Root `worktrees/` layout | Workspace-level `worktrees/` vs `projects/*/worktrees/`. Update paths in formats, `sheep-start`, `start-task`, `close-scope`. |
-| 3 | `post_create` copy list | Per-project files to copy after checkout. Document in workspace registry. |
+| 1 | `create-worktree.py` | **Done.** Pull base branch, `git worktree add`, workspace `worktrees/<project>-<slug>`, copy gitignored locals from registry, `post_create`, scaffold `current-task/`, register `global-status.json`. |
+| 2 | Root `worktrees/` layout | **Done** (shipped with #1). **Unified:** `worktrees/<project>-<slug>` at workspace root (single hyphen). See `create-worktree.py` and `nicki-workspace.example.yaml`. |
+| 3 | `post_create` copy list | **Done** (shipped with #1). Per-project `copy` and `post_create` in workspace registry; readable by `create-worktree.py`. |
 | 4 | Migrate active task | Recreate or move `tetris-clone-frp` worktree; fix `global-status.json`. |
 | 5 | Wire `sheep-start` to new script | Replace/extend `start-worktrees.sh` call path; keep register flow. |
 | 6 | **Gherkin + spec mutual understanding** | See below — blocks bad downstream work. |
+
+Worktree path rule: always `worktrees/<project>-<slug>` — e.g. `worktrees/nicki-create-worktree-py`, `worktrees/tetris-clone-frp-hero-section`. Never double hyphen.
+
+Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-global-status.py`, `WORKFLOW.md` (manual recovery).
 
 ### Gherkin + spec mutual understanding (#6)
 

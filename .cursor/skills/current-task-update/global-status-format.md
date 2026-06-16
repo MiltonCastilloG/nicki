@@ -16,13 +16,13 @@ Default path: `global-status.json` at Nicki workspace root (repo root in single-
 
 ## Task registry entry
 
-Each key in `tasks` is a stable string id (numeric string recommended, e.g. `"42"`).
+Each key in `tasks` is a stable string id scoped per project: `<project>:<id>` (e.g. `nicki:3`, `tetris-clone-frp:1`). Task ids auto-increment per project.
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `project` | Yes | Managed project name (e.g. `castlemill-landing`) |
 | `slug` | Yes | Worktree folder slug (e.g. `hero-section`) |
-| `worktree_path` | Yes | Repo-relative path to task worktree |
+| `worktree_path` | Yes | Repo-relative path to task worktree (e.g. `worktrees/nicki-hero-section`) |
 | `status_path` | Yes | Repo-relative path to per-task `status.json` |
 
 ## Example
@@ -30,13 +30,13 @@ Each key in `tasks` is a stable string id (numeric string recommended, e.g. `"42
 ```json
 {
   "version": 1,
-  "active_task": "42",
+  "active_task": "castlemill-landing:1",
   "tasks": {
-    "42": {
+    "castlemill-landing:1": {
       "project": "castlemill-landing",
       "slug": "hero-section",
-      "worktree_path": "projects/castlemill-landing/worktrees/hero-section",
-      "status_path": "projects/castlemill-landing/worktrees/hero-section/current-task/status.json"
+      "worktree_path": "worktrees/castlemill-landing-hero-section",
+      "status_path": "worktrees/castlemill-landing-hero-section/current-task/status.json"
     }
   }
 }
@@ -46,7 +46,7 @@ Each key in `tasks` is a stable string id (numeric string recommended, e.g. `"42
 
 | Decision | Choice |
 |----------|--------|
-| Task id | Numeric string key; `slug` duplicated in entry |
+| Task id | Per-project numeric string; registry key `<project>:<id>` |
 | `active_task` | Present when multiple tasks may be open |
 | Registry filename | `global-status.json` (not root `status.json`) |
 | Close unregister | Remove entry after archive; clear or re-point `active_task` |
