@@ -103,6 +103,7 @@ nicki/
 ├── docs/
 │   ├── NICKI.md         # workflow semantics
 │   ├── PLAN.md          # multi-project workspace plan
+│   ├── tasks.md         # actionable backlog
 │   └── archive/         # closed task archives (00, 01, …)
 └── .cursor/
     ├── agents/          # sheep workflow binding (Nicki only)
@@ -110,4 +111,4 @@ nicki/
     └── skills/          # pure functionality + README.md
 ```
 
-Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Multi-project workspace: [`docs/PLAN.md`](docs/PLAN.md). Skills/agents audit: [`nicki-contruction/report-2.md`](nicki-contruction/report-2.md).
+Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Multi-project workspace: [`docs/PLAN.md`](docs/PLAN.md). Backlog: [`docs/tasks.md`](docs/tasks.md).
