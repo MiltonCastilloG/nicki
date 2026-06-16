@@ -1,0 +1,57 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: gherkin-spec-mutual-understanding
+  title: Gherkin and spec mutual understanding
+  original: "P1-6: Nicki and sheep do not advance past describe / spec until user and agent share the same understanding — ask before draft, block spec without empty open_questions."
+  type: feature
+  branch: feature/gherkin-spec-mutual-understanding
+
+story: ask-before-draft · chat-only Gherkin · sheep-describe + story-maker · spec block-without-write · open_questions relay · subtasks gate · minimal touch nicki/sheep-spec/spec-maker
+
+outcome:
+  status: merged
+  target: main
+  pushed_branch: main
+  final_artifact: current-task/integrates/gherkin-spec-mutual-understanding.yaml
+
+process:
+  - step: describe
+    summary: User approved Gherkin story with continue; two Features for describe ask-before-draft and spec block-without-write; tetris ghost piece as acceptance anchor.
+  - step: spec
+    summary: 17 testable requirements; empty open_questions; harness enforcement deferred to P2.
+  - step: subtasks
+    summary: 13-line OpenSpec checklist covering nicki.md, sheep-spec.md, spec-maker/SKILL.md, and manual tetris verification flows.
+  - step: execute
+    summary: Minimal diffs to nicki.md, sheep-spec.md, spec-maker/SKILL.md; post-execute trim and sheep-describe + story-maker refactor mirroring sheep-spec pattern.
+  - step: review
+    summary: Approved; traceability PASS for tetris ghost-piece scenarios; routing.yaml wiring and README.md listed as deferred scope.
+  - step: acceptance
+    summary: User accepted at ready_for_acceptance; approved for sync.
+  - step: sync
+    summary: Committed b904081 on feature branch; merged origin/main (3fbffca); pushed via SSH.
+  - step: integrate
+    summary: Merged feature/gherkin-spec-mutual-understanding into main @ 984857f; pushed main via SSH.
+
+decisions:
+  - Chat is primary Q&A channel during describe and spec; disk open_questions secondary for compaction
+  - Post-execute refactor moved describe behavior into story-maker + sheep-describe (mirror spec-maker + sheep-spec)
+  - routing.yaml describe wiring added intentionally despite original out-of-scope note
+  - Harness script enforcement (check-gate.py) deferred to P2
+
+open_questions: []
+
+suggestions:
+  - area: spec
+    suggestion: Capture story-maker + sheep-describe split in spec when mirroring an existing sheep+skill pattern, so routing.yaml touch is planned not deferred.
+    evidence: "review deferred scope note on routing.yaml modified post-execute."
+  - area: orchestration
+    suggestion: Implement P2 check-gate.py and routing gates for describe story_artifact and spec open_questions enforcement.
+    evidence: "story and spec scope.out list harness enforcement as P2."
+  - area: execute
+    suggestion: Run one full Nicki pipeline E2E on tetris ghost piece verification instead of traceability-only review.
+    evidence: "execution manual_verification notes full Nicki pipeline not run."

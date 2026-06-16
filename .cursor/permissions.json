@@ -31,6 +31,8 @@
     "git worktree list",
     "git worktree list --porcelain",
     "git worktree add",
+    "git worktree remove",
+    "git worktree prune",
     "git checkout",
     "git checkout main",
     "git pull",
@@ -45,6 +47,17 @@
     "git push",
     "git push -u origin HEAD",
     "git push origin",
+    "git push origin main",
+    "git push -u origin",
+    "git push git@github.com:",
+    "git push -u git@github.com:",
+    "git branch -D",
+    "git branch -d",
+    "git -C",
+
+    "python3 .cursor/skills/start-task/scripts/create-worktree.py",
+    "python3 .cursor/skills/start-task/scripts/register-global-status.py",
+    "python3 -m py_compile",
 
     "jq",
     "mkdir -p",
@@ -62,13 +75,15 @@
   ],
   "autoRun": {
     "allow_instructions": [
-      "Allow Nicki sheep workflow git in task worktrees: status, status --porcelain, diff, diff --staged, diff main...HEAD, log, branch, branch --show-current, remote, rev-parse, show-ref, worktree list/add, checkout, pull, fetch, merge (including origin/main and --no-ff), add, commit, push (including -u origin HEAD).",
-      "Allow Nicki start scripts: bash or direct invocation of start-worktrees.sh and register-global-status.sh, including PROJECT=<project> prefixed runs.",
-      "Allow Nicki close scripts: bash or direct invocation of unregister-global-status.sh and rm -rf -- on confirmed worktree paths.",
-      "Allow Nicki sync and integrate git after user confirmed the step: fetch, merge, add, commit, push on feature or target branches.",
-      "Allow npm and pnpm install, lint, and test for execute and review verification in worktrees.",
-      "Allow jq, mkdir -p, cp, and cat used by Nicki workflow scripts, archive copy, and HEREDOC commit messages.",
-      "Allow smoke scripts under .cursor/hooks/scripts/ and .cursor/skills/*/scripts/ when validating permissions or workflow."
+      "Allow Nicki sheep workflow git: status, diff, log, branch (including -D/-d), remote, rev-parse, show-ref, worktree list/add/remove/prune, checkout, pull, fetch, merge (origin/main, --no-ff), add, commit, push (origin, -u origin HEAD, origin main, and SSH git@github.com: URLs).",
+      "Allow git -C for managed project repos under projects/ (worktree prune, branch delete, worktree list).",
+      "Allow Nicki start/close Python scripts: create-worktree.py, register-global-status.py, unregister-global-status.sh; bash variants of start/register scripts; PROJECT= prefixed runs.",
+      "Allow Nicki close teardown: unregister-global-status.sh and rm -rf -- on worktree paths after user confirmed close.",
+      "Allow Nicki sync and integrate git (including SSH push fallback when HTTPS auth fails) after user confirmed the step.",
+      "Allow python3 -m py_compile on workflow scripts during review.",
+      "Allow npm and pnpm install, lint, and test in worktrees.",
+      "Allow jq, mkdir -p, cp, and cat for workflow scripts, archive copy, and HEREDOC commits.",
+      "Allow smoke scripts under .cursor/hooks/scripts/ and .cursor/skills/*/scripts/."
     ],
     "block_instructions": [
       "Block chmod; invoke Nicki scripts with bash instead.",

@@ -33,25 +33,27 @@ When goals **align**, do all three — e.g. add `check-gate.py` and trim duplica
 | 3 | `post_create` copy list | **Done** (shipped with #1). Per-project `copy` and `post_create` in workspace registry; readable by `create-worktree.py`. |
 | 4 | Migrate active task | Recreate or move `tetris-clone-frp` worktree; fix `global-status.json`. |
 | 5 | Wire `sheep-start` to new script | Replace/extend `start-worktrees.sh` call path; keep register flow. |
-| 6 | **Gherkin + spec mutual understanding** | See below — blocks bad downstream work. |
+| 6 | **Gherkin + spec mutual understanding** | **Done.** Archive: `docs/archive/gherkin-spec-mutual-understanding/`. See below. |
 
 Worktree path rule: always `worktrees/<project>-<slug>` — e.g. `worktrees/nicki-create-worktree-py`, `worktrees/tetris-clone-frp-hero-section`. Never double hyphen.
 
 Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-global-status.py`, `WORKFLOW.md` (manual recovery).
 
-### Gherkin + spec mutual understanding (#6)
+### Gherkin + spec mutual understanding (#6) — done
 
 **Goal:** Nicki and sheep do not advance past `describe` / `spec` until user and agent share the same understanding — not just formatted output.
 
 | Step | Who | Behavior |
 |------|-----|----------|
-| `describe` | **Nicki** | Draft Gherkin; **ask** on ambiguity (scope, actors, acceptance). Revise until user **explicitly approves** story meaning. No `story.md` on first draft alone. |
-| `spec` | **sheep-spec** | Read approved story; **ask** (via `open_questions` + blocked return) when requirements fork or stay vague. No spec file until resolved or user confirms trade-offs. |
-| Gate | **Harness** | `routing.yaml` / `check-gate.py`: block `spec` without `story_artifact`; block `subtasks` while spec `open_questions` non-empty. |
+| `describe` | **sheep-describe** + **story-maker** | Ask before draft; do not invent specifics. Draft in relay until user approves. Write `story.md` only when clear and approved. |
+| `describe` relay | **Nicki** | Relay blocked `open_questions` or draft `summary`; re-send sheep-describe with user context. Pause when user is silent. |
+| `spec` | **sheep-spec** + **spec-maker** | Block without write when vague or forked; `open_questions` for Nicki relay. No spec file until resolved. |
+| `spec` relay | **Nicki** | Present `open_questions`; re-send sheep-spec after user answers. No subtasks while spec `open_questions` non-empty. |
+| Gate | **Harness** (P2) | `routing.yaml` / `check-gate.py`: block `spec` without `story_artifact`; block `subtasks` while spec `open_questions` non-empty. |
 
-**Touch:** `nicki.md` (Describe), `sheep-spec.md`, `spec-maker/SKILL.md`, optional `story-format.md` / spec gate smoke.
+**Shipped:** `story-maker/SKILL.md`, `sheep-describe.md`, `nicki.md` (Describe + Spec relay), `sheep-spec.md`, `spec-maker/SKILL.md`, `routing.yaml` (describe → `sheep-describe`).
 
-**Today:** one-shot approval on describe; spec-maker asks internally but sheep may write spec with lingering `open_questions` — tighten loop so Nicki relays questions to user until clear.
+**Deferred to P2:** `check-gate.py` script enforcement; full E2E tetris ghost-piece Nicki run.
 
 Projects on disk: `castlemill-landing`, `tetris-clone-frp` (one active worktree). Gitignored env is copied by script — not a layout problem.
 
