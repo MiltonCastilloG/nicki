@@ -39,7 +39,7 @@ process:
   - step: integrate
     summary: Merged feature/board-renderer-state into master; pushed origin/master 9856100.
   - step: close
-    summary: Archived to docs/archive/board-renderer-state/; worktree torn down; task 1 unregistered.
+    summary: Archived to docs/archive/tetris-clone-frp/board-renderer-state/; worktree torn down; task 1 unregistered.
 
 decisions: []
 

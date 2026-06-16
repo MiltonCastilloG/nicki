@@ -17,7 +17,7 @@ outcome:
   status: archived
   target: main
   pushed_branch: null
-  final_artifact: docs/archive/02/report.yaml
+  final_artifact: docs/archive/nicki/02/report.yaml
 
 process:
   - step: spec
@@ -27,7 +27,7 @@ process:
   - step: execute
     summary: Removed leaf pipeline commands; Nicki doc uses Task spawn language; docs aligned.
   - step: close
-    summary: Archived to docs/archive/02/; construction source torn down.
+    summary: Archived to docs/archive/nicki/02/; construction source torn down.
 
 decisions:
   - Nicki entry via Task subagent_type and nicki-default rule — no slash-command path required

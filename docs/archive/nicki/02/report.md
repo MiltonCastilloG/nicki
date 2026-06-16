@@ -10,7 +10,7 @@ Task subagent_type spawn only · leaf slash commands removed · thin agent shell
 
 ## Outcome
 
-Shipped. Archived at `docs/archive/02/`. All 20 subtasks checked.
+Shipped. Archived at `docs/archive/nicki/02/`. All 20 subtasks checked.
 
 ## Process
 
@@ -20,7 +20,7 @@ Shipped. Archived at `docs/archive/02/`. All 20 subtasks checked.
 
 **Execute** verified commands directory has no leaf pipeline commands and each step reachable as agent + skill pair.
 
-**Close** archived to `docs/archive/02/`; construction source torn down.
+**Close** archived to `docs/archive/nicki/02/`; construction source torn down.
 
 ## Decisions
 

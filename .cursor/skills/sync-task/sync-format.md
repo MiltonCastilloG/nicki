@@ -13,7 +13,7 @@ Default path: `current-task/syncs/<slug>.yaml` under the task worktree scope roo
 | `commit` | Yes | Commit phase result |
 | `pre_push_merge` | Yes | Base branch merge into feature before push |
 | `remote` | If synced | Remote name and feature branch |
-| `push` | If synced | Pushed commit SHA and upstream |
+| `push` | If synced | Pushed SHA, upstream, `transport` |
 | `conflicts` | No | Conflict files and resolution status |
 | `user_resolutions` | No | User inputs for conflict resolution |
 | `blockers` | If blocked/partial | Why sync did not fully complete |
@@ -71,6 +71,7 @@ remote:
 push:
   sha: abc1234
   upstream: origin/feature/hero-section
+  transport: ssh
 
 conflicts: []
 user_resolutions: []

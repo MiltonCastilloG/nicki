@@ -17,7 +17,7 @@ outcome:
   status: archived
   target: main
   pushed_branch: null
-  final_artifact: docs/archive/03/report.yaml
+  final_artifact: docs/archive/nicki/03/report.yaml
 
 process:
   - step: spec
@@ -27,7 +27,7 @@ process:
   - step: execute
     summary: Nine sheep agents, routing.yaml, sync/integrate tail, validation fold, pure skills, docs and smoke updates.
   - step: close
-    summary: Archived to docs/archive/03/; construction source torn down.
+    summary: Archived to docs/archive/nicki/03/; construction source torn down.
 
 decisions:
   - Users attach pipeline skills ad-hoc; only Nicki sends sheep via Task

@@ -17,7 +17,7 @@ outcome:
   status: archived
   target: main
   pushed_branch: null
-  final_artifact: docs/archive/00/report.yaml
+  final_artifact: docs/archive/nicki/00/report.yaml
 
 process:
   - step: spec
@@ -27,7 +27,7 @@ process:
   - step: execute
     summary: status-architecture execution — schemas, agents, skills, hooks, smoke scripts, examples.
   - step: close
-    summary: Archived to docs/archive/00/; construction source torn down.
+    summary: Archived to docs/archive/nicki/00/; construction source torn down.
 
 decisions:
   - global-status.json at workspace root; per-task status.json under current-task/
