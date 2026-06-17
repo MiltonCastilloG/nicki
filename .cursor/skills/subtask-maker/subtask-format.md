@@ -25,9 +25,9 @@ Default path: `current-task/subtasks/<slug>.md` under the worktree scope root.
 
 One **terse sentence** per line — no filler (just, basically, really); keep technical terms exact.
 
-**Do:** one buildable outcome per line; dependencies first; test subtasks when spec implies coverage; verification subtasks last from spec `acceptance`; map every requirement and acceptance item.
+**Do:** one buildable outcome per line; dependencies first; **verify-before-build** when existing code may already satisfy a requirement; **refactor-to-share** when similar logic exists instead of duplicating it; test subtasks when spec implies coverage; verification subtasks last from spec `acceptance`; map every requirement and acceptance item.
 
-**Don't:** multiple sentences on one line; file paths or symbol names in text (verification may name checks, e.g. "Run npm run lint on changed files"); vague lines; skip implied tests.
+**Don't:** multiple sentences on one line; symbol names in text (verification may name checks, e.g. "Run npm run lint on changed files"); vague lines; skip implied tests;  drop a requirement because you think it is already done — write a verify line instead.
 
 ## Example
 
@@ -49,6 +49,14 @@ constraints:
 - [ ] Add unit tests asserting the Hero renders headline, subcopy, and CTA.
 - [ ] Run npm run lint on changed files and fix any issues.
 - [ ] Run npm test for Hero and home page test suites.
+```
+
+When exploration finds existing coverage, prefer lines like:
+
+```markdown
+- [ ] Confirm the home page hero already meets headline, subcopy, and CTA requirements and change nothing if it does.
+- [ ] Extract shared CTA button styling from the footer component and reuse it in the hero instead of duplicating button logic.
+- [ ] Wire the existing Hero component into the home page only where the hero area is still missing it.
 ```
 
 Spec input (read): [spec-input.md](spec-input.md). Execute input (read): [subtask-input.md](subtask-input.md). Full spec schema: [spec-format.md](../spec-maker/spec-format.md).
