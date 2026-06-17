@@ -2,7 +2,7 @@
 
 **Nicki is a good dog.**
 
-Cursor workflow for structured agent-driven development. Nicki orchestrates the current-task pipeline (describe → close) in project-local worktrees with YAML/Markdown handoffs.
+Cursor workflow for structured agent-driven development. Nicki orchestrates the current-task pipeline (start → close) in project-local worktrees with YAML/Markdown handoffs on disk.
 
 ---
 
@@ -15,7 +15,7 @@ Cursor workflow for structured agent-driven development. Nicki orchestrates the 
 | Skills | `.cursor/skills/<name>/` | Pure functionality — how to perform one job; artifact schemas |
 | Skill index | `.cursor/skills/README.md` | Skills vs agents rules and exceptions |
 
-Ad-hoc work outside the pipeline: attach a skill (e.g. `conflict-resolution`, `caveman`) — no slash commands.
+Ad-hoc work outside the pipeline: attach a skill (e.g. `spec-maker`, `execute-plan`, `conflict-resolution`) — no slash commands. Do not Task-spawn sheep from the parent agent.
 
 ### Three layers
 
@@ -27,7 +27,7 @@ Nicki (.cursor/agents/nicki.md + routing.yaml)
        └─ returns compact YAML → Nicki → sheep-status
 ```
 
-Leaf skills are **portable** — no `status.json`, no pipeline step names, no “spawn X next”. Agents own auto-load paths and Nicki handoff expectations.
+Leaf skills are **portable** — no `status.json`, no pipeline step names, no “spawn X next”. Sheep own auto-load paths and Nicki handoff expectations.
 
 ---
 
@@ -56,7 +56,7 @@ nicki hero-section
 nicki continue
 ```
 
-Parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`). Nicki asks before each step and sends sheep (`sheep-start`, `sheep-spec`, `sheep-execute`, …). Ad-hoc work: attach skills directly — do not send sheep from the parent agent.
+The parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`). Nicki asks before each step and sends sheep (`sheep-start`, `sheep-describe`, `sheep-spec`, `sheep-execute`, …). After every sheep except close, Nicki sends `sheep-status` to update `current-task/status.json`.
 
 Git steps (`sync`, `integrate`) need explicit confirmation. Close asks to confirm archive and worktree delete.
 
@@ -68,30 +68,53 @@ Git steps (`sync`, `integrate`) need explicit confirmation. Close asks to confir
 start → describe → spec → subtasks → execute → review → [fix] → acceptance → sync → integrate → close
 ```
 
-Nicki sends `sheep-status` after each sheep except close. `sheep-start` / `sheep-close` own `global-status.json`; `sheep-status` owns per-task `status.json`.
+Post-review routing comes from validation YAML (`readiness.status`), not from review markdown:
+
+| `readiness.status` | Next |
+| ------------------ | ---- |
+| `fix_required` | `execute` again (`## Fix` appended to subtasks by review) |
+| `ready_for_acceptance` | Nicki `acceptance` checkpoint — sync blocked until user accepts |
+| `blocked` | Nicki asks user |
+
+Nicki-only steps: `acceptance`, `fix`. Validation (readiness + deferred next-steps) runs inside `sheep-review`.
+
+`sheep-start` / `sheep-close` own `global-status.json`; `sheep-status` owns per-task `status.json`.
 
 | Step | Sheep | Loads (typical) | Primary output |
 | ---- | ----- | --------------- | -------------- |
 | Setup | `sheep-start` | — (creates worktree + registry) | worktree + `global-status.json` entry |
-| Describe | Nicki only | `status.json` | `current-task/story.md` |
+| Describe | `sheep-describe` | status, `task.original` | `current-task/story.md` (Gherkin) |
 | Spec | `sheep-spec` | status, story | `current-task/specs/<slug>.yaml` |
 | Subtasks | `sheep-subtask` | status, spec | `current-task/subtasks/<slug>.md` |
 | Execute | `sheep-execute` | status, subtasks, spec | code + `current-task/executions/<slug>.yaml` |
-| Review | `sheep-review` | spec, subtasks, execution, validation skill | `reviews/<slug>.yaml` + `review-validations/rN-validation.yaml` + optional `next-steps/*.yaml` |
-| Sync / integrate | `sheep-sync`, `sheep-integrate` | status, review validation | `syncs/`, `integrates/` handoffs |
-| Close | `sheep-close` | status, integrate handoff | `docs/archive/<slug>/` |
+| Review | `sheep-review` | spec, subtasks, execution | `current-task/reviews/<slug>.yaml` + `current-task/review-validations/rN-validation.yaml` + optional `current-task/next-steps/*.yaml` |
+| Sync / integrate | `sheep-sync`, `sheep-integrate` | status, review validation | `current-task/syncs/<slug>.yaml`, `current-task/integrates/<slug>.yaml` |
+| Close | `sheep-close` | status, integrate handoff | `docs/archive/<slug>/` (report + story); worktree deleted |
+
+**Subtasks** map spec requirements to ordered one-line checklist items. Subtask-maker explores for existing coverage and prefers verify-before-build or refactor-to-share over default “build X” when the spec is already satisfied or logic can be reused.
 
 ---
 
 ## State on disk
 
 ```text
-global-status.json                    # workspace root; sheep-start / sheep-close only
+global-status.json                         # workspace root; sheep-start / sheep-close only
   tasks[<id>].status_path → current-task/status.json
-    artifacts.* → YAML/Markdown handoffs under current-task/
+
+worktrees/<path>/current-task/
+  status.json                              # sheep-status only
+  story.md
+  specs/<slug>.yaml
+  subtasks/<slug>.md
+  executions/<slug>.yaml
+  reviews/<slug>.yaml
+  review-validations/rN-validation.yaml
+  next-steps/*.yaml
+  syncs/<slug>.yaml
+  integrates/<slug>.yaml
 ```
 
-Authoritative schemas: `.cursor/skills/current-task-update/status-format.md`, `global-status-format.md`.
+Writer schemas: `.cursor/skills/current-task-update/status-format.md`, `global-status-format.md`. Nicki and readers use slim `status-read.md` / `global-status-read.md`.
 
 ---
 
@@ -101,14 +124,17 @@ Authoritative schemas: `.cursor/skills/current-task-update/status-format.md`, `g
 nicki/
 ├── README.md
 ├── docs/
-│   ├── NICKI.md         # workflow semantics
-│   ├── PLAN.md          # multi-project workspace plan
-│   ├── tasks.md         # actionable backlog
-│   └── archive/         # closed task archives (00, 01, …)
+│   ├── NICKI.md              # workflow semantics (rebuild guide)
+│   ├── WORKFLOW-DIAGRAMS.md  # mermaid pipeline maps
+│   ├── complexity.md         # agent load analysis
+│   ├── PLAN.md               # multi-project workspace plan
+│   ├── tasks.md              # actionable backlog
+│   └── archive/<slug>/       # closed task archives
 └── .cursor/
-    ├── agents/          # sheep workflow binding (Nicki only)
+    ├── agents/               # nicki + sheep workflow binding
     ├── rules/
-    └── skills/          # pure functionality + README.md
+    ├── hooks/
+    └── skills/               # pure functionality + README.md
 ```
 
-Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Multi-project workspace: [`docs/PLAN.md`](docs/PLAN.md). Backlog: [`docs/tasks.md`](docs/tasks.md).
+Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Diagrams: [`docs/WORKFLOW-DIAGRAMS.md`](docs/WORKFLOW-DIAGRAMS.md). Multi-project workspace: [`docs/PLAN.md`](docs/PLAN.md). Backlog: [`docs/tasks.md`](docs/tasks.md).
