@@ -31,9 +31,10 @@ When goals **align**, do all three — e.g. add `check-gate.py` and trim duplica
 | 1 | `create-worktree.py` | **Done.** Pull base branch, `git worktree add`, workspace `worktrees/<project>-<slug>`, copy gitignored locals from registry, `post_create`, scaffold `current-task/`, register `global-status.json`. |
 | 2 | Root `worktrees/` layout | **Done** (shipped with #1). **Unified:** `worktrees/<project>-<slug>` at workspace root (single hyphen). See `create-worktree.py` and `nicki-workspace.example.yaml`. |
 | 3 | `post_create` copy list | **Done** (shipped with #1). Per-project `copy` and `post_create` in workspace registry; readable by `create-worktree.py`. |
-| 4 | Migrate active task | Recreate or move `tetris-clone-frp` worktree; fix `global-status.json`. |
+| 4 | Migrate active task | **Done.** `tetris-clone-frp` active at `worktrees/tetris-clone-frp-ghost-piece-rendering`; `global-status.json` and `status.json` use unified paths. No legacy `projects/tetris-clone-frp/worktrees/`. |
 | 5 | Wire `sheep-start` to new script | Replace/extend `start-worktrees.sh` call path; keep register flow. |
 | 6 | **Gherkin + spec mutual understanding** | **Done.** Archive: `docs/archive/gherkin-spec-mutual-understanding/`. See below. |
+| 15 | `nicki.code-workspace` sync | **Script exists:** `scripts/generate-code-workspace.sh` regenerates `nicki.code-workspace` from `worktrees/` (Shared + one folder per git worktree). **Wire it:** run after successful `create-worktree.py` (start — add folder); run after worktree delete in `close-scope` (close — remove folder). Warn on regen failure; do not fail create/close. Skip on `--dry-run`. |
 
 Worktree path rule: always `worktrees/<project>-<slug>` — e.g. `worktrees/nicki-create-worktree-py`, `worktrees/tetris-clone-frp-hero-section`. Never double hyphen.
 
@@ -55,7 +56,7 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 
 **Deferred to P2:** `check-gate.py` script enforcement; full E2E tetris ghost-piece Nicki run.
 
-Projects on disk: `castlemill-landing`, `tetris-clone-frp` (one active worktree). Gitignored env is copied by script — not a layout problem.
+Projects on disk: `castlemill-landing`, `project-psychic-lemon`, `tetris-clone-frp` (one active worktree). Gitignored env is copied by script — not a layout problem.
 
 ---
 

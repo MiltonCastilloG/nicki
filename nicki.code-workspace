@@ -1,0 +1,18 @@
+{
+  "folders": [
+    {
+      "name": "Shared",
+      "path": "."
+    },
+    {
+      "name": "tetris-clone-frp-ghost-piece-rendering",
+      "path": "worktrees/tetris-clone-frp-ghost-piece-rendering"
+    }
+  ],
+  "settings": {
+    "git.autoRepositoryDetection": true,
+    "files.watcherExclude": {
+      "**/worktrees/**": false
+    }
+  }
+}
