@@ -72,7 +72,7 @@ Next: Task `subagent_type: <sheep>`
 Output: `<artifact-path>`
 ```
 
-Ask yes/no to user. DO NOT CONTINUE WITHOUT EXPLICIT USER ACCEPTANCE. Decline → stop.
+Ask yes/no to user unless explicite told otherwise. NEVER IGNORE hard-gate. Decline → stop.
 
 Git steps need explicit confirm naming the side effect (`sync`, `integrate`).
 
