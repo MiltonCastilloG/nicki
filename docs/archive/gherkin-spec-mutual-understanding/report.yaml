@@ -1,0 +1,61 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: gherkin-spec-mutual-understanding
+  title: Gherkin and spec mutual understanding
+  original: |
+    P1-6: Nicki and sheep do not advance past describe / spec until user and agent share the same
+    understanding — not just formatted output. Describe asks before inventing; spec blocks without
+    writing YAML when requirements fork or stay vague. Touch nicki.md, sheep-spec.md, spec-maker/SKILL.md;
+    harness enforcement deferred to P2.
+  type: feature
+  branch: feature/gherkin-spec-mutual-understanding
+
+story: describe ask-first · chat-only drafts · spec block-without-write · open_questions gate · story-maker + sheep-describe refactor
+
+outcome:
+  status: integrated
+  target: main
+  pushed_branch: main
+  merge_sha: d09b87a
+  final_artifact: current-task/integrates/gherkin-spec-mutual-understanding.yaml
+
+process:
+  - step: describe
+    summary: User approved Gherkin with "continue"; two Features — describe asks before inventing, spec asks before writing YAML; tetris ghost piece as acceptance anchor.
+  - step: spec
+    summary: Seventeen testable requirements; empty open_questions; touch limited to nicki.md, sheep-spec.md, spec-maker/SKILL.md; harness deferred to P2.
+  - step: subtasks
+    summary: Thirteen-line OpenSpec checklist from approved spec; all items checked before execute.
+  - step: execute
+    summary: Minimal diffs to nicki.md, sheep-spec.md, spec-maker/SKILL.md; post-execute trim and sheep-describe + story-maker refactor with routing.yaml describe wiring.
+  - step: review
+    summary: Approved; traceability PASS for tetris ghost-piece describe and spec scenarios; routing.yaml and README scope notes deferred non-blocking.
+  - step: acceptance
+    summary: User accepted at ready_for_acceptance; approved for sync.
+  - step: sync
+    summary: Worktree clean; fast-forward merged origin/main; pushed feature branch; no conflicts.
+  - step: integrate
+    summary: No-op merge — feature already ancestor of main at d09b87a; origin/main verified current despite push auth warning.
+
+decisions:
+  - Post-execute trim removed redundant prose per user "less is more" while retaining behavioral guarantees.
+  - Describe behavior moved to story-maker/SKILL.md and sheep-describe.md mirroring spec-maker + sheep-spec; nicki.md keeps thin Describe relay and pause-on-silence.
+  - routing.yaml describe step wired to sheep-describe (nicki_only false) — intentional post-execute change despite original out-of-scope listing.
+
+open_questions: []
+
+suggestions:
+  - area: orchestration
+    suggestion: Record post-execute refactors that add files or touch out-of-scope paths as explicit sub-rounds before review.
+    evidence: "execution describe_sheep_refactor added story-maker, sheep-describe, routing.yaml; review deferred scope notes."
+  - area: push
+    suggestion: When push fails on auth, document remote verification steps in integrate handoff (already done here).
+    evidence: "integrate publish note — HTTPS auth error; origin/main already at d09b87a."
+  - area: spec
+    suggestion: Keep harness enforcement (check-gate.py, routing gates) as a follow-on P2 task when describe/spec behavior stabilizes.
+    evidence: "story and spec explicitly defer check-gate.py and full blocked-return contract to P2."
