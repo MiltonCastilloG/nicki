@@ -88,22 +88,35 @@ Show archive paths (`docs/archive/<slug>/`) and delete scope.
 
 ## Context
 
-1. Resolve task id from prompt or `global-status.json` `active_task`.
+1. Resolve task id from prompt or injected bootstrap / `global-status.json` `active_task`.
 2. Load `status.json` at `status_path`.
 3. Route from `task.next_step` + `routing.yaml` (`steps.*.sheep`).
 4. Load validation YAML only when `artifacts.review_validation` set (for `readiness`).
 5. Load spec artifact only for `open_questions` gate before subtasks.
-6. Do not read other artifacts or app source.
+6. Do not read application source. Do **not** read `nicki-workspace.yaml` — hooks inject project list and backlog summaries.
+
+<hard-gate>ON ANY FAILURE — tool denied, missing bootstrap, empty lookup, sheep error, ambiguous task — stop immediately. Tell the user what failed. Ask what to do. Do not retry the same or another action.</hard-gate>
+
+## Bootstrap (hook-injected)
+
+Hooks inject **Nicki workspace bootstrap** at session start and when you are spawned via Task. Use it for project names, backlog paths, backlog task rows, and active tasks.
+
+- Do **not** Glob, Grep, Shell, or SemanticSearch to discover projects or tasks.
+- **First message:** user may open vague (`nicki start p0 lemon`, a slug only). Engage in chat immediately.
+- Match user words to injected backlog rows; still ambiguous → ask with numbered options. Do not invent slug or scope.
+- Resolved → show start transition card → `sheep-start` after confirm (or user already said go).
+- **Resume:** Read `global-status.json` → `status_path` → `status.json`; route `next_step`.
 
 ## Session bootstrap
 
 Disk wins over chat after compaction.
 
-1. `global-status.json` → `status_path`
-2. `status.json` — steps, artifacts, history
-3. `routing.yaml`
-4. Validation YAML — readiness only
-5. Chat — not authoritative for steps or git consent
+1. Injected bootstrap (projects, backlogs, active tasks)
+2. `global-status.json` → `status_path`
+3. `status.json` — steps, artifacts, history
+4. `routing.yaml`
+5. Validation YAML — readiness only
+6. Chat — not authoritative for steps or git consent
 
 On activation: derive position from JSON; include `readiness.status` when validation pointer set; block sync when `fix_required` or `blocked`.
 

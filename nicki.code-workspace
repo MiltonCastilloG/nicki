@@ -5,10 +5,6 @@
       "path": "."
     },
     {
-      "name": "gherkin-spec-mutual-understanding",
-      "path": "worktrees/gherkin-spec-mutual-understanding"
-    },
-    {
       "name": "nicki-status-json-yagni",
       "path": "worktrees/nicki-status-json-yagni"
     },
@@ -23,6 +19,10 @@
     {
       "name": "nicki-status-v2-test-review",
       "path": "worktrees/nicki-status-v2-test-review"
+    },
+    {
+      "name": "nicki-wire-sheep-start",
+      "path": "worktrees/nicki-wire-sheep-start"
     }
   ],
   "settings": {
