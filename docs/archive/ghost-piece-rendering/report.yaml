@@ -1,0 +1,59 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: ghost-piece-rendering
+  title: Ghost piece rendering
+  original: |
+    Implement ghost piece rendering in board.js: simulate downward movement to hard-drop rest,
+    draw ghost layer at reduced opacity between locked blocks and active piece, recompute on redraw.
+  type: feature
+  branch: feature/ghost-piece-rendering
+
+story: ghost hard-drop position · downward simulation · draw order · 0.28 alpha · hold D · Space pause
+
+outcome:
+  status: merged
+  target: master
+  pushed_branch: master
+  merge_sha: 82b7cb1
+  final_artifact: current-task/integrates/ghost-piece-rendering.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story with four scenarios; board.js-only scope; ghost at rest overlaps active piece.
+  - step: spec
+    summary: Seven requirements bounded to board renderer; no game-loop changes.
+  - step: subtasks
+    summary: Verified existing drawGhostLayer; checklist added simulation and per-redraw recompute.
+  - step: execute
+    summary: updateGhostBlocks simulates downward steps via checkBlocksCollision; draw order and alpha unchanged.
+  - step: review
+    summary: R1 approved ghost requirements; lint passed.
+  - step: sync
+    summary: Committed ghost work 1d90ff2; merged origin/master; pushed feature branch.
+  - step: execute
+    summary: User override — hold KeyD, Space toggles pause, docs/help updated; hard drop Arrow Up only.
+  - step: review
+    summary: R2 approved keybinding changes; game.js out of ghost spec scope but user-approved.
+  - step: sync
+    summary: Committed 7492e95; merged origin/master; pushed feature branch.
+  - step: integrate
+    summary: Merged feature/ghost-piece-rendering into master at 82b7cb1; pushed origin/master.
+
+decisions:
+  - Ghost rest position equals hard-drop rest; computed in board.js from fallingBlocks and lockedMap.
+  - Incremental keybinding work reused same worktree after first sync per user override.
+
+open_questions: []
+
+suggestions:
+  - area: orchestration
+    suggestion: Split out-of-scope follow-ups (e.g. keybindings) into a separate task before second sync.
+    evidence: "execution deviations note user override on same branch after sync; review flagged deferred_scope."
+  - area: spec
+    suggestion: Record scope expansion in spec when incremental work touches files outside original boundary.
+    evidence: "game.js input changes out of ghost-piece spec scope per r2-validation."

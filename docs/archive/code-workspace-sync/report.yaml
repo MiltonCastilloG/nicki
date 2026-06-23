@@ -1,0 +1,63 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: code-workspace-sync
+  title: nicki.code-workspace sync
+  original: |
+    Wire scripts/generate-code-workspace.sh: run after successful create-worktree.py (start — add folder);
+    run after worktree delete in close-scope (close — remove folder). Warn on regen failure; do not fail
+    create/close. Skip on --dry-run.
+  type: chore
+  branch: chore/code-workspace-sync
+
+story: start regen · close regen · warn-only failure · dry-run skip · Shared + worktree folders
+
+outcome:
+  status: merged
+  target: main
+  pushed_branch: main
+  merge_sha: e84fef0
+  final_artifact: current-task/integrates/code-workspace-sync.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story — four scenarios for start add, close remove, warn-on-failure, dry-run skip.
+  - step: spec
+    summary: Five requirements; regen script may simplify during wiring; YAGNI revisions dropped frozen-as-is constraint.
+  - step: subtasks
+    summary: Eleven subtasks wiring create-worktree.py and close-scope; acceptance verification items.
+  - step: execute
+    summary: Wired regen into start (warn-only, dry-run skip) and close-scope §4; first pass left close/failure E2E pending.
+  - step: review
+    summary: R1 blocked on close and regen-failure E2E; fix round passed; R2 ready_for_acceptance.
+  - step: execute
+    summary: User polish — simplified generate-code-workspace.sh to 5-line python3 -c one-liner; semantics preserved.
+  - step: review
+    summary: R3 approved post-simplification; verify rerun passed.
+  - step: acceptance
+    summary: User accepted and requested full pipeline through close.
+  - step: sync
+    summary: Committed 5510ac8; resolved add/add conflicts on script and workspace file; pushed chore branch.
+  - step: integrate
+    summary: Merged chore/code-workspace-sync into main at e84fef0; pushed origin/main.
+
+decisions:
+  - Regen script simplified to one-liner during wiring; output semantics unchanged (Shared plus one folder per git worktree).
+  - Sync conflicts resolved per user — keep feature one-liner for script; regenerate nicki.code-workspace after script fix.
+
+open_questions: []
+
+suggestions:
+  - area: execute
+    suggestion: Run close and regen-failure E2E before first review handoff when spec lists them as acceptance criteria.
+    evidence: "r1-validation fix_required for subtasks 8–9; second execute round needed."
+  - area: merge
+    suggestion: Expect add/add conflicts on generate-code-workspace.sh and nicki.code-workspace when parallel tasks touch workspace tooling.
+    evidence: "sync handoff conflicts on both paths; user resolved 1A script + 2A regen workspace."
+  - area: orchestration
+    suggestion: Treat post-review script simplification as a scoped sub-round with explicit user approval before acceptance.
+    evidence: "execution deviations note user_approved polish after r2 complete."
