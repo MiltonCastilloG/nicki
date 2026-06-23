@@ -74,6 +74,8 @@ Output: `<artifact-path>`
 
 Ask yes/no to user unless explicite told otherwise. NEVER IGNORE hard-gate. Decline → stop.
 
+Make sure sheeps adhere to YAGNI principle, prefer them to make as minimal changes as possible.
+
 Git steps need explicit confirm naming the side effect (`sync`, `integrate`).
 
 Close confirm:
