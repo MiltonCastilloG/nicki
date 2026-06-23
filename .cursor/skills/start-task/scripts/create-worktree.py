@@ -37,6 +37,7 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REGISTER_SCRIPT = SCRIPT_DIR / "register-global-status.py"
+REGEN_SCRIPT = "scripts/generate-code-workspace.sh"
 WORKFLOW_DOC = SCRIPT_DIR / "WORKFLOW.md"
 
 TYPE_PREFIX = {
@@ -520,6 +521,24 @@ def register_task(
     raise WorktreeError("register-global-status.py succeeded but produced no task id.")
 
 
+def regenerate_code_workspace(workspace: Path, dry_run: bool) -> str | None:
+    if dry_run:
+        return None
+    script = workspace / REGEN_SCRIPT
+    if not script.is_file():
+        return f"workspace regeneration skipped: missing {REGEN_SCRIPT}"
+    result = subprocess.run(
+        ["bash", str(script)],
+        cwd=workspace,
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "").strip()
+        return f"workspace regeneration failed: {detail}"
+    return None
+
+
 def create_worktree(
     *,
     project_id: str,
@@ -585,6 +604,10 @@ def create_worktree(
             data = json.loads(status_file.read_text(encoding="utf-8"))
             data["task"]["id"] = tid
             status_file.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+    warn = regenerate_code_workspace(workspace, dry_run)
+    if warn:
+        handoff.warnings.append(warn)
 
     handoff.status = "dry_run" if dry_run else "complete"
     return handoff

@@ -44,6 +44,16 @@ rm -rf -- "<worktree_path>"
 
 Whole worktree gone — not only `current-task/`.
 
+## 4. Regenerate workspace
+
+From `workspace_root` after teardown:
+
+```bash
+bash scripts/generate-code-workspace.sh
+```
+
+Regen failure: warn the operator; do not restore the deleted worktree.
+
 ## Never delete
 
 `docs/archive/`, repo workflow docs, other worktrees.

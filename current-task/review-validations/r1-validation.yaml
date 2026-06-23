@@ -1,27 +1,33 @@
 meta:
-  worktree: gherkin-spec-mutual-understanding
+  worktree: nicki-code-workspace-sync
   generated_by: validation
-  review: current-task/reviews/gherkin-spec-mutual-understanding.yaml
+  review: current-task/reviews/code-workspace-sync.yaml
 decision: valid
-valid_findings: []
+valid_findings:
+  - id: f1
+    source: "[verify] Subtask 8 E2E not completed: close-scope teardown plus regen was not run to confirm removed worktrees drop from nicki.code-workspace while others remain."
+    prefix: verify
+    reason: Blocking — close regen acceptance not demonstrated end-to-end.
+  - id: f2
+    source: "[verify] Subtask 9 E2E not completed: regeneration failure during start and close was not exercised end-to-end."
+    prefix: verify
+    reason: Blocking — failure-path acceptance not demonstrated end-to-end.
 deferred_findings:
   - id: d1
-    source: "[scope] .cursor/skills/nicki/routing.yaml modified (describe wired to sheep-describe) — intentional post-execute change; original spec/story listed routing out of scope."
+    source: "[scope] E2E test worktrees nicki-e2e-ws-review-1/2/3 remain on disk under worktrees/ and in nicki.code-workspace — cleanup after close E2E."
     prefix: scope
-    reason: Intentional refactor wiring; non-blocking per review approval.
-  - id: d2
-    source: "[scope] .cursor/skills/README.md updated to list story-maker in pipeline leaf skills."
-    prefix: scope
-    reason: Minor doc alignment for new story-maker skill; non-blocking.
+    reason: Non-blocking deferred cleanup from partial E2E run.
 discarded_findings: []
 next_steps: []
 review_inputs: []
 readiness:
-  status: ready_for_acceptance
-  recommended_next_step: acceptance
-  blockers: []
-  deferred_scope: true
-summary: >
-  Review approved. All requirements and subtasks verified via focus-path traceability;
-  two deferred scope notes (routing.yaml wiring and README.md) do not block acceptance.
-  readiness.status is ready_for_acceptance.
+  status: fix_required
+  recommended_next_step: execute
+  blockers:
+    - Close E2E not run — teardown plus regen must drop removed worktree entries
+    - Failure-path E2E not run — regen failure must warn only on start and close
+  fix_subtasks:
+    - Run close E2E for three test worktrees and confirm nicki.code-workspace updates
+    - Run start and close regen-failure E2E and confirm warn-only with primary success
+summary: |
+  Wiring and start-side E2E pass review; close and failure-path verification subtasks 8–9 lack E2E evidence. Return to execute for close teardown/regen tests, failure simulation, and test worktree cleanup.
