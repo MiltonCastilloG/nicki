@@ -1,0 +1,52 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: status-json-yagni
+  title: YAGNI simplify per-task status.json
+  original: status-json-yagni
+  type: chore
+  branch: chore/status-json-yagni
+
+story: task-status.v2 · collapsed pointers · completed_steps · artifact-sourced archive · dogfood worktree
+
+outcome:
+  status: merged
+  target: main
+  pushed_branch: main
+  merge_sha: aef52f6
+  final_artifact: current-task/integrates/status-json-yagni.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story — minimal status.json, trim history, archive process from artifacts.
+  - step: spec
+    summary: YAGNI simplify per-task status.json — routing fields, collapse duplicates, source archive from handoffs.
+  - step: subtasks
+    summary: YAGNI simplify per-task status.json — eleven subtasks across schema, docs, scaffold, consumers, dogfood.
+  - step: execute
+    summary: Complete — status-format, status-read, create-worktree scaffold, task-archive sourcing, consumer alignment.
+  - step: review
+    summary: Third-pass approved — r2 polish verified; supplementary tables aligned to artifacts.story.
+  - step: sync
+    summary: Committed b42b014 on chore/status-json-yagni; branch pushed.
+  - step: integrate
+    summary: Merged into main at aef52f6; docs/tasks.md conflict resolved per user (keep main backlog layout).
+
+decisions:
+  - History shape chosen as completed_steps string array; verbose history[] dropped.
+  - Integrate conflict on docs/tasks.md — kept main HEAD backlog; dropped feature Gherkin #6 done block.
+  - Completion recorded in docs/tasks-done.md per user direction.
+
+open_questions: []
+
+suggestions:
+  - area: merge
+    suggestion: When parallel tasks touch docs/tasks.md backlog layout, confirm done-section placement before integrate.
+    evidence: "integrate handoff user_resolutions on docs/tasks.md and docs/tasks-done.md."
+  - area: push
+    suggestion: Verify HTTPS git auth in agent environment before integrate push step when remote may lag.
+    evidence: "integrate checks git push origin main passed false; remote already up to date per fetch."

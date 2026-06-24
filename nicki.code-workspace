@@ -9,10 +9,6 @@
       "path": "worktrees/nicki-review-wire-self"
     },
     {
-      "name": "nicki-status-json-yagni",
-      "path": "worktrees/nicki-status-json-yagni"
-    },
-    {
       "name": "nicki-wire-sheep-start",
       "path": "worktrees/nicki-wire-sheep-start"
     },
