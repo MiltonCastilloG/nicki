@@ -5,14 +5,27 @@
       "path": "."
     },
     {
-      "name": "tetris-clone-frp-ghost-piece-rendering",
-      "path": "worktrees/tetris-clone-frp-ghost-piece-rendering"
+      "name": "gherkin-spec-mutual-understanding",
+      "path": "worktrees/gherkin-spec-mutual-understanding"
+    },
+    {
+      "name": "nicki-status-json-yagni",
+      "path": "worktrees/nicki-status-json-yagni"
+    },
+    {
+      "name": "nicki-status-v2-test-blocked",
+      "path": "worktrees/nicki-status-v2-test-blocked"
+    },
+    {
+      "name": "nicki-status-v2-test-minimal",
+      "path": "worktrees/nicki-status-v2-test-minimal"
+    },
+    {
+      "name": "nicki-status-v2-test-review",
+      "path": "worktrees/nicki-status-v2-test-review"
     }
   ],
   "settings": {
-    "git.autoRepositoryDetection": true,
-    "files.watcherExclude": {
-      "**/worktrees/**": false
-    }
+    "git.autoRepositoryDetection": true
   }
 }
