@@ -50,23 +50,6 @@ jq -r --arg id "$TASK_ID" '.tasks[$id] | "\(.project) \(.worktree_path)"' global
 - Task id must be explicit; do not infer from chat.
 - Readiness: follow `artifacts.review_validation` pointer when routing after review.
 
-## Workspace bootstrap injection
-
-Cold-start context is **hook-owned** — Nicki does not read `nicki-workspace.yaml`.
-
-| Hook | Event | Behavior |
-|------|-------|----------|
-| [`inject-nicki-bootstrap.sh`](../../hooks/inject-nicki-bootstrap.sh) | `sessionStart` | Returns `additional_context` with projects, backlog paths, backlog task rows, active tasks |
-| Same script | `preToolUse` matcher `Task` | When `tool_input.subagent_type` is `nicki`, prepends bootstrap to Task `prompt` via `updated_input` |
-
-Bootstrap reads (hook process only):
-
-1. `nicki-workspace.yaml` (fallback `nicki-workspace.example.yaml`) — project name → path
-2. `global-status.json` if present — `active_task` and registry entries
-3. Per-project `docs/TASKS.md` or `docs/tasks.md` (nicki) — compact phase/task table rows
-
-Task-id resolution chain below is unchanged; bootstrap is **additive** for vague start requests.
-
 ## Example script
 
 See `.cursor/hooks/examples/resolve-task-status.sh`.
@@ -77,8 +60,7 @@ See `.cursor/hooks/examples/resolve-task-status.sh`.
 |------|------|
 | `.cursor/hooks/agent-permissions.json` | Canonical allowlist per agent |
 | `.cursor/hooks/enforce-agent-tools.sh` | `preToolUse` hook — reads permissions, denies disallowed tools |
-| `.cursor/hooks/inject-nicki-bootstrap.sh` | `sessionStart` + `preToolUse` Task→nicki — workspace bootstrap injection |
-| `.cursor/hooks.json` | Registers hooks |
+| `.cursor/hooks.json` | Registers the `preToolUse` hook |
 
 Agent identity from `subagent_type` then `agent_type` only — **not** task/description text (avoids false match on words like `nicki` in prompts). Unknown agent or unmapped tool → allow. Known agent + `false` permission → deny.
 

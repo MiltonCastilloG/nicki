@@ -1,18 +1,9 @@
 {
   "version": 1,
   "hooks": {
-    "sessionStart": [
-      {
-        "command": "bash .cursor/hooks/inject-nicki-bootstrap.sh"
-      }
-    ],
     "preToolUse": [
       {
         "command": ".cursor/hooks/enforce-agent-tools.sh"
-      },
-      {
-        "command": "bash .cursor/hooks/inject-nicki-bootstrap.sh",
-        "matcher": "Task"
       }
     ]
   }

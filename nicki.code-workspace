@@ -5,24 +5,20 @@
       "path": "."
     },
     {
+      "name": "nicki-review-wire-self",
+      "path": "worktrees/nicki-review-wire-self"
+    },
+    {
       "name": "nicki-status-json-yagni",
       "path": "worktrees/nicki-status-json-yagni"
     },
     {
-      "name": "nicki-status-v2-test-blocked",
-      "path": "worktrees/nicki-status-v2-test-blocked"
-    },
-    {
-      "name": "nicki-status-v2-test-minimal",
-      "path": "worktrees/nicki-status-v2-test-minimal"
-    },
-    {
-      "name": "nicki-status-v2-test-review",
-      "path": "worktrees/nicki-status-v2-test-review"
-    },
-    {
       "name": "nicki-wire-sheep-start",
       "path": "worktrees/nicki-wire-sheep-start"
+    },
+    {
+      "name": "project-psychic-lemon-project-init",
+      "path": "worktrees/project-psychic-lemon-project-init"
     }
   ],
   "settings": {

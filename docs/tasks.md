@@ -1,6 +1,6 @@
 # Nicki — tasks
 
-Actionable backlog. Analysis: [`investigation.md`](investigation.md), [`investigation-complexity.md`](investigation-complexity.md).
+Actionable backlog. Completed work: [`tasks-done.md`](tasks-done.md). Analysis: [`investigation.md`](investigation.md), [`investigation-complexity.md`](investigation-complexity.md).
 
 ## Three goals (always)
 
@@ -28,35 +28,19 @@ When goals **align**, do all three — e.g. add `check-gate.py` and trim duplica
 
 | # | Task | Notes |
 |---|------|-------|
-| 1 | `create-worktree.py` | **Done.** Pull base branch, `git worktree add`, workspace `worktrees/<project>-<slug>`, copy gitignored locals from registry, `post_create`, scaffold `current-task/`, register `global-status.json`. |
-| 2 | Root `worktrees/` layout | **Done** (shipped with #1). **Unified:** `worktrees/<project>-<slug>` at workspace root (single hyphen). See `create-worktree.py` and `nicki-workspace.example.yaml`. |
-| 3 | `post_create` copy list | **Done** (shipped with #1). Per-project `copy` and `post_create` in workspace registry; readable by `create-worktree.py`. |
-| 4 | Migrate active task | **Done.** `tetris-clone-frp` active at `worktrees/tetris-clone-frp-ghost-piece-rendering`; `global-status.json` and `status.json` use unified paths. No legacy `projects/tetris-clone-frp/worktrees/`. |
-| 5 | Wire `sheep-start` to new script | Replace/extend `start-worktrees.sh` call path; keep register flow. |
-| 6 | **Gherkin + spec mutual understanding** | **Done.** Archive: `docs/archive/gherkin-spec-mutual-understanding/`. See below. |
-| 15 | `nicki.code-workspace` sync | **Script exists:** `scripts/generate-code-workspace.sh` regenerates `nicki.code-workspace` from `worktrees/` (Shared + one folder per git worktree). **Wire it:** run after successful `create-worktree.py` (start — add folder); run after worktree delete in `close-scope` (close — remove folder). Warn on regen failure; do not fail create/close. Skip on `--dry-run`. |
+| 5 | Wire `sheep-start` to new script | Replace/extend `start-worktrees.sh` call path in `sheep-start.md`; use `create-worktree.py` + structured handoff. Keep register flow. |
+| 16 | **Context handling** | `sessionStart` Nicki should only read or the bootstrap hook should read the state files writting into current task. That's all the context it need in each step, shouldn't be loading the whole chat in each step, that's bad harness. |
+
+**Deferred suggestions (non-blocking):**
+
+- `NICKI.md` — short section on session bootstrap vs disk bootstrap chain
+- Backlog extract — handle `docs/tasks.md` rows without `` `slug` `` in column 3
+- `hook-contract` — add or delete `examples/resolve-task-status.sh` reference
+- Cloud agents — `sessionStart` may not fire; document desktop-first or alternate cold-start path if needed
 
 Worktree path rule: always `worktrees/<project>-<slug>` — e.g. `worktrees/nicki-create-worktree-py`, `worktrees/tetris-clone-frp-hero-section`. Never double hyphen.
 
 Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-global-status.py`, `WORKFLOW.md` (manual recovery).
-
-### Gherkin + spec mutual understanding (#6) — done
-
-**Goal:** Nicki and sheep do not advance past `describe` / `spec` until user and agent share the same understanding — not just formatted output.
-
-| Step | Who | Behavior |
-|------|-----|----------|
-| `describe` | **sheep-describe** + **story-maker** | Ask before draft; do not invent specifics. Draft in relay until user approves. Write `story.md` only when clear and approved. |
-| `describe` relay | **Nicki** | Relay blocked `open_questions` or draft `summary`; re-send sheep-describe with user context. Pause when user is silent. |
-| `spec` | **sheep-spec** + **spec-maker** | Block without write when vague or forked; `open_questions` for Nicki relay. No spec file until resolved. |
-| `spec` relay | **Nicki** | Present `open_questions`; re-send sheep-spec after user answers. No subtasks while spec `open_questions` non-empty. |
-| Gate | **Harness** (P2) | `routing.yaml` / `check-gate.py`: block `spec` without `story_artifact`; block `subtasks` while spec `open_questions` non-empty. |
-
-**Shipped:** `story-maker/SKILL.md`, `sheep-describe.md`, `nicki.md` (Describe + Spec relay), `sheep-spec.md`, `spec-maker/SKILL.md`, `routing.yaml` (describe → `sheep-describe`).
-
-**Deferred to P2:** `check-gate.py` script enforcement; full E2E tetris ghost-piece Nicki run.
-
-Projects on disk: `castlemill-landing`, `project-psychic-lemon`, `tetris-clone-frp` (one active worktree). Gitignored env is copied by script — not a layout problem.
 
 ---
 
@@ -111,7 +95,7 @@ Only after P1–P2 run clean on a real task. See deletion map in [`investigation
 | P2 | Minimal CLI — `workspace init`, `project clone`, `runtime install`, `doctor` |
 | P3 | Dogfood across managed projects |
 
-May merge with **#1–2** above. Update PLAN when root `worktrees/` ships.
+May merge with completed P1 worktree tasks — see [`tasks-done.md`](tasks-done.md). Update PLAN when root `worktrees/` ships.
 
 ---
 
@@ -119,6 +103,7 @@ May merge with **#1–2** above. Update PLAN when root `worktrees/` ships.
 
 | Doc | Role |
 |-----|------|
+| [`tasks-done.md`](tasks-done.md) | Shipped P1 tasks and archives |
 | [`investigation.md`](investigation.md) | Article vs Nicki; direction |
 | [`investigation-complexity.md`](investigation-complexity.md) | Trimming deletion map (P3 only) |
 | [`PLAN.md`](PLAN.md) | Workspace layout |
