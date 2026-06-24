@@ -1,6 +1,6 @@
 # Per-task status.json format
 
-Per-task workflow state inside the active worktree. **JSON only.** Replaces the orchestration role of `status.json`.
+Per-task workflow state inside the active worktree. **JSON only.**
 
 Path: `current-task/status.json` relative to task worktree root.
 
@@ -12,22 +12,17 @@ Handoff YAML/Markdown bodies stay separate; status holds pointers and step posit
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `version` | Yes | Schema version; use `1` |
-| `meta` | Yes | Writer metadata |
+| `meta` | Yes | Schema identifier only |
 | `task` | Yes | Identity and step pointers |
-| `scope` | Yes | Worktree slug and path |
+| `scope` | Yes | Worktree path |
 | `artifacts` | Yes | Paths to handoff files (relative to worktree) |
-| `constraints` | No | Inherited rules (e.g. `no-commit`, `no-new-deps`) |
 | `open_questions` | Yes | Blockers; empty array when unblocked |
-| `history` | Yes | Append-only workflow events |
 
 ## `meta`
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `schema` | Yes | `task-status.v1` |
-| `generated_by` | Yes | `status-update` |
-| `updated_by` | Yes | `status-update` |
+| `schema` | Yes | `task-status.v2` |
 
 ## `task`
 
@@ -37,12 +32,11 @@ Handoff YAML/Markdown bodies stay separate; status holds pointers and step posit
 | `slug` | Yes | Worktree folder slug |
 | `project` | No | Managed project name |
 | `title` | No | Short title |
-| `original` | Yes | Raw user task text from start |
-| `story_artifact` | No | Path to Gherkin story markdown (preferred over inline story) |
+| `original` | Yes | Short slug or one-line title after describe; start slug until then |
 | `type` | No | `feature`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf` |
 | `current_step` | Yes | Step Nicki is on or just completed |
 | `next_step` | Yes | Next step Nicki should propose |
-| `last_completed_step` | No | Latest completed step |
+| `completed_steps` | No | Step names completed so far (e.g. `["start", "describe", "spec"]`) |
 
 Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `integrate`, `close`, `done`.
 
@@ -50,20 +44,17 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `worktree` | Yes | Slug |
 | `worktree_path` | Yes | Repo-relative or absolute worktree path |
 
 ## `artifacts`
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `status` | Yes | `current-task/status.json` |
 | `story` | No | `current-task/story.md` |
 | `spec` | No | Spec YAML path |
 | `subtasks` | No | Subtask markdown path |
 | `execution` | No | Execution YAML path |
-| `review` | No | Review YAML path |
-| `review_validation` | No | Latest validation YAML |
+| `review_validation` | No | Latest validation YAML — sole review gate pointer |
 | `review_input` | No | Latest review guidance YAML |
 | `next_steps` | No | Array of follow-up spec paths |
 | `sync` | No | Sync handoff path (`current-task/syncs/<slug>.yaml`) |
@@ -90,24 +81,9 @@ Blocked example:
 ]
 ```
 
-## `history`
-
-Append one event per status update:
-
-```json
-{
-  "step": "spec",
-  "status": "complete",
-  "artifact": "current-task/specs/hero-section.yaml",
-  "summary": "Spec captured requirements and acceptance."
-}
-```
-
-Status values: `complete`, `blocked`, `failed`, `skipped`.
-
 ## Readiness routing
 
-After review, status-update sets `artifacts.review_validation` to latest validation YAML. Nicki + hooks read `readiness` from that file — **not** review markdown, **not** chat.
+After review, status-update sets `artifacts.review_validation` to latest validation YAML. Nicki + hooks read `readiness` from that file — **not** review markdown, **not** status history.
 
 | `readiness.status` | `task.next_step` typical | `sync-task` |
 |--------------------|--------------------------|-------------|
@@ -120,70 +96,37 @@ After review, status-update sets `artifacts.review_validation` to latest validat
 
 `artifacts.review_validation` → `current-task/review-validations/rN-validation.yaml`. Refresh on every review complete.
 
-### Fix-loop history
-
-When review reruns after fix execute, append history:
-
-```json
-{ "step": "fix", "status": "complete", "artifact": "current-task/review-validations/r2-validation.yaml", "summary": "Fix loop iteration 2." }
-```
-
 ### Acceptance
 
-Nicki-only step after `ready_for_acceptance`. On user accept, history records `step: acceptance`; `next_step` may advance to `sync` (still needs git confirm). On reject, update `open_questions` / blockers; route `execute` or `describe` per user.
+Nicki-only step after `ready_for_acceptance`. On user accept, append `acceptance` to `completed_steps`; `next_step` may advance to `sync` (still needs git confirm). On reject, update `open_questions` / blockers; route `execute` or `describe` per user.
 
-### Spec `open_questions` mirror
+### Spec `open_questions` gate
 
-When spec handoff has non-empty `open_questions`, status-update mirrors into `open_questions` and blocks `next_step: subtasks` until cleared.
-
-## Resolved defaults (status-architecture task)
-
-| Decision | Choice |
-|----------|--------|
-| User story | `current-task/story.md` + `task.story_artifact` pointer |
-| Blocked state | Non-empty `open_questions` + blocking `next_step` until cleared or override |
-| Terse MD | Lite caveman for workflow Markdown handoffs per caveman skill |
+Spec-to-subtasks gate reads `open_questions` from the spec artifact file — not mirrored on status.
 
 ## Example
 
 ```json
 {
-  "version": 1,
-  "meta": {
-    "schema": "task-status.v1",
-    "generated_by": "status-update",
-    "updated_by": "status-update"
-  },
+  "meta": { "schema": "task-status.v2" },
   "task": {
     "id": "42",
     "slug": "hero-section",
     "project": "castlemill-landing",
     "original": "hero-section",
-    "story_artifact": "current-task/story.md",
     "type": "feature",
     "current_step": "spec",
     "next_step": "subtasks",
-    "last_completed_step": "describe"
+    "completed_steps": ["start", "describe"]
   },
   "scope": {
-    "worktree": "hero-section",
     "worktree_path": "worktrees/castlemill-landing-hero-section"
   },
   "artifacts": {
-    "status": "current-task/status.json",
     "story": "current-task/story.md",
     "spec": "current-task/specs/hero-section.yaml"
   },
-  "constraints": ["no-commit", "no-new-deps"],
-  "open_questions": [],
-  "history": [
-    {
-      "step": "start",
-      "status": "complete",
-      "artifact": "current-task/status.json",
-      "summary": "Worktree created. Task registered in global-status.json."
-    }
-  ]
+  "open_questions": []
 }
 ```
 

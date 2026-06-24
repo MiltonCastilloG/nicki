@@ -80,7 +80,7 @@ Each sheep produces YAML handoff under `worktrees/<project>-<slug>/current-task/
 | ---- | ----- | ------------ | -------------- |
 | Setup | `sheep-start` | No | `worktrees/<project>-<slug>/` |
 | State | `sheep-status` | No (status JSON only) | `current-task/status.json` |
-| Describe | Nicki only | No | `task.story` in context (Gherkin user story) |
+| Describe | Nicki only | No | `artifacts.story` → `current-task/story.md` (Gherkin user story) |
 | Spec | `sheep-spec` | No | `current-task/specs/<slug>.yaml` |
 | Subtasks | `sheep-subtask` | No | `current-task/subtasks/<slug>.md` |
 | Execute | `sheep-execute` | Yes | Code changes + updated subtasks + `current-task/executions/<slug>.yaml` |
@@ -119,7 +119,7 @@ docs/archive/<slug>/
 
 **Workspace registry:** `global-status.json` at workspace root — active tasks, project, worktree path, route to per-task status. **Only sheep-start and sheep-close write this file.**
 
-**Per-task status:** `current-task/status.json` inside the worktree — step pointers, artifact paths, open questions, history. **Only sheep-status writes this file.**
+**Per-task status:** `current-task/status.json` inside the worktree — `task-status.v2`: step pointers, `task.completed_steps`, artifact paths, `open_questions`. **Only sheep-status writes this file.**
 
 Nicki and sheep read both; sheep must not edit either. Legacy `current-task/current-task-context.yaml` is deprecated.
 
@@ -127,15 +127,15 @@ Nicki and sheep read both; sheep must not edit either. Legacy `current-task/curr
 
 | Section | Purpose |
 | ------- | ------- |
-| `task` | Identity + step pointers: `current_step`, `next_step`, `last_completed_step`, `story` (Gherkin user story) |
-| `scope` | Worktree slug and path — hard scope boundary |
-| `artifacts` | Paths to all known handoff files |
+| `meta` | Schema identifier only (`task-status.v2`) |
+| `task` | Identity + step pointers: `current_step`, `next_step`, optional `completed_steps`, short `original` |
+| `scope` | `worktree_path` — hard scope boundary |
+| `artifacts` | Paths to handoff files (`story`, `spec`, `review_validation`, etc.) |
 | `open_questions` | Blockers; empty list means Nicki can continue |
-| `history` | Append-only workflow events |
 
 ### What it deliberately omits
 
-There is **no broad task-level `state` enum**. Step pointers, `open_questions`, and `history[].status` are the source of truth. This avoids redundant state that could drift from reality.
+No verbose `history[]`, no `last_completed_step`, no duplicate pointers (`story_artifact`, `artifacts.status`, `scope.worktree`), no ceremony meta (`generated_by`, `updated_by`, `version`). There is **no broad task-level `state` enum** — step pointers and `open_questions` are the source of truth.
 
 ### Step values
 
@@ -218,7 +218,7 @@ Each step produces compact handoff artifacts (YAML/Markdown). Downstream agents 
 
 ### 5. No broad state enum — step pointers + open questions
 
-Instead of a `state: in_progress | blocked | done` field, the context file uses `current_step`, `next_step`, `last_completed_step`, and `open_questions`. Blockers live in `open_questions`; history is append-only.
+Instead of a `state: in_progress | blocked | done` field, status uses `current_step`, `next_step`, optional `task.completed_steps`, and `open_questions`. Blockers live in `open_questions`; handoff summaries live in artifact files, not status.
 
 ### 6. Worktree path is the hard scope boundary
 
@@ -337,7 +337,7 @@ Nicki sends `sheep-start`, then `sheep-status`, describe, and each sheep after c
 
 ## Compaction + mode picker
 
-Cursor compacts chats — disk wins: `global-status.json`, `status.json`, artifacts, `readiness` in validation YAML. Re-read on every Nicki activation; re-confirm git unless `history` records consent. Nicki = subagent via Task today; custom mode picker future when Cursor supports repo-defined modes.
+Cursor compacts chats — disk wins: `global-status.json`, `status.json`, artifacts, `readiness` in validation YAML. Re-read on every Nicki activation; re-confirm git on sync/integrate. Nicki = subagent via Task today; custom mode picker future when Cursor supports repo-defined modes.
 
 ---
 

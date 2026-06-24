@@ -27,7 +27,7 @@ steps:
     artifact_key: spec
     expected_artifact: current-task/specs/<slug>.yaml
     default_next_step: subtasks
-    gate: task.story_artifact exists and story file on disk
+    gate: artifacts.story exists and story file on disk
     prompt: worktree path, task id
 
   subtasks:

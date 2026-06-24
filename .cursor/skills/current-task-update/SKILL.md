@@ -19,7 +19,7 @@ Schemas:
 ## When to use
 
 - Nicki completed `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `acceptance`, `sync`, `integrate`, or fix-loop routing.
-- Nicki needs next step, artifact pointers, open questions, or history persisted.
+- Nicki needs next step, artifact pointers, or open questions persisted.
 - Worktree exists; need init missing `current-task/status.json`.
 
 ## Required inputs
@@ -41,9 +41,9 @@ open_questions: []
 summary: Spec captured requirements and acceptance.
 ```
 
-Optional: `task` (slug, title, original, story_artifact, type), `git`, `artifacts`, `constraints`.
+Optional: `task` (slug, title, original, type), `git`, `artifacts`.
 
-For describe: set `task.story_artifact: current-task/story.md` and write story body terse per caveman skill when summary includes full story text — otherwise Nicki passes story for a dedicated write step.
+For describe: set `artifacts.story: current-task/story.md` and write story body terse per caveman skill when summary includes full story text — otherwise Nicki passes story for a dedicated write step.
 
 ## Workflow
 
@@ -74,19 +74,21 @@ Task Progress:
 
 - Validate against [status-format.md](status-format.md).
 - `scope.worktree_path` must match command worktree.
-- If missing: init from summary with `meta.schema: task-status.v1`, default `artifacts.status`, default `constraints: [no-commit, no-new-deps]`.
+- If missing: init from summary with `meta.schema: task-status.v2`.
 - Ask when summary conflicts with existing status.
 
 ### Step 3: Apply update
 
-- `meta.updated_by: status-update`
-- `task.current_step`, `task.next_step`, `task.last_completed_step` when complete
+Emit simplified shape on every write. **Legacy migration:** when loading v1 status, drop `version`, `meta.generated_by`, `meta.updated_by`, `scope.worktree`, `task.story_artifact`, `artifacts.status`, `artifacts.review`, `task.last_completed_step`, `constraints`, and `history` — preserve essential routing fields and artifact pointers.
+
+- `meta.schema: task-status.v2` only — do not write `meta.updated_by` or other ceremony fields
+- `task.current_step`, `task.next_step`
 - Merge `artifacts`; after review set `artifacts.review_validation` to latest validation path from summary `artifact`
-- Mirror spec `open_questions` into status when summary includes them
-- Fix-loop: when `completed_step: fix` or review reruns after fix, append `history` with `step: fix` and validation path
-- Acceptance: when `completed_step: acceptance`, record user accept/reject in `history`; reject may populate `open_questions`
+- **Describe:** replace `task.original` with slug or one-line title; set `artifacts.story`
+- **completed_steps:** append `completed_step` name when `completed_status: complete` (init `[]` when absent); omit verbose `history`
+- Fix-loop: when `completed_step: fix` or review reruns after fix, append `fix` to `completed_steps`
+- Acceptance: when `completed_step: acceptance`, append `acceptance` to `completed_steps`; reject may populate `open_questions`
 - `open_questions` from summary; blocked when non-empty
-- Append `history` event
 
 ### Step 4: Write and report
 

@@ -1,0 +1,7 @@
+approved: true
+content: |
+  All spec requirements met. v2 schema aligned across status-format.md, status-read.md, scaffold, example, writers, task-archive, and consumers.
+  r2 deferred d1 resolved: sheep-spec.md disk-inputs and docs/NICKI.md describe row use artifacts.story; no task.story in .cursor/agents or docs/NICKI.md.
+  r1 completed_steps placement fix verified under task.completed_steps in format docs, example, scaffold, and worktree status.json.
+  current-task-update emits v2 only; task-archive sources process from artifact handoffs; routing gates use artifacts.story and artifacts.review_validation per status-read.
+  Checked subtasks verified; verify: rg task.story (no matches) and json.tool on status.example.json passed.

@@ -1,7 +1,0 @@
-approved: true
-content: |
-  All spec requirements still met after regen-script simplification (regen-script, start-regen, close-regen, failure-warning-only, dry-run-skip).
-  scripts/generate-code-workspace.sh collapsed from 32-line heredoc to 5-line python3 -c one-liner; logic unchanged — Shared folder plus sorted worktrees/ subdirs with .git, same settings block.
-  Wiring in create-worktree.py (regenerate_code_workspace warn-only, dry-run skip) and close-scope/SKILL.md section 4 unchanged from r2.
-  Verify rerun: bash scripts/generate-code-workspace.sh exit 0; fake-wt fixture added one worktree entry then dropped on removal; dry-run create-worktree handoff status dry_run with no regen warnings.
-  No new dependencies; changes within spec scope.in.

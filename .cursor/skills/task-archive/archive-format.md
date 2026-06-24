@@ -14,7 +14,19 @@ Spec and subtask paths from status are **not** archived — delete from worktree
 
 ## Load inputs
 
-Read via `current-task/status.json` — [status-format.md](../current-task-update/status-format.md) `artifacts` + `history` + `open_questions`. Follow pointers; glob only if pointer missing.
+Read via `current-task/status.json` — [status-format.md](../current-task-update/status-format.md) `artifacts` + `open_questions`. Follow pointers; glob only if pointer missing.
+
+**Process sourcing:** derive `report.yaml` `process` from artifact presence and handoff `meta` under `current-task/` — not from `status.json` history. For each step with an artifact pointer, load the handoff and take a one-line summary from its `meta` or top-level summary fields.
+
+| Step | Artifact pointer | Summary source |
+|------|------------------|----------------|
+| `describe` | `artifacts.story` | story exists → brief line from story title or slug |
+| `spec` | `artifacts.spec` | `meta.summary` or spec `title` |
+| `subtasks` | `artifacts.subtasks` | subtask frontmatter `title` |
+| `execute` | `artifacts.execution` | execution `meta.status` + subtask count |
+| `review` | `artifacts.review_validation` | validation `readiness.status` |
+| `sync` | `artifacts.sync` | sync handoff `meta` |
+| `integrate` | `artifacts.integrate` | integrate handoff `meta` |
 
 No status.json → ask: archive from artifacts or stop.
 

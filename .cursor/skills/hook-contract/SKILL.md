@@ -20,7 +20,7 @@ task id → global-status.json → status_path → status.json → artifact path
 2. Lookup `.tasks[<task_id>]`.
 3. Read fields: `project`, `slug`, `worktree_path`, `status_path`.
 4. Read per-task `status.json` at `status_path`.
-5. Read `task.current_step`, `task.next_step`, `artifacts`, `open_questions`, `history`.
+5. Read `task.current_step`, `task.next_step`, `task.completed_steps` when present, `artifacts`, `open_questions`.
 
 ## jq examples
 

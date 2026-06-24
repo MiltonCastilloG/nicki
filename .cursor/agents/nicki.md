@@ -53,9 +53,9 @@ After every sheep except `sheep-close`, send `sheep-status` automatically.
 
 ## Describe relay
 
-After `sheep-start` + first status update. Block `spec` until `task.story_artifact` exists. Do **not** re-run describe after spec begins — repair gaps in spec.
+After `sheep-start` + first status update. Block `spec` until `artifacts.story` exists and story file is on disk. Do **not** re-run describe after spec begins — repair gaps in spec.
 
-Send `sheep-describe`. Relay blocked `open_questions` or draft `summary` in chat. Re-send with user context after answers or approval. Pause when user is silent. Block `spec` until `story_artifact` exists. Do not re-run describe after spec begins.
+Send `sheep-describe`. Relay blocked `open_questions` or draft `summary` in chat. Re-send with user context after answers or approval. Pause when user is silent. Block `spec` until `artifacts.story` exists. Do not re-run describe after spec begins.
 
 ## Spec relay
 
@@ -67,7 +67,7 @@ Before each sheep (except `sheep-status`), show:
 
 ```markdown
 Current task: `<slug>` — <title>
-Progress: `<last_completed_step>` → `<current_step>` → `<next_step>`
+Progress: `<task.completed_steps>` → `<current_step>` → `<next_step>`
 Next: Task `subagent_type: <sheep>`
 Output: `<artifact-path>`
 ```
@@ -100,7 +100,7 @@ Show archive paths (`docs/archive/<slug>/`) and delete scope.
 Disk wins over chat after compaction.
 
 1. `global-status.json` → `status_path`
-2. `status.json` — steps, artifacts, history
+2. `status.json` — steps, artifacts, completed_steps
 3. `routing.yaml`
 4. Validation YAML — readiness only
 5. Chat — not authoritative for steps or git consent

@@ -6,17 +6,16 @@ Per-task `current-task/status.json`. Nicki and other sheep **read** for routing 
 
 | Section | Fields |
 |---------|--------|
-| `task` | `slug`, `title`, `original`, `story_artifact`, `current_step`, `next_step`, `last_completed_step` |
-| `scope` | `worktree`, `worktree_path` |
-| `artifacts` | Paths to story, spec, subtasks, execution, review, `review_validation`, sync, integrate, archive |
+| `task` | `slug`, `title`, `original`, `current_step`, `next_step`, `completed_steps` (optional) |
+| `scope` | `worktree_path` |
+| `artifacts` | Paths to story, spec, subtasks, execution, `review_validation`, sync, integrate, archive |
 | `open_questions` | Blockers — empty array when pipeline can continue |
-| `constraints` | Inherited rules when present |
 
 Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `integrate`, `close`, `done`.
 
 ## Gates
 
-- **`describe` → `spec`:** `task.story_artifact` must exist.
+- **`describe` → `spec`:** `artifacts.story` must exist and story file on disk.
 - **`spec` → `subtasks`:** spec artifact `open_questions` must be empty (load spec file when checking).
 - **Post-review routing:** read `readiness` from validation YAML at `artifacts.review_validation` — not from status or review markdown.
 
@@ -35,15 +34,14 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
   "task": {
     "slug": "hero-section",
     "original": "hero-section",
-    "story_artifact": "current-task/story.md",
     "current_step": "spec",
     "next_step": "subtasks"
   },
   "scope": {
-    "worktree": "hero-section",
     "worktree_path": "projects/foo/worktrees/hero-section"
   },
   "artifacts": {
+    "story": "current-task/story.md",
     "spec": "current-task/specs/hero-section.yaml",
     "review_validation": "current-task/review-validations/r1-validation.yaml"
   },

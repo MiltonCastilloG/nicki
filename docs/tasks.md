@@ -80,7 +80,7 @@ Only after P1–P2 run clean on a real task. See deletion map in [`investigation
 
 | Item | Why |
 |------|-----|
-| Disk `consented` history | Not needed for functioning or guardrails |
+| Disk `consented` history | Dropped in task-status.v2 — git confirm on sync/integrate only |
 | `bin/nicki` CLI | PLAN.md sketch — later |
 | Typed `AgentDefinition` TS | Parallel layer |
 | Full orchestrator rewrite | Chat Nicki stays |

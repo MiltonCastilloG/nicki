@@ -1,129 +1,24 @@
 {
-  "version": 1,
-  "meta": {
-    "schema": "task-status.v1",
-    "generated_by": "create-worktree.py",
-    "updated_by": "status-update"
-  },
+  "meta": { "schema": "task-status.v2" },
   "task": {
-    "id": "1",
-    "slug": "code-workspace-sync",
+    "id": "2",
+    "slug": "status-json-yagni",
     "project": "nicki",
-    "original": "nicki.code-workspace sync — Wire scripts/generate-code-workspace.sh: run after successful create-worktree.py (start — add folder); run after worktree delete in close-scope (close — remove folder). Warn on regen failure; do not fail create/close. Skip on --dry-run.",
-    "story_artifact": "current-task/story.md",
+    "original": "status-json-yagni",
     "type": "chore",
     "current_step": "acceptance",
     "next_step": "sync",
-    "last_completed_step": "acceptance"
+    "completed_steps": ["start", "describe", "spec", "subtasks", "execute", "review", "review", "execute", "review", "acceptance"]
   },
   "scope": {
-    "worktree": "nicki-code-workspace-sync",
-    "worktree_path": "worktrees/nicki-code-workspace-sync"
+    "worktree_path": "worktrees/nicki-status-json-yagni"
   },
   "artifacts": {
-    "status": "current-task/status.json",
     "story": "current-task/story.md",
-    "spec": "current-task/specs/code-workspace-sync.yaml",
-    "subtasks": "current-task/subtasks/code-workspace-sync.md",
-    "execution": "current-task/executions/code-workspace-sync.yaml",
-    "review": "current-task/reviews/code-workspace-sync.yaml",
+    "spec": "current-task/specs/status-json-yagni.yaml",
+    "subtasks": "current-task/subtasks/status-json-yagni.md",
+    "execution": "current-task/executions/status-json-yagni.yaml",
     "review_validation": "current-task/review-validations/r3-validation.yaml"
   },
-  "constraints": [
-    "no-commit",
-    "no-new-deps"
-  ],
-  "open_questions": [],
-  "history": [
-    {
-      "step": "start",
-      "status": "complete",
-      "artifact": "current-task/status.json",
-      "summary": "Worktree created via create-worktree.py."
-    },
-    {
-      "step": "start",
-      "status": "complete",
-      "artifact": "current-task/status.json",
-      "summary": "Worktree was created and task context initialized."
-    },
-    {
-      "step": "describe",
-      "status": "complete",
-      "artifact": "current-task/story.md",
-      "summary": "User approved Gherkin story; one Feature with Background and four scenarios for start add, close remove, warn-on-failure, and dry-run skip."
-    },
-    {
-      "step": "spec",
-      "status": "complete",
-      "artifact": "current-task/specs/code-workspace-sync.yaml",
-      "summary": "Wrote spec with 5 requirements (start-regen, close-regen, shared-entry-preserved, failure-warning-only, dry-run-skip). Scope in wiring regeneration into start and close; scope out worktree naming, check-gate, rewriting script rules, new deps."
-    },
-    {
-      "step": "spec",
-      "status": "complete",
-      "artifact": "current-task/specs/code-workspace-sync.yaml",
-      "summary": "Revised spec per user YAGNI guidance — reuse existing generate-code-workspace.sh as-is (not replace); one-liner requirements; dropped shared-entry-preserved; scope out excludes modifying script."
-    },
-    {
-      "step": "subtasks",
-      "status": "complete",
-      "artifact": "current-task/subtasks/code-workspace-sync.md",
-      "summary": "Wrote 11 subtasks wiring regen into create-worktree.py (start, dry-run skip, warn-on-failure) and close-scope (post-teardown, warn-on-failure), plus acceptance verification. Reuse existing scripts/generate-code-workspace.sh as-is."
-    },
-    {
-      "step": "spec",
-      "status": "complete",
-      "artifact": "current-task/specs/code-workspace-sync.yaml",
-      "summary": "Revised spec — regen script may be simplified when wiring (YAGNI, not frozen as-is); regen-script requirement replaces reuse-existing-script; scope in includes simplification; output semantics preserved (Shared + one folder per git worktree)."
-    },
-    {
-      "step": "subtasks",
-      "status": "complete",
-      "artifact": "current-task/subtasks/code-workspace-sync.md",
-      "summary": "Revised subtasks for regen-script simplification during wiring — single entry point, may simplify where needed; output semantics preserved (Shared + one folder per git worktree); wiring lines unchanged."
-    },
-    {
-      "step": "execute",
-      "status": "partial",
-      "artifact": "current-task/executions/code-workspace-sync.yaml",
-      "summary": "Wrote execution handoff and updated subtask checkmarks. Implementation subtasks 1–6 and verification 10–11 done; E2E verification subtasks 7–9 remain pending. Changes: scripts/generate-code-workspace.sh restored; create-worktree.py wired regen (skip dry-run, warn on failure); close-scope/SKILL.md documents post-teardown regen."
-    },
-    {
-      "step": "review",
-      "status": "complete",
-      "artifact": "current-task/review-validations/r1-validation.yaml",
-      "summary": "Review complete — wiring and start E2E pass (3 test worktrees created, workspace updated). fix_required: close E2E (subtask 8) and failure-path E2E (subtask 9) not demonstrated. ## Fix appended to subtasks."
-    },
-    {
-      "step": "execute",
-      "status": "complete",
-      "artifact": "current-task/executions/code-workspace-sync.yaml",
-      "summary": "Fix round complete — close E2E passed (3 test worktrees torn down, regen dropped entries, git worktree prune). Regen-failure E2E passed (start warn-only with worktree created; close teardown not rolled back). All subtasks 7–9 and fix items marked done. Execution status complete."
-    },
-    {
-      "step": "review",
-      "status": "complete",
-      "artifact": "current-task/review-validations/r2-validation.yaml",
-      "summary": "Post-fix review approved. Close E2E and regen-failure E2E satisfy prior r1 verify blockers. All requirements and subtasks verified. readiness.status ready_for_acceptance."
-    },
-    {
-      "step": "execute",
-      "status": "complete",
-      "artifact": "current-task/executions/code-workspace-sync.yaml",
-      "summary": "Simplified scripts/generate-code-workspace.sh — 32-line Python heredoc to 5-line script with python3 -c one-liner. Semantics preserved. Verified exit 0."
-    },
-    {
-      "step": "review",
-      "status": "complete",
-      "artifact": "current-task/review-validations/r3-validation.yaml",
-      "summary": "r3 review after script simplification — 5-line python3 -c one-liner preserves output semantics; verify rerun passed. ready_for_acceptance."
-    },
-    {
-      "step": "acceptance",
-      "status": "complete",
-      "artifact": "current-task/review-validations/r3-validation.yaml",
-      "summary": "User accepted at ready_for_acceptance with explicit request for full pipeline through close (sync, integrate, close)."
-    }
-  ]
+  "open_questions": []
 }

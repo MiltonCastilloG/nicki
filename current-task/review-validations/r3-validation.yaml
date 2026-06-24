@@ -1,9 +1,12 @@
 meta:
-  worktree: nicki-code-workspace-sync
+  worktree: nicki-status-json-yagni
   generated_by: validation
-  review: current-task/reviews/code-workspace-sync.yaml
+  review: current-task/reviews/status-json-yagni.yaml
 decision: valid
-valid_findings: []
+valid_findings:
+  - id: d1-resolved
+    source: "r2 deferred d1: sheep-spec.md disk-inputs and docs/NICKI.md describe row now use artifacts.story; rg task.story in .cursor/agents and docs/NICKI.md returns no matches."
+    prefix: scope
 deferred_findings: []
 discarded_findings: []
 next_steps: []
@@ -12,5 +15,4 @@ readiness:
   status: ready_for_acceptance
   recommended_next_step: acceptance
   blockers: []
-summary: |
-  Post-simplify r3 review confirms the one-liner regen script preserves output semantics and all wiring/acceptance criteria from r2. Ready for acceptance.
+summary: Third-pass review approved. r2 polish fix verified — supplementary consumer tables aligned to artifacts.story; no deferred scope findings remain.
