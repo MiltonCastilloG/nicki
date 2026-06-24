@@ -12,6 +12,10 @@ projects/*/worktrees/*
 global-status.json
 nicki-workspace.yaml
 
+# Per-task orchestration (worktree-local; durable record in docs/archive/)
+current-task/*
+!current-task/status.example.json
+
 # Dependencies and caches (worktrees, managed clones, legacy paths)
 **/node_modules/
 **/saved_games/
