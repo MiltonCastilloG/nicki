@@ -37,7 +37,7 @@ Invoke only after user acceptance (or explicit override). Block when:
 
 Set `meta.review`, `meta.validation`, `meta.context` when those inputs were loaded.
 
-Nicki expects artifact `current-task/syncs/<slug>.yaml` and `next_step: integrate`.
+Nicki expects artifact `current-task/syncs/<slug>.yaml`. `next_step` is `archive` after first sync; `integrate` after second sync (when `artifacts.archive` set).
 
 ## Scope
 

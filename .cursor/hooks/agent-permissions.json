@@ -152,6 +152,23 @@
     "generate_image": false,
     "switch_mode": false
   },
+  "sheep-archive": {
+    "read": true,
+    "write": true,
+    "delete": true,
+    "shell": false,
+    "grep": true,
+    "glob": true,
+    "semantic_search": false,
+    "task": false,
+    "web_search": false,
+    "web_fetch": false,
+    "mcp": false,
+    "ask_question": true,
+    "todo_write": true,
+    "generate_image": false,
+    "switch_mode": false
+  },
   "sheep-close": {
     "read": true,
     "write": true,

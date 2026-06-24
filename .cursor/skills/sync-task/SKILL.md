@@ -72,7 +72,7 @@ Stop and ask when:
 
 ### Step 3: Commit phase
 
-Stage only paths belonging to this task (application changes, tests, docs, task metadata when policy requires).
+Stage only paths belonging to this task (application changes, tests, docs). Never stage `current-task/`. Second pass: stage `docs/archive/<slug>/` when archive exists uncommitted.
 
 Draft a concise commit message — short subject (3–10 words), plain and technical. Match repo convention when present.
 

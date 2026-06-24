@@ -64,10 +64,12 @@ flowchart LR
   Acp --> Q[sheep-sync]
   L -->|blocked| Ask[ask user]
   Q --> R[sheep-status]
-  R --> S[sheep-integrate]
+  R --> Arch[sheep-archive]
+  Arch --> Q2[sheep-sync]
+  Q2 --> R2[sheep-status]
+  R2 --> S[sheep-integrate]
   S --> T[sheep-status]
   T --> Y[sheep-close]
-  Y --> Z[docs/archive]
 ```
 
 ---
@@ -86,14 +88,15 @@ Each sheep produces YAML handoff under `worktrees/<project>-<slug>/current-task/
 | Execute | `sheep-execute` | Yes | Code changes + updated subtasks + `current-task/executions/<slug>.yaml` |
 | Review | `sheep-review` | No | `reviews/<slug>.yaml` + `review-validations/rN-validation.yaml` + optional `next-steps/*.yaml` |
 | Sync | `sheep-sync` | Yes (commit + pre-push merge + push feature) | `current-task/syncs/<slug>.yaml` |
+| Archive | `sheep-archive` | No (writes `docs/archive/`) | `docs/archive/<slug>/report.yaml` |
 | Integrate | `sheep-integrate` | Yes (merge into `main` + push `main`) | `current-task/integrates/<slug>.yaml` |
-| Close | `sheep-close` | Archive + delete | `docs/archive/<slug>/`; needs integrate or override |
+| Close | `sheep-close` | Delete worktree | unregister + teardown; needs integrate |
 
 ### Artifact handoff chain
 
 ```
 spec ──→ subtasks ──→ execution ──→ review + validation (+ next-steps when deferred scope)
-sync ──→ integrate ──→ archive
+sync ──→ archive ──→ sync ──→ integrate ──→ close
 ```
 
 - **Spec** defines *what* to build — requirements, scope, acceptance. No file paths.
@@ -101,8 +104,8 @@ sync ──→ integrate ──→ archive
 - **Execute-plan** implements unchecked subtasks in order and marks each `- [x]` in place.
 - **Execution** is an evidence map for review, not an approval.
 - **Review** has `approved` and `content`; **validation** skill emits readiness and out-of-scope next-steps in same spawn.
-- **Sync / integrate** — two git steps; handoffs in task worktree; status pointers only in JSON.
-- **Archive** — `report.yaml`, `report.md`, `story.md` at repo root; spec and subtasks erased from worktree; whole worktree removed after close.
+- **Archive** — `report.yaml`, `report.md`, `story.md` under `docs/archive/`; committed on feature branch before integrate. `current-task/` is gitignored (worktree-local).
+- **Close** — unregister + delete whole worktree after integrate.
 
 Closed tasks are stored at:
 
@@ -139,7 +142,7 @@ No verbose `history[]`, no `last_completed_step`, no duplicate pointers (`story_
 
 ### Step values
 
-`start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `integrate`, `close`, `done`
+`start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`
 
 Schemas: `.cursor/skills/current-task-update/status-format.md`, `.cursor/skills/current-task-update/global-status-format.md`, `.cursor/skills/hook-contract/SKILL.md`
 
@@ -224,12 +227,17 @@ Instead of a `state: in_progress | blocked | done` field, status uses `current_s
 
 Task work inside `projects/<project>/worktrees/<slug>/` (or legacy path). execute-plan hard boundary. Nicki validates `scope.worktree_path`.
 
-### 7. Git tail: sync → integrate
+### 7. Git tail: sync → archive → sync → integrate → close
 
 1. **Sync** — local commit, merge `main` into feature branch, push feature branch (`sync-task`)
-2. **Integrate** — merge feature into `main`, push `main` to remote (`integrate-task`)
+2. **Archive** — write `docs/archive/<slug>/` (`sheep-archive` / `task-archive`); no git
+3. **Sync** (again) — commit and push `docs/archive/`
+4. **Integrate** — merge feature into `main`, push `main` to remote (`integrate-task`)
+5. **Close** — unregister `global-status.json`, delete worktree (`close-task` / `close-scope`)
 
-Two user confirms. Close gates on integrate handoff or archive override.
+`current-task/` is gitignored — orchestration stays worktree-local; only `docs/archive/` and product changes reach `main`.
+
+Three user confirms (`sync`, `integrate`, `close`). Archive confirm is separate (`archive` step).
 
 ### 8. Shared conflict-resolution protocol
 
@@ -239,9 +247,9 @@ sync-task and integrate-task both reference `.cursor/skills/conflict-resolution/
 
 sheep-status runs automatically after each sheep without asking. Exception: sheep-close removes the worktree — no context write after.
 
-### 10. Close: tail gate, archive, teardown
+### 10. Close: tail gate, teardown
 
-close-task checks integrate handoff (or records override), writes archive first, unregisters `global-status.json`, deletes whole worktree last.
+close-task checks integrate handoff, unregisters `global-status.json`, deletes whole worktree last. Archive runs earlier via `sheep-archive`.
 
 ### 11. Spec/subtask/execution separation
 
@@ -296,8 +304,9 @@ All subtasks done or no `review_scope` → full review. `review_scope.mode: part
 | Execute | `sheep-execute.md` | `execute-plan/SKILL.md` | `execution-format.md` |
 | Review | `sheep-review.md` | `review-execution/SKILL.md` | `review-format.md`, `validation/` |
 | Sync | `sheep-sync.md` | `sync-task/SKILL.md` | `sync-format.md` |
+| Archive | `sheep-archive.md` | `task-archive/SKILL.md` | `task-archive/archive-format.md` |
 | Integrate | `sheep-integrate.md` | `integrate-task/SKILL.md` | `integrate-format.md` |
-| Close | `sheep-close.md` | `close-task/SKILL.md` | `task-archive/archive-format.md` |
+| Close | `sheep-close.md` | `close-task/SKILL.md` | — |
 
 ### Close helpers (no sheep)
 

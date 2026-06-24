@@ -45,6 +45,8 @@ Add to `.gitignore`:
 worktrees/
 global-status.json
 nicki-workspace.yaml
+current-task/
+!current-task/status.example.json
 ```
 
 ### 2. Run with Nicki
@@ -58,14 +60,14 @@ nicki continue
 
 The parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`). Nicki asks before each step and sends sheep (`sheep-start`, `sheep-describe`, `sheep-spec`, `sheep-execute`, …). After every sheep except close, Nicki sends `sheep-status` to update `current-task/status.json`.
 
-Git steps (`sync`, `integrate`) need explicit confirmation. Close asks to confirm archive and worktree delete.
+Git steps (`sync`, `integrate`) need explicit confirmation. Archive and close need separate confirms. Close asks to confirm worktree delete only.
 
 ---
 
 ## Pipeline
 
 ```
-start → describe → spec → subtasks → execute → review → [fix] → acceptance → sync → integrate → close
+start → describe → spec → subtasks → execute → review → [fix] → acceptance → sync → archive → sync → integrate → close
 ```
 
 Post-review routing comes from validation YAML (`readiness.status`), not from review markdown:
@@ -88,8 +90,8 @@ Nicki-only steps: `acceptance`, `fix`. Validation (readiness + deferred next-ste
 | Subtasks | `sheep-subtask` | status, spec | `current-task/subtasks/<slug>.md` |
 | Execute | `sheep-execute` | status, subtasks, spec | code + `current-task/executions/<slug>.yaml` |
 | Review | `sheep-review` | spec, subtasks, execution | `current-task/reviews/<slug>.yaml` + `current-task/review-validations/rN-validation.yaml` + optional `current-task/next-steps/*.yaml` |
-| Sync / integrate | `sheep-sync`, `sheep-integrate` | status, review validation | `current-task/syncs/<slug>.yaml`, `current-task/integrates/<slug>.yaml` |
-| Close | `sheep-close` | status, integrate handoff | `docs/archive/<slug>/` (report + story); worktree deleted |
+| Sync / archive / integrate | `sheep-sync`, `sheep-archive`, `sheep-integrate` | status, review validation | `current-task/syncs/<slug>.yaml`, `docs/archive/<slug>/`, `current-task/integrates/<slug>.yaml` |
+| Close | `sheep-close` | status, integrate handoff | worktree deleted; unregister `global-status.json` |
 
 **Subtasks** map spec requirements to ordered one-line checklist items. Subtask-maker explores for existing coverage and prefers verify-before-build or refactor-to-share over default “build X” when the spec is already satisfied or logic can be reused.
 

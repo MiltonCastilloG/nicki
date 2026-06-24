@@ -2,7 +2,7 @@
 
 Workspace-root task registry. **JSON only.** Source of truth for which tasks exist and where per-task status lives.
 
-**Write boundary:** only `sheep-start` (register) and `sheep-close` (unregister). Readers use [global-status-read.md](global-status-read.md).
+**Write boundary:** register on start; unregister on close. Readers use [global-status-read.md](global-status-read.md).
 
 Default path: `global-status.json` at Nicki workspace root (repo root in single-repo mode).
 

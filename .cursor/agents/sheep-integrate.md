@@ -19,11 +19,12 @@ Read `.cursor/skills/integrate-task/SKILL.md`, `.cursor/skills/integrate-task/in
 | Input | Path / source | Notes |
 |-------|---------------|-------|
 | Task worktree path | From Nicki prompt | Handoff write location |
-| Sync handoff | `@current-task/syncs/<slug>.yaml` | Required — `status: synced` |
+| Sync handoff | `@current-task/syncs/<slug>.yaml` | Required — `status: synced` (second pass — archive pushed) |
+| Archive | `artifacts.archive` or `docs/archive/<slug>/report.yaml` | **Gate** — on disk and pushed |
 | Status | `@current-task/status.json` | Read only |
 | Target branch | Nicki prompt or default `main` | Merge destination |
 
-**Gate:** Nicki invokes when `artifacts.sync` set and user confirmed integrate.
+**Gate:** Nicki invokes when `artifacts.sync` and `artifacts.archive` set and user confirmed integrate.
 
 Feature branch from: sync handoff `remote.branch` or `commit.branch`, or status `git.branch`.
 

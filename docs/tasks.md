@@ -50,7 +50,7 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 | 7 | `check-gate.py` | `.cursor/skills/nicki/scripts/check-gate.py` — `status.json` + `routing.yaml` (+ validation/spec when needed). Stdout: `allowed`, `sheep`, `reason`, `user_confirm`. All steps; git tail first. |
 | 8 | Nicki **calls** gate script | Add to `nicki.md`: before spawn, run script; on fail show `reason`, do not spawn. **Keep** existing gate prose until script is proven — add, don't delete yet. |
 | 9 | Return YAML validator | `sheep-status` path — validate `sheep_return_contract` before write. |
-| 10 | Smoke fixtures | Gate pass/fail on fixture `status.json`. Worktree script smoke if applicable. |
+| 10 | Smoke fixtures | Fixture `status.json` (+ spec/validation when needed) exercised **through `check-gate.py`** — pass and fail cases. **No separate `smoke-status-v2` script** — v2 shape checks and step gates live here once #7 ships. Optional: extend `create-worktree.py` / `smoke-status-boundary.sh` for scaffold-only asserts. |
 | 11 | Permissions | Allow `python …/check-gate.py` and `create-worktree.py` in `.cursor/permissions.json`. |
 
 ### `check-gate.py` (#7)
@@ -58,6 +58,8 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 Script owns **whether** Nicki may spawn the next sheep — reads `routing.yaml`, `status.json`, validation/spec when a gate needs them. Nicki shows the transition card, user confirms, then runs the script; on `allowed: false`, show `reason` and stop.
 
 That replaces routing prose duplicated in `nicki.md` and `status-read.md` (Gates + Readiness table). After the script is proven on a real task (P3 **#13**): delete those sections from `status-read.md` — **do not** replace with a diagram. File keeps field pointers and the JSON example only; routing stays in `routing.yaml` + the script.
+
+**Validating status/schema changes (#10, not Nicki E2E):** After task-status.v2, do **not** use a full Nicki pipeline run to verify schema or gate field names — too slow and easy to test the wrong branch (worktrees scaffold from `main`). Use **#10 fixtures** run against `check-gate.py` instead: minimal v2 happy path, blocked `open_questions`, readiness routing, and at least one legacy-shape fail fixture (e.g. `task.story_artifact`, verbose `history`). Until #7 exists, ad-hoc local checks are fine; do not add a permanent parallel smoke script.
 
 ---
 

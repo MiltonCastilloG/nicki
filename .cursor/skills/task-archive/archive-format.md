@@ -1,6 +1,6 @@
 # Task archive format
 
-`close-task` writes under `docs/archive/<slug>/`.
+`task-archive` writes under `docs/archive/<slug>/`.
 
 ## Outputs
 
@@ -36,7 +36,7 @@ Summarize handoffs — never paste full bodies, logs, diffs, transcripts, secret
 
 | Field | Req |
 |-------|-----|
-| `meta` | yes — `task-archive.v1`, `generated_by: close-task`, `source_context`; optional `tail_override` when integrate skipped |
+| `meta` | yes — `task-archive.v1`, `generated_by: task-archive`, `source_context` |
 | `task` | yes — slug, title, original, type, branch |
 | `story` | yes — keyword line of what shipped |
 | `outcome` | yes — merge/push/commit final |
@@ -48,7 +48,7 @@ Summarize handoffs — never paste full bodies, logs, diffs, transcripts, secret
 ```yaml
 meta:
   schema: task-archive.v1
-  generated_by: close-task
+  generated_by: task-archive
   source_context: current-task/status.json
   tail_override: null
 
@@ -115,4 +115,4 @@ No raw diffs/logs. Clear prose for irreversible warnings.
 ## Rules
 
 - Compact — summarize, don't copy `current-task/` tree.
-- `report.yaml`, `report.md`, and `story.md` required before [close-scope](../close-scope/SKILL.md) unregister/teardown.
+- `report.yaml`, `report.md`, and `story.md` required before second sync (commit/push) and integrate.

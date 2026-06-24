@@ -20,7 +20,7 @@ current-task/
   integrates/<slug>.yaml
 ```
 
-`sheep-status` (current-task-update skill) is the only writer for this file. Nicki and other sheep may read it; artifacts should reference it with `meta.context` when their schema allows metadata.
+`current-task-update` is the only writer for this file. Artifacts should reference it with `meta.context` when their schema allows metadata.
 
 ## Top-level fields
 

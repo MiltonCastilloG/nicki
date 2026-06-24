@@ -46,4 +46,4 @@ Projects on disk: `castlemill-landing`, `project-psychic-lemon`, `tetris-clone-f
 | Readers | `status-read.md`, `routing.yaml`, `nicki.md`, sheep disk-inputs use `artifacts.story` |
 | Archive | `task-archive` sources process from artifact handoffs, not status history |
 
-**Deferred to P2:** `check-gate.py` script enforcement of v2 gates.
+**Deferred to P2:** `check-gate.py` script enforcement of v2 gates; fixture pass/fail via P2 **#10** (not a separate smoke script or full Nicki E2E).
