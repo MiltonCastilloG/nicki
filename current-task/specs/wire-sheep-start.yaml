@@ -1,0 +1,140 @@
+meta:
+  worktree: nicki-wire-sheep-start
+  generated_by: spec-maker
+  task: |
+    # P1-5 — Wire sheep-start to create-worktree.py
+
+    ## Feature: sheep-start uses create-worktree.py
+
+    As a Nicki operator
+    I want sheep-start to invoke create-worktree.py from the workspace root
+    So that new task worktrees follow the unified layout and Nicki handoff is mechanical
+
+    ### Background
+
+    Given the Nicki workspace root is the only valid cwd for worktree creation
+    And actors are the user, Nicki, and sheep-start
+    And sheep-start follows start-task/SKILL.md for classification and one create-worktree.py run per work item
+    And worktrees live at worktrees/<project>-<slug> with a single hyphen
+    And create-worktree.py pulls main, scaffolds current-task/, copies registry locals, runs post_create, and registers global-status.json
+    And registration uses register-global-status.py (invoked by create-worktree.py on success)
+    And start-worktrees.sh is not referenced on the sheep-start agent path
+    And constraints are no-commit and no-new-deps
+    And deleting start-worktrees.sh from the repo, changing create-worktree.py behavior, permissions.json, and check-gate are out of scope
+
+    ### Scenario: sheep-start creates a nicki self-task worktree
+
+    Given sheep-start has classified a work item with project "nicki" and slug "wire-sheep-start"
+    When sheep-start runs create-worktree.py from the workspace root with --project, --slug, --type, and --original as needed
+    Then a new git worktree exists at worktrees/nicki-wire-sheep-start
+    And current-task/status.json is scaffolded in that worktree
+    And global-status.json gains a per-project task entry with worktree_path and status_path
+    And sheep-start does not invoke start-worktrees.sh
+    And sheep-start reports structured handoff fields from create-worktree.py JSON stdout for sheep-status
+
+    ### Scenario: sheep-start creates a managed-project worktree
+
+    Given nicki-workspace.yaml lists a managed project (e.g. tetris-clone-frp)
+    And sheep-start has a work item with that project and a kebab-case slug
+    When sheep-start runs create-worktree.py once for that item
+    Then the worktree is created at worktrees/<project>-<slug>
+    And global-status.json is updated for that project
+    And sheep-start does not invoke start-worktrees.sh
+
+    ### Scenario: start-worktrees.sh retired from agent path
+
+    Given sheep-start.md and related agent instructions describe the start flow
+    When an operator or reviewer inspects the sheep-start agent path
+    Then instructions direct create-worktree.py per start-task/SKILL.md
+    And start-worktrees.sh is not listed as the worktree creation command
+    And register-global-status flow is preserved (via create-worktree.py registration, not a parallel legacy shell path)
+
+    ### Scenario: existing worktree is not silently overwritten
+
+    Given a worktree already exists at worktrees/<project>-<slug>
+    When sheep-start runs create-worktree.py for that project and slug
+    Then the script fails without overwriting the existing worktree
+    And sheep-start surfaces the error and WORKFLOW.md recovery guidance
+  branch: chore/wire-sheep-start
+  context: current-task/status.json
+
+title: Wire sheep-start to create-worktree.py
+type: chore
+
+summary: >
+  Align sheep-start with the start-task skill by routing worktree creation through
+  create-worktree.py from the workspace root instead of start-worktrees.sh. Preserve
+  global-status registration via the existing create-worktree.py flow, report structured
+  handoff from script JSON stdout, and retire start-worktrees.sh from the sheep-start
+  agent path only — minimal wiring changes with no script deletion or create-worktree.py
+  behavior changes.
+
+requirements:
+  - id: invoke-create-worktree
+    description: >
+      Sheep-start creates each work item by running create-worktree.py once from the
+      Nicki workspace root, passing project, slug, type, and original as required by
+      start-task classification — not by invoking start-worktrees.sh.
+  - id: nicki-self-task-worktree
+    description: >
+      For a nicki self-task work item, create-worktree.py produces a git worktree at
+      worktrees/<project>-<slug>, scaffolds current-task/status.json in that worktree,
+      and registers a per-project task entry in global-status.json with worktree_path
+      and status_path.
+  - id: managed-project-worktree
+    description: >
+      For a work item whose project is listed in nicki-workspace.yaml, create-worktree.py
+      creates the worktree at worktrees/<project>-<slug> and updates global-status.json
+      for that project.
+  - id: structured-handoff
+    description: >
+      On successful creation, sheep-start reports structured handoff fields derived from
+      create-worktree.py JSON stdout for downstream sheep-status consumption.
+  - id: retire-legacy-shell-path
+    description: >
+      Sheep-start agent instructions describe create-worktree.py per start-task/SKILL.md
+      as the worktree creation command; start-worktrees.sh is not referenced on the
+      sheep-start agent path.
+  - id: preserve-registration-flow
+    description: >
+      Global-status registration remains driven by create-worktree.py (which invokes
+      register-global-status.py on success) — no parallel legacy shell registration path.
+  - id: no-overwrite-existing
+    description: >
+      When create-worktree.py fails because a worktree already exists at the target path,
+      sheep-start surfaces the error without overwriting the existing worktree and includes
+      WORKFLOW.md recovery guidance.
+
+scope:
+  in:
+    - Sheep-start agent instructions and start flow wiring
+    - Alignment with start-task skill classification and one-script-per-item invocation
+    - Structured handoff from create-worktree.py JSON stdout
+    - Error surfacing when target worktree already exists
+  out:
+    - Deleting start-worktrees.sh from the repository
+    - Changing create-worktree.py behavior or register-global-status.py
+    - permissions.json changes
+    - check-gate changes
+    - New npm or Python dependencies
+
+constraints:
+  - no-commit
+  - no-new-deps
+
+acceptance:
+  - Sheep-start agent path documents create-worktree.py as the worktree creation command per start-task/SKILL.md
+  - start-worktrees.sh is not referenced on the sheep-start agent path
+  - A nicki self-task run produces worktree at worktrees/<project>-<slug> with scaffolded status and global-status entry
+  - A managed-project run produces worktree at worktrees/<project>-<slug> with global-status updated for that project
+  - Successful runs yield structured handoff fields from create-worktree.py JSON stdout
+  - Duplicate worktree attempts fail without overwrite and surface error plus WORKFLOW.md recovery guidance
+  - Global-status registration occurs only via create-worktree.py success path, not a legacy shell path
+
+assumptions:
+  - create-worktree.py and register-global-status.py behavior is correct as-is; this task only rewires agent instructions
+  - start-worktrees.sh may remain in the repo for non-agent use; only the sheep-start agent path retires it
+  - Workspace root is the sole valid cwd for worktree creation
+  - Worktree naming follows worktrees/<project>-<slug> with a single hyphen
+
+open_questions: []

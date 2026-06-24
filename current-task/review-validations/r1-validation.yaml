@@ -1,33 +1,23 @@
 meta:
-  worktree: nicki-code-workspace-sync
+  worktree: nicki-wire-sheep-start
   generated_by: validation
-  review: current-task/reviews/code-workspace-sync.yaml
+  review: current-task/reviews/wire-sheep-start.yaml
 decision: valid
-valid_findings:
-  - id: f1
-    source: "[verify] Subtask 8 E2E not completed: close-scope teardown plus regen was not run to confirm removed worktrees drop from nicki.code-workspace while others remain."
-    prefix: verify
-    reason: Blocking — close regen acceptance not demonstrated end-to-end.
-  - id: f2
-    source: "[verify] Subtask 9 E2E not completed: regeneration failure during start and close was not exercised end-to-end."
-    prefix: verify
-    reason: Blocking — failure-path acceptance not demonstrated end-to-end.
+valid_findings: []
 deferred_findings:
   - id: d1
-    source: "[scope] E2E test worktrees nicki-e2e-ws-review-1/2/3 remain on disk under worktrees/ and in nicki.code-workspace — cleanup after close E2E."
+    source: "[scope] Uncommitted changes to current-task/status.json, current-task/story.md, nicki.code-workspace outside spec scope.in."
     prefix: scope
-    reason: Non-blocking deferred cleanup from partial E2E run.
+    reason: Task artifacts outside sheep-start wiring scope; non-blocking.
 discarded_findings: []
 next_steps: []
 review_inputs: []
 readiness:
-  status: fix_required
-  recommended_next_step: execute
-  blockers:
-    - Close E2E not run — teardown plus regen must drop removed worktree entries
-    - Failure-path E2E not run — regen failure must warn only on start and close
-  fix_subtasks:
-    - Run close E2E for three test worktrees and confirm nicki.code-workspace updates
-    - Run start and close regen-failure E2E and confirm warn-only with primary success
+  status: ready_for_acceptance
+  recommended_next_step: acceptance
+  blockers: []
 summary: |
-  Wiring and start-side E2E pass review; close and failure-path verification subtasks 8–9 lack E2E evidence. Return to execute for close teardown/regen tests, failure simulation, and test worktree cleanup.
+  Review approved. sheep-start agent path documents create-worktree.py per start-task skill;
+  legacy start-worktrees.sh and parallel register-global-status.sh removed. Nicki self-task
+  E2E verified (worktrees/nicki-review-wire-self, nicki:7). Managed layout corroborated
+  via dry-run and existing psychic-lemon worktree. Test worktree left for operator cleanup.
