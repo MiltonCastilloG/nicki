@@ -1,37 +1,21 @@
 {
-  "version": 1,
-  "meta": {
-    "schema": "task-status.v1",
-    "generated_by": "status-update",
-    "updated_by": "status-update"
-  },
+  "meta": { "schema": "task-status.v2" },
   "task": {
     "id": "1",
     "slug": "status-architecture",
     "project": "nicki",
-    "original": "JSON status architecture migration",
+    "original": "status-architecture",
     "type": "refactor",
     "current_step": "execute",
     "next_step": "review",
-    "last_completed_step": "subtasks"
+    "completed_steps": ["start", "describe", "spec", "subtasks"]
   },
   "scope": {
-    "worktree": "status-architecture",
     "worktree_path": "."
   },
   "artifacts": {
-    "status": "current-task/status.json",
     "spec": "00-spec.yaml",
     "subtasks": "00-subtasks.md"
   },
-  "constraints": ["no-commit", "no-new-deps", "caveman-md-default-full"],
-  "open_questions": [],
-  "history": [
-    {
-      "step": "subtasks",
-      "status": "complete",
-      "artifact": "00-subtasks.md",
-      "summary": "Subtask checklist drafted caveman full."
-    }
-  ]
+  "open_questions": []
 }

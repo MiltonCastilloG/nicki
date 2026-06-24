@@ -1,0 +1,140 @@
+meta:
+  worktree: nicki-status-json-yagni
+  generated_by: execute-plan
+  subtasks: current-task/subtasks/status-json-yagni.md
+  spec: current-task/specs/status-json-yagni.yaml
+  context: current-task/status.json
+  status: complete
+  constraints: [no-commit, no-new-deps]
+
+paths:
+  created: [current-task/executions/status-json-yagni.yaml]
+  modified:
+    - .cursor/skills/current-task-update/status-format.md
+    - .cursor/skills/current-task-update/status-read.md
+    - .cursor/skills/current-task-update/SKILL.md
+    - .cursor/skills/start-task/scripts/create-worktree.py
+    - .cursor/skills/task-archive/SKILL.md
+    - .cursor/skills/task-archive/archive-format.md
+    - current-task/status.example.json
+    - current-task/subtasks/status-json-yagni.md
+    - .cursor/agents/sheep-spec.md
+    - docs/NICKI.md
+  deleted: []
+  unplanned: []
+
+subtasks:
+  - index: 1
+    text: Choose the trimmed history shape and document it in current-task-update write rules.
+    status: done
+    checked: true
+    paths: [.cursor/skills/current-task-update/SKILL.md]
+    note: Chose completed_steps string array; omit verbose history.
+  - index: 2
+    text: Rewrite status-format.md for simplified canonical schema.
+    status: done
+    checked: true
+    paths: [.cursor/skills/current-task-update/status-format.md]
+    note: task-status.v2; meta.schema only; completed_steps optional.
+  - index: 3
+    text: Align status-read.md with status-format.md.
+    status: done
+    checked: true
+    paths: [.cursor/skills/current-task-update/status-read.md]
+    note: artifacts.story gate; review_validation sole review pointer.
+  - index: 4
+    text: Update current-task-update apply rules for simplified shape and legacy migration.
+    status: done
+    checked: true
+    paths: [.cursor/skills/current-task-update/SKILL.md]
+    note: Legacy strip on write; trim original after describe.
+  - index: 5
+    text: Update create-worktree scaffold initial status.json.
+    status: done
+    checked: true
+    paths: [.cursor/skills/start-task/scripts/create-worktree.py]
+    note: v2 scaffold without history or duplicate pointers.
+  - index: 6
+    text: Update status.example.json to match simplified schema.
+    status: done
+    checked: true
+    paths: [current-task/status.example.json]
+    note: Matches status-format.md example shape.
+  - index: 7
+    text: Update task-archive to source process from artifacts not history.
+    status: done
+    checked: true
+    paths:
+      - .cursor/skills/task-archive/SKILL.md
+      - .cursor/skills/task-archive/archive-format.md
+    note: Process table from artifact handoff meta.
+  - index: 8
+    text: Confirm describe-to-spec gate via single story pointer in status-read.
+    status: done
+    checked: true
+    note: Gate uses artifacts.story per status-read.md.
+  - index: 9
+    text: Confirm spec-to-subtasks gate reads open_questions from spec file only.
+    status: done
+    checked: true
+    note: status-read documents spec file load; no status mirror.
+  - index: 10
+    text: Confirm post-review routing reads review_validation artifact only.
+    status: done
+    checked: true
+    note: status-read readiness from artifacts.review_validation.
+  - index: 11
+    text: Dogfood simplified status through pipeline without breaking readers.
+    status: done
+    checked: true
+    note: Writers/readers aligned; status.json migration deferred to sheep-status.
+  - index: 12
+    text: Verify Nicki and sheep routing gates for describe, spec, review paths.
+    status: done
+    checked: true
+    note: status-read gates match spec acceptance; routing.yaml unchanged per scope.
+  - index: 13
+    text: Verify duplicates, ceremony meta, verbose history absent from docs/scaffold/example/status.
+    status: done
+    checked: true
+    note: Docs/scaffold/example clean; legacy status.json awaits sheep-status write.
+  - index: 14
+    text: Verify task-archive drafts process without status history.
+    status: done
+    checked: true
+    paths: [.cursor/skills/task-archive/archive-format.md]
+    note: archive-format no longer references status history.
+  - index: 15
+    text: "Polish (r2 d1): align supplementary consumer tables from task.story to artifacts.story."
+    status: done
+    checked: false
+    paths:
+      - .cursor/agents/sheep-spec.md
+      - docs/NICKI.md
+    note: sheep-spec disk-inputs and NICKI describe row; agents/README scan clean.
+
+verify:
+  - command: rg 'task\.story' .cursor/agents docs/NICKI.md
+    exit: 1
+    passed: true
+  - command: python3 -m json.tool current-task/status.example.json
+    exit: 0
+    passed: true
+
+deviations:
+  - kind: list_gap
+    subtask_index: 11
+    note: sheep-execute does not write status.json; sheep-status migrates worktree status on next step.
+  - kind: user_approved
+    subtask_index: 15
+    note: Polish pass for r2-validation d1; not on original subtask checklist.
+
+open_questions: []
+
+hotspots: []
+
+review_scope:
+  mode: triage
+  focus_paths:
+    - .cursor/agents/sheep-spec.md
+    - docs/NICKI.md

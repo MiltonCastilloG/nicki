@@ -438,12 +438,7 @@ def scaffold_current_task(
     for sub in ("specs", "subtasks", "executions", "reviews", "review-validations"):
         (ct / sub).mkdir(parents=True, exist_ok=True)
     status = {
-        "version": 1,
-        "meta": {
-            "schema": "task-status.v1",
-            "generated_by": "create-worktree.py",
-            "updated_by": "create-worktree.py",
-        },
+        "meta": {"schema": "task-status.v2"},
         "task": {
             "slug": slug,
             "project": project_id,
@@ -451,25 +446,11 @@ def scaffold_current_task(
             "type": task_type,
             "current_step": "start",
             "next_step": "describe",
-            "last_completed_step": "start",
+            "completed_steps": ["start"],
         },
-        "scope": {
-            "worktree": worktree_dir_name(project_id, slug),
-            "worktree_path": wt_rel,
-        },
-        "artifacts": {
-            "status": "current-task/status.json",
-        },
-        "constraints": ["no-commit", "no-new-deps"],
+        "scope": {"worktree_path": wt_rel},
+        "artifacts": {},
         "open_questions": [],
-        "history": [
-            {
-                "step": "start",
-                "status": "complete",
-                "artifact": "current-task/status.json",
-                "summary": "Worktree created via create-worktree.py.",
-            }
-        ],
     }
     (ct / "status.json").write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
     return status_rel

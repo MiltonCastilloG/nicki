@@ -19,12 +19,12 @@ Read and follow `.cursor/skills/spec-maker/SKILL.md` and `.cursor/skills/spec-ma
 | Input | Path / source | Notes |
 |-------|---------------|-------|
 | Worktree path | Nicki prompt | Scope root |
-| Task story | `task.story` from `@current-task/status.json` when present | Preferred |
+| Task story | `artifacts.story` from `@current-task/status.json` when present | Preferred |
 | Task original | `task.original` from status when no story | Fallback |
 | Free-text description | Nicki prompt | Fallback when no story |
 | Status | `@current-task/status.json` | Read only — validate `scope.worktree_path` |
 
-**Gate:** Missing `task.story_artifact` before describe completed — stop; Nicki blocks spec.
+**Gate:** Missing `artifacts.story` or story file on disk before describe completed — stop; Nicki blocks spec.
 
 ## Output
 

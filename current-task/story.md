@@ -1,180 +1,161 @@
-# P1-6 — Gherkin and spec mutual understanding
+# status-json-yagni — simplify per-task status.json
 
-## Feature: Describe step asks before inventing
+## Feature: Minimal status.json for routing and gates
 
 As a Nicki operator
-I want Nicki to ask the human user about task details before drafting Gherkin
-So that the story reflects shared understanding instead of invented specifics
+I want per-task status.json to hold only fields Nicki and sheep actually read
+So that orchestration state stays small, single-purpose, and free of ceremony
 
 ### Background
 
 ```gherkin
-Given actors are the human user, Nicki, and sheep (no parent-agent behavior change)
-And mutual understanding means asking the user about details instead of inventing specifics
-And Nicki performs describe in chat only (Nicki does not write files directly)
-And sheep-status writes story.md once after explicit user approval
-And task.current_step stays "describe" until story.md exists on disk
-And status.json open_questions is not updated during describe (chat is enough)
-And disk open_questions may record blockers for compaction or new-chat recovery
-And vague task.original is probed until implementation intent is clear enough to draft
-And the user may approve scenario-by-scenario before the full story is accepted
-And there is no user override to force advance past unresolved describe gaps
-And when the user is silent, Nicki pauses and does not burn tokens speculating
-And after spec begins, story is not re-opened for describe — gaps are repaired in spec
-And priority when goals conflict is correct functioning, then harness, then trimming
-And this task touches only nicki.md, sheep-spec.md, and spec-maker/SKILL.md with minimal diffs
-And check-gate.py, routing.yaml, status-read.md, status-format.md, current-task-update/SKILL.md, story-format.md, and spec gate smoke are out of scope
+Given actors are the human user, Nicki, sheep-status, and pipeline sheep
+And current-task/status.json is the per-task orchestration store under each worktree
+And only sheep-status writes status.json; other sheep and Nicki read via status-read.md
+And handoff bodies stay in separate YAML/Markdown artifacts — status holds pointers and step position only
+And status-read.md already documents the minimal read surface: task step pointers, scope.worktree_path, artifacts.*, open_questions
+And check-gate.py does not exist yet — this task aligns docs and writers; harness enforcement is deferred
+And priority when goals conflict is correct routing and gates, then doc alignment, then byte trimming
 And constraints are no-commit and no-new-deps
+And this task touches status schema docs, current-task-update skill, create-worktree scaffold, status.example.json, and task-archive sourcing — not application project code
 ```
 
-### Scenario: Nicki asks before first Gherkin draft
+### Scenario: Essential fields remain for Nicki routing
 
 ```gherkin
-Given sheep-start completed and task.original is present in status.json
-And Nicki is on the describe step
-When task.original is missing detail needed for testable scenarios
-Then Nicki asks the human user organized questions in chat
-And Nicki does not draft Gherkin until questions are answered or Nicki has no gaps to fill
-And Nicki does not write story.md on a first draft alone
+Given a task worktree with current-task/status.json
+When Nicki or a sheep reads status for routing
+Then task.current_step and task.next_step are present
+And task.slug identifies the task
+And scope.worktree_path resolves the worktree root
+And artifacts holds paths to story, spec, subtasks, execution, review_validation, sync, integrate, and archive as they exist
+And open_questions is present and empty when the pipeline may continue
+And describe-to-spec gate still works via a single story pointer on disk
+And spec-to-subtasks gate still reads open_questions from the spec artifact file
+And post-review routing still reads readiness from artifacts.review_validation — not from status history or review markdown
 ```
 
-### Scenario: Questions first, then draft, then revise
+### Scenario: Redundant duplicate pointers are collapsed
 
 ```gherkin
-Given Nicki has gathered answers from the human user
-When Nicki drafts Gherkin with Feature, As a / I want / So that, and at least one Scenario
-Then Nicki shows the draft in chat without persisting story.md
-And the human user may reject and request revision
-And Nicki revises in chat across multiple rounds until approval
-And Nicki sends sheep-status to write story.md only once after approval
+Given status.json before this task may duplicate the same path in multiple fields
+When the simplified schema is applied
+Then scope.worktree slug duplicate of task.slug is removed — slug lives under task only
+And task.story_artifact duplicate of artifacts.story is removed — one canonical story pointer remains
+And artifacts.status self-pointer to current-task/status.json is removed — path is implicit
+And artifacts.review is removed when artifacts.review_validation is the only pointer used for review gates
+And last_completed_step is removed when derivable from current_step and optional completed_steps
+And readers documented in status-read.md use the surviving canonical fields only
 ```
 
-### Scenario: Explicit approval of story meaning
+### Scenario: Ceremony and double versioning are removed
 
 ```gherkin
-Given Nicki has shown a Gherkin draft in chat
-When the human user replies with "approve", "continue", or "go"
-Or Nicki has no remaining gaps to fill and the user confirms
-Then the story meaning is considered approved
-And Nicki may send sheep-status to persist current-task/story.md
-And task.story_artifact points to current-task/story.md
-And last_completed_step advances to describe with next_step spec
+Given status.json may carry meta.generated_by, meta.updated_by, version, and meta.schema
+When the simplified schema is applied
+Then meta.generated_by and meta.updated_by are dropped
+And double versioning is collapsed to a single schema identifier (meta.schema only, or equivalent one field)
+And constraints duplicated in spec, subtasks, and execution frontmatter are not required on status.json
+And status.example.json and create-worktree.py scaffold match the simplified shape
 ```
 
-### Scenario: Scenario-by-scenario approval
+### Scenario: task.original is trimmed after describe
 
 ```gherkin
-Given a Gherkin draft with multiple scenarios
-When the human user approves one scenario but not others
-Then Nicki iterates only on unapproved scenarios in chat
-And Nicki does not persist story.md until all scenarios are approved or explicitly waived by the user
-```
-
-### Scenario: Nicki does not advance with gaps to fill
-
-```gherkin
-Given Nicki still has unanswered questions about scope, actors, or acceptance
-When Nicki would show a transition card for a downstream sheep
-Then Nicki does not proceed until gaps are resolved in chat with the human user
-```
-
-### Scenario: Acceptance test — describe on tetris ghost piece task
-
-```gherkin
-Given an agent invokes Nicki to start a worktree for tetris-clone-frp
-And task.original references NEXT_STEPS.MD item "3) Implement ghost piece rendering"
-When Nicki runs describe for that task
-Then Nicki asks about details not stated in NEXT_STEPS (e.g. ghost alpha, game.js vs board.js wiring, recompute triggers)
-And Nicki does not invent those specifics in the draft
-And after user answers and approves, story.md is persisted and the pipeline may continue to spec
-And the test stops at subtasks without execute when used as a verification run
+Given describe completed and current-task/story.md exists on disk
+When sheep-status records the describe step
+Then task.original is replaced with a short label (slug or one-line title) — not the full audit prose
+And the full user intent remains in story.md and archive story copy
+And new worktrees may still seed task.original from the start slug until describe runs
 ```
 
 ---
 
-## Feature: Spec step asks before writing YAML
+## Feature: Trim history and source archive process elsewhere
 
 As a Nicki operator
-I want sheep-spec to resolve ambiguities with the human user before writing a spec file
-So that subtasks breakdown starts from a complete requirements document
+I want status.json history to stop duplicating handoff YAML summaries
+So that disk stays small and archive process lines come from authoritative artifact files
 
 ### Background
 
 ```gherkin
-Given actors are the human user, Nicki, and sheep-spec
-And Nicki relays sheep-spec questions to the human user in chat
-And the human user answers in chat to unblock the pipeline
-And multiple question rounds are allowed
-And sheep-spec does not write current-task/specs/<slug>.yaml until open_questions would be empty
-And when requirements fork, sheep-spec lists options and Nicki presents them to the human user
-And open_questions must be [] before subtasks may proceed
-And Nicki persists resolutions via sheep-status with user permission
-And status open_questions during spec is secondary to chat (answered in chat)
-And subtask-maker needs only the written spec document — no additional user Q&A loop
-And spec-maker/SKILL.md enforces ask-first and no spec file while questions remain
-And sheep-spec.md may receive minimal alignment; blocked-return contract prose is deferred to future P2 harness work
-And there is no user override to force subtasks with non-empty spec open_questions
-And when the user is silent, the pipeline stays blocked at spec
-And gaps discovered after describe are repaired in spec, not by re-running describe
+Given verbose history[] has been the main YAGNI offender in long-running tasks
+And history duplicates summaries already in spec, execution, review-validation, and integrate handoffs
+And status-read.md does not list history as a field Nicki uses for gates
+And task-archive currently loads history for report.yaml process section
+And archive-format.md documents process as step plus one-line summary
 ```
 
-### Scenario: sheep-spec asks before writing spec file
+### Scenario: History is dropped or reduced to completed step names
 
 ```gherkin
-Given an approved story.md exists and Nicki transitions to spec
-When sheep-spec finds vague requirements or design forks in the approved story
-Then sheep-spec does not write a spec YAML file
-And sheep-spec returns blocked handoff with open_questions populated
-And Nicki presents those questions to the human user in chat
+Given a task progresses through spec, subtasks, execute, and review
+When sheep-status updates status.json after each step
+Then status.json does not append verbose history events with artifact summaries
+And either history is omitted entirely
+Or status keeps only completed_steps as a string array of step names (e.g. ["start", "describe", "spec"])
+Or status keeps at most one optional last_event one-liner without duplicating handoff bodies
+And current-task-update SKILL.md documents the chosen shape and sheep-status write rules
 ```
 
-### Scenario: Nicki relays answers and re-runs spec
+### Scenario: Archive process is sourced from artifact files
 
 ```gherkin
-Given sheep-spec blocked with open_questions
-And the human user answered in chat
-When Nicki has user permission to persist resolution
-Then Nicki sends sheep-status as needed and re-sends sheep-spec
-And sheep-spec writes the spec file only when all open_questions are resolved
+Given close-task runs task-archive for a completed task
+When report.yaml process section is drafted
+Then process steps are derived from artifact presence and handoff meta under current-task/ — not from status.json history[]
+And each process entry remains step plus one-line summary per archive-format.md
+And report.yaml still includes task, story, outcome, decisions, open_questions, and suggestions
+And archived story.md is still copied from artifacts.story
 ```
 
-### Scenario: Subtasks gate requires empty open_questions
+### Scenario: Existing tasks can migrate on next status update
 
 ```gherkin
-Given a spec file exists at current-task/specs/<slug>.yaml
-When spec open_questions is non-empty
-Then subtasks step does not proceed
-And Nicki does not send sheep-subtask until open_questions is []
+Given an in-flight worktree still has legacy history[] and duplicate pointers
+When sheep-status next writes that status.json
+Then the writer emits the simplified shape
+And essential routing fields and artifact pointers are preserved
+And verbose history is not copied forward
 ```
 
-### Scenario: Fork presented as options
+---
+
+## Feature: Docs and examples stay aligned
+
+As a Nicki operator
+I want one documented minimal status shape
+So that readers, scaffolds, and status-update behave consistently
+
+### Scenario: status-format.md matches status-read.md minimal shape
 
 ```gherkin
-Given the approved story allows multiple valid implementations
-When sheep-spec detects a requirements fork
-Then sheep-spec lists the options in open_questions
-And Nicki shows each option to the human user in chat
-And the human user picks one before sheep-spec writes the spec file
+When an implementer reads status-format.md and status-read.md
+Then both describe the same canonical fields and gates
+And history is optional or absent per the trimmed design
+And review_validation is documented as the sole review gate pointer
+And the full JSON example in status-format.md reflects the simplified schema
 ```
 
-### Scenario: Acceptance test — spec on tetris ghost piece task
+### Scenario: Out of scope for this task
 
 ```gherkin
-Given describe completed for NEXT_STEPS.MD ghost piece task with approved story.md
-When Nicki runs spec for that task
-Then sheep-spec asks via Nicki about any remaining ambiguities (e.g. alpha value, hard-drop parity checks)
-And no spec file is written until those are resolved
-And after resolution the spec has open_questions: []
-And the pipeline reaches subtasks without running execute
-And the verification worktree may be deleted if the happy path passes
+Given this chore scopes YAGNI simplification only
+When implementers plan work
+Then they do not implement check-gate.py or change routing.yaml gates in this task
+And they do not add new dependencies
+And global-status.json registry shape is unchanged unless a field directly duplicates per-task status
 ```
 
-### Scenario: Out of scope for this feature
+### Scenario: Acceptance — dogfood status-json-yagni worktree
 
 ```gherkin
-Given this P1-6 story
-When implementers scope the work
-Then they do not implement check-gate.py or change routing.yaml in this task
-And they do not add story-format.md or spec gate smoke fixtures
-And harness enforcement of these rules is documented for P2 check-gate.py and P2 Nicki gate-script wiring
+Given this task's own worktree at worktrees/nicki-status-json-yagni
+When describe completes with approved story.md
+And spec, subtasks, and execute update status through the pipeline
+Then status.json in that worktree uses the simplified schema throughout
+And no reader documented in status-read.md breaks
+And task-archive can produce report.yaml process without status history[]
+And the verification run may stop after subtasks or execute without integrate when used as a harness check
 ```

@@ -50,7 +50,7 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 | `describe` relay | **Nicki** | Relay blocked `open_questions` or draft `summary`; re-send sheep-describe with user context. Pause when user is silent. |
 | `spec` | **sheep-spec** + **spec-maker** | Block without write when vague or forked; `open_questions` for Nicki relay. No spec file until resolved. |
 | `spec` relay | **Nicki** | Present `open_questions`; re-send sheep-spec after user answers. No subtasks while spec `open_questions` non-empty. |
-| Gate | **Harness** (P2) | `routing.yaml` / `check-gate.py`: block `spec` without `story_artifact`; block `subtasks` while spec `open_questions` non-empty. |
+| Gate | **Harness** (P2) | `routing.yaml` / `check-gate.py`: block `spec` without `artifacts.story`; block `subtasks` while spec `open_questions` non-empty. |
 
 **Shipped:** `story-maker/SKILL.md`, `sheep-describe.md`, `nicki.md` (Describe + Spec relay), `sheep-spec.md`, `spec-maker/SKILL.md`, `routing.yaml` (describe → `sheep-describe`).
 
@@ -96,7 +96,7 @@ Only after P1–P2 run clean on a real task. See deletion map in [`investigation
 
 | Item | Why |
 |------|-----|
-| Disk `consented` history | Not needed for functioning or guardrails |
+| Disk `consented` history | Dropped in task-status.v2 — git confirm on sync/integrate only |
 | `bin/nicki` CLI | PLAN.md sketch — later |
 | Typed `AgentDefinition` TS | Parallel layer |
 | Full orchestrator rewrite | Chat Nicki stays |

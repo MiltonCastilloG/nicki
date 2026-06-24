@@ -1,0 +1,250 @@
+meta:
+  worktree: nicki-status-json-yagni
+  generated_by: spec-maker
+  branch: chore/status-json-yagni
+  context: current-task/status.json
+  task: |
+    # status-json-yagni — simplify per-task status.json
+
+    ## Feature: Minimal status.json for routing and gates
+
+    As a Nicki operator
+    I want per-task status.json to hold only fields Nicki and sheep actually read
+    So that orchestration state stays small, single-purpose, and free of ceremony
+
+    ### Background
+
+    Given actors are the human user, Nicki, sheep-status, and pipeline sheep
+    And current-task/status.json is the per-task orchestration store under each worktree
+    And only sheep-status writes status.json; other sheep and Nicki read via status-read.md
+    And handoff bodies stay in separate YAML/Markdown artifacts — status holds pointers and step position only
+    And status-read.md already documents the minimal read surface: task step pointers, scope.worktree_path, artifacts.*, open_questions
+    And check-gate.py does not exist yet — this task aligns docs and writers; harness enforcement is deferred
+    And priority when goals conflict is correct routing and gates, then doc alignment, then byte trimming
+    And constraints are no-commit and no-new-deps
+    And this task touches status schema docs, current-task-update skill, create-worktree scaffold, status.example.json, and task-archive sourcing — not application project code
+
+    ### Scenario: Essential fields remain for Nicki routing
+
+    Given a task worktree with current-task/status.json
+    When Nicki or a sheep reads status for routing
+    Then task.current_step and task.next_step are present
+    And task.slug identifies the task
+    And scope.worktree_path resolves the worktree root
+    And artifacts holds paths to story, spec, subtasks, execution, review_validation, sync, integrate, and archive as they exist
+    And open_questions is present and empty when the pipeline may continue
+    And describe-to-spec gate still works via a single story pointer on disk
+    And spec-to-subtasks gate still reads open_questions from the spec artifact file
+    And post-review routing still reads readiness from artifacts.review_validation — not from status history or review markdown
+
+    ### Scenario: Redundant duplicate pointers are collapsed
+
+    Given status.json before this task may duplicate the same path in multiple fields
+    When the simplified schema is applied
+    Then scope.worktree slug duplicate of task.slug is removed — slug lives under task only
+    And task.story_artifact duplicate of artifacts.story is removed — one canonical story pointer remains
+    And artifacts.status self-pointer to current-task/status.json is removed — path is implicit
+    And artifacts.review is removed when artifacts.review_validation is the only pointer used for review gates
+    And last_completed_step is removed when derivable from current_step and optional completed_steps
+    And readers documented in status-read.md use the surviving canonical fields only
+
+    ### Scenario: Ceremony and double versioning are removed
+
+    Given status.json may carry meta.generated_by, meta.updated_by, version, and meta.schema
+    When the simplified schema is applied
+    Then meta.generated_by and meta.updated_by are dropped
+    And double versioning is collapsed to a single schema identifier (meta.schema only, or equivalent one field)
+    And constraints duplicated in spec, subtasks, and execution frontmatter are not required on status.json
+    And status.example.json and create-worktree.py scaffold match the simplified shape
+
+    ### Scenario: task.original is trimmed after describe
+
+    Given describe completed and current-task/story.md exists on disk
+    When sheep-status records the describe step
+    Then task.original is replaced with a short label (slug or one-line title) — not the full audit prose
+    And the full user intent remains in story.md and archive story copy
+    And new worktrees may still seed task.original from the start slug until describe runs
+
+    ---
+
+    ## Feature: Trim history and source archive process elsewhere
+
+    As a Nicki operator
+    I want status.json history to stop duplicating handoff YAML summaries
+    So that disk stays small and archive process lines come from authoritative artifact files
+
+    ### Background
+
+    Given verbose history[] has been the main YAGNI offender in long-running tasks
+    And history duplicates summaries already in spec, execution, review-validation, and integrate handoffs
+    And status-read.md does not list history as a field Nicki uses for gates
+    And task-archive currently loads history for report.yaml process section
+    And archive-format.md documents process as step plus one-line summary
+
+    ### Scenario: History is dropped or reduced to completed step names
+
+    Given a task progresses through spec, subtasks, execute, and review
+    When sheep-status updates status.json after each step
+    Then status.json does not append verbose history events with artifact summaries
+    And either history is omitted entirely
+    Or status keeps only completed_steps as a string array of step names (e.g. ["start", "describe", "spec"])
+    Or status keeps at most one optional last_event one-liner without duplicating handoff bodies
+    And current-task-update SKILL.md documents the chosen shape and sheep-status write rules
+
+    ### Scenario: Archive process is sourced from artifact files
+
+    Given close-task runs task-archive for a completed task
+    When report.yaml process section is drafted
+    Then process steps are derived from artifact presence and handoff meta under current-task/ — not from status.json history[]
+    And each process entry remains step plus one-line summary per archive-format.md
+    And report.yaml still includes task, story, outcome, decisions, open_questions, and suggestions
+    And archived story.md is still copied from artifacts.story
+
+    ### Scenario: Existing tasks can migrate on next status update
+
+    Given an in-flight worktree still has legacy history[] and duplicate pointers
+    When sheep-status next writes that status.json
+    Then the writer emits the simplified shape
+    And essential routing fields and artifact pointers are preserved
+    And verbose history is not copied forward
+
+    ---
+
+    ## Feature: Docs and examples stay aligned
+
+    As a Nicki operator
+    I want one documented minimal status shape
+    So that readers, scaffolds, and status-update behave consistently
+
+    ### Scenario: status-format.md matches status-read.md minimal shape
+
+    When an implementer reads status-format.md and status-read.md
+    Then both describe the same canonical fields and gates
+    And history is optional or absent per the trimmed design
+    And review_validation is documented as the sole review gate pointer
+    And the full JSON example in status-format.md reflects the simplified schema
+
+    ### Scenario: Out of scope for this task
+
+    Given this chore scopes YAGNI simplification only
+    When implementers plan work
+    Then they do not implement check-gate.py or change routing.yaml gates in this task
+    And they do not add new dependencies
+    And global-status.json registry shape is unchanged unless a field directly duplicates per-task status
+
+    ### Scenario: Acceptance — dogfood status-json-yagni worktree
+
+    Given this task's own worktree at worktrees/nicki-status-json-yagni
+    When describe completes with approved story.md
+    And spec, subtasks, and execute update status through the pipeline
+    Then status.json in that worktree uses the simplified schema throughout
+    And no reader documented in status-read.md breaks
+    And task-archive can produce report.yaml process without status history[]
+    And the verification run may stop after subtasks or execute without integrate when used as a harness check
+
+title: YAGNI simplify per-task status.json
+type: chore
+
+summary: >
+  Reduce per-task status.json to the minimal fields Nicki and sheep actually read for
+  routing and gates. Collapse duplicate pointers, drop ceremony metadata and verbose
+  history, trim task.original after describe, align docs and scaffolds, and source
+  archive process from artifact handoffs instead of status history.
+
+requirements:
+  - id: routing-fields
+    description: >
+      Preserve task.slug, task.current_step, task.next_step, scope.worktree_path,
+      artifacts pointers (story, spec, subtasks, execution, review_validation, sync,
+      integrate, archive as present), and open_questions for pipeline routing and gates.
+  - id: describe-spec-gate
+    description: >
+      Describe-to-spec gate still works via exactly one canonical story pointer on disk;
+      status-read documents the surviving field.
+  - id: spec-subtasks-gate
+    description: >
+      Spec-to-subtasks gate still reads open_questions from the spec artifact file, not
+      from duplicated status fields.
+  - id: review-routing-gate
+    description: >
+      Post-review routing reads readiness from artifacts.review_validation only — not
+      from status history or review markdown.
+  - id: collapse-duplicates
+    description: >
+      Remove scope.worktree slug duplicate, story pointer duplicate, artifacts.status
+      self-pointer, artifacts.review when review_validation suffices, and
+      last_completed_step when derivable from current_step and optional completed_steps.
+  - id: trim-ceremony-meta
+    description: >
+      Drop meta.generated_by and meta.updated_by; collapse double versioning to a single
+      schema identifier; do not require constraints on status when already carried in
+      spec, subtasks, or execution frontmatter.
+  - id: trim-task-original
+    description: >
+      After describe, task.original holds a short slug or one-line title only; full intent
+      remains in story.md and archive copy; new worktrees may seed original from start
+      slug until describe runs.
+  - id: history-trim
+    description: >
+      Stop appending verbose history events with artifact summaries; use history omitted,
+      completed_steps step-name array, or at most one optional last_event one-liner —
+      document the chosen shape and sheep-status write rules in current-task-update skill.
+  - id: archive-process-source
+    description: >
+      task-archive derives report.yaml process from artifact presence and handoff meta
+      under current-task/, not from status.json history; each entry remains step plus
+      one-line summary; other report fields unchanged; story copy still from artifacts.story.
+  - id: legacy-migration
+    description: >
+      On next sheep-status write, in-flight worktrees emit the simplified shape, preserve
+      essential routing fields and artifact pointers, and do not copy verbose history forward.
+  - id: docs-alignment
+    description: >
+      status-format.md and status-read.md describe the same canonical fields, gates, and
+      optional-or-absent history; review_validation is the sole review gate pointer;
+      status-format example reflects the simplified schema.
+  - id: scaffold-alignment
+    description: >
+      create-worktree scaffold and status.example.json match the simplified schema shape.
+  - id: dogfood-worktree
+    description: >
+      This task's worktree uses the simplified schema through spec, subtasks, and execute
+      updates without breaking documented readers or archive process generation.
+
+scope:
+  in:
+    - Per-task status.json schema simplification
+    - current-task-update skill and status-format.md / status-read.md alignment
+    - create-worktree scaffold and status.example.json
+    - task-archive process sourcing from artifacts
+    - Legacy status migration on next sheep-status write
+    - Dogfood verification in status-json-yagni worktree
+    - Consumer alignment — nicki.md, sheep-spec.md, hook-contract, routing.yaml gates
+    - docs/NICKI.md and docs/tasks.md status field references
+  out:
+    - check-gate.py implementation
+    - New npm or Python dependencies
+    - Application project code under managed repos
+    - global-status.json unless a field directly duplicates per-task status
+
+constraints:
+  - no-commit
+  - no-new-deps
+
+acceptance:
+  - Nicki and sheep routing gates work with simplified status (describe, spec, review).
+  - Duplicate pointers and ceremony meta removed; single schema identifier remains.
+  - History is omitted or reduced per documented chosen shape; no verbose event append.
+  - task.original is short after describe; full intent lives in story.md.
+  - task-archive produces report.yaml process without reading status history[].
+  - status-format.md, status-read.md, scaffold, and example JSON agree on canonical shape.
+  - status-json-yagni worktree status.json uses simplified schema through pipeline steps.
+  - No documented status-read consumer breaks.
+
+assumptions:
+  - Priority when goals conflict is routing and gates first, then doc alignment, then byte trimming.
+  - History shape choice (omit, completed_steps, or last_event) is made during implementation and documented in current-task-update skill.
+  - Harness verification may stop after subtasks or execute without integrate.
+  - check-gate.py enforcement remains deferred to a future task.
+
+open_questions: []

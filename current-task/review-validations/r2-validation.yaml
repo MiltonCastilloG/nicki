@@ -1,0 +1,19 @@
+meta:
+  worktree: nicki-status-json-yagni
+  generated_by: validation
+  review: current-task/reviews/status-json-yagni.yaml
+decision: valid
+valid_findings: []
+deferred_findings:
+  - id: d1
+    source: "[scope] sheep-spec.md disk-inputs table still says task.story (gate uses artifacts.story); docs/NICKI.md describe row says task.story — non-blocking terminology drift in supplementary tables."
+    prefix: scope
+    reason: Supplementary consumer doc tables use legacy task.story label; routing gates and status-read use artifacts.story correctly.
+discarded_findings: []
+next_steps: []
+review_inputs: []
+readiness:
+  status: ready_for_acceptance
+  recommended_next_step: acceptance
+  blockers: []
+summary: Second-pass review approved. r1 completed_steps placement fix verified; v2 schema aligned across format docs, scaffold, example, writers, and consumers. One deferred scope note on stale task.story labels in supplementary tables.
