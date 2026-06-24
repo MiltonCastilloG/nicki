@@ -1,0 +1,33 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+
+task:
+  slug: archive-tail-test
+  title: Archive tail workflow review test
+  original: archive tail workflow review test
+  type: chore
+  branch: chore/archive-tail-test
+
+story: gitignore current-task · sheep-archive · sync→archive→sync→integrate→close
+
+outcome:
+  status: pending_integrate
+  target: main
+  feature_branch: chore/archive-tail-test
+  sync_handoff: current-task/syncs/archive-tail-test.yaml
+
+process:
+  - step: spec
+    summary: Six requirements for archive tail workflow.
+  - step: review
+    summary: ready_for_acceptance — static review approved.
+  - step: sync
+    summary: First sync committed workflow changes; merged main; current-task excluded.
+
+decisions: []
+
+open_questions: []
+
+suggestions: []
