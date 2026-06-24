@@ -1,24 +1,106 @@
 {
-  "meta": { "schema": "task-status.v2" },
+  "version": 1,
+  "meta": {
+    "schema": "task-status.v1",
+    "generated_by": "create-worktree.py",
+    "updated_by": "status-update"
+  },
   "task": {
-    "id": "2",
-    "slug": "status-json-yagni",
+    "id": "nicki:6",
+    "slug": "wire-sheep-start",
     "project": "nicki",
-    "original": "status-json-yagni",
+    "title": "P1-5 — Wire sheep-start to create-worktree.py",
+    "original": "P1-5: Wire sheep-start to create-worktree.py — replace start-worktrees.sh call path in sheep-start; keep register-global-status flow; retire start-worktrees.sh from the agent path.",
+    "story_artifact": "current-task/story.md",
     "type": "chore",
     "current_step": "acceptance",
     "next_step": "sync",
-    "completed_steps": ["start", "describe", "spec", "subtasks", "execute", "review", "review", "execute", "review", "acceptance"]
+    "last_completed_step": "acceptance"
   },
   "scope": {
-    "worktree_path": "worktrees/nicki-status-json-yagni"
+    "worktree": "nicki-wire-sheep-start",
+    "worktree_path": "worktrees/nicki-wire-sheep-start"
   },
   "artifacts": {
+    "status": "current-task/status.json",
     "story": "current-task/story.md",
-    "spec": "current-task/specs/status-json-yagni.yaml",
-    "subtasks": "current-task/subtasks/status-json-yagni.md",
-    "execution": "current-task/executions/status-json-yagni.yaml",
-    "review_validation": "current-task/review-validations/r3-validation.yaml"
+    "spec": "current-task/specs/wire-sheep-start.yaml",
+    "subtasks": "current-task/subtasks/wire-sheep-start.md",
+    "execution": "current-task/executions/wire-sheep-start.yaml",
+    "review": "current-task/reviews/wire-sheep-start.yaml",
+    "review_validation": "current-task/review-validations/r1-validation.yaml"
   },
-  "open_questions": []
+  "constraints": [
+    "no-commit",
+    "no-new-deps"
+  ],
+  "open_questions": [],
+  "history": [
+    {
+      "step": "start",
+      "status": "complete",
+      "artifact": "current-task/status.json",
+      "summary": "Worktree created via create-worktree.py."
+    },
+    {
+      "step": "start",
+      "status": "complete",
+      "artifact": "current-task/status.json",
+      "summary": "Worktree created on chore/wire-sheep-start via create-worktree.py; register nicki:6 if not already in global-status.json."
+    },
+    {
+      "step": "describe",
+      "status": "draft",
+      "artifact": null,
+      "summary": "P1-5 — Wire sheep-start to create-worktree.py (chore, YAGNI). Intent: align sheep-start with start-task skill and create-worktree.py; retire start-worktrees.sh from agent path only. Assumption (confirm on approve): registration stays in create-worktree flow. Draft Gherkin: Feature with Background and 4 scenarios (nicki self-task, managed-project, retire start-worktrees.sh from agent path, existing worktree not overwritten). Story not written — awaiting user approval."
+    },
+    {
+      "step": "describe",
+      "status": "complete",
+      "artifact": "current-task/story.md",
+      "summary": "Approved Gherkin story written — P1-5 wires sheep-start to create-worktree.py per start-task/SKILL.md, keeps registration via create-worktree.py, retires start-worktrees.sh from agent path only; four scenarios (nicki self-task, managed project, agent-path retirement, no overwrite)."
+    },
+    {
+      "step": "spec",
+      "status": "complete",
+      "artifact": "current-task/specs/wire-sheep-start.yaml",
+      "summary": "Spec defines minimal sheep-start wiring to create-worktree.py per start-task/SKILL.md: one script invocation per work item from workspace root, structured JSON handoff, global-status registration via existing create-worktree flow, start-worktrees.sh retired from agent path only. Out of scope: delete shell script, change create-worktree.py, permissions.json, check-gate. Seven requirements, no open questions."
+    },
+    {
+      "step": "subtasks",
+      "status": "failed",
+      "artifact": null,
+      "summary": "Sheep-subtask reported complete with artifact current-task/subtasks/wire-sheep-start.md, but file missing on disk (subtasks/ contains only unrelated task files). Prior session disk write likely failed; twelve-line OpenSpec checklist not persisted."
+    },
+    {
+      "step": "subtasks",
+      "status": "complete",
+      "artifact": "current-task/subtasks/wire-sheep-start.md",
+      "summary": "Twelve-line OpenSpec checklist written and verified on disk — sheep-start.md wiring to create-worktree.py per start-task skill, legacy shell path retired from agent instructions, JSON handoff aligned, six verification lines for acceptance."
+    },
+    {
+      "step": "execute",
+      "status": "complete",
+      "artifact": "current-task/executions/wire-sheep-start.yaml",
+      "summary": "sheep-start.md now defers classification to start-task/SKILL.md, invokes create-worktree.py per work item (not start-worktrees.sh), maps JSON stdout to sheep-status handoff, and surfaces WORKFLOW.md on failure; parallel register-global-status.sh removed. Verified nicki self-task creation, managed dry-run path layout, handoff fields, and duplicate guard."
+    },
+    {
+      "step": "review",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r1-validation.yaml",
+      "summary": "approved: true; readiness.status: ready_for_acceptance. sheep-start.md routes worktree creation through create-worktree.py; legacy start-worktrees.sh and parallel register-global-status.sh removed. Nicki self-task E2E verified (worktrees/nicki-review-wire-self). Managed layout corroborated via dry-run and existing psychic-lemon worktree. Test worktree nicki:7 left for cleanup. Disk gap: current-task/reviews/wire-sheep-start.yaml missing; r1-validation.yaml on disk is stale code-workspace-sync content."
+    },
+    {
+      "step": "review",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r1-validation.yaml",
+      "summary": "approved: true; readiness.status: ready_for_acceptance. sheep-start.md routes through create-worktree.py; legacy shell paths removed. E2E: nicki-review-wire-self (nicki:7) live; managed layout via dry-run + psychic-lemon. Test worktree nicki:7 left for operator cleanup. Artifacts verified on disk."
+    },
+    {
+      "step": "acceptance",
+      "status": "complete",
+      "artifact": "current-task/review-validations/r1-validation.yaml",
+      "summary": "User accepted at ready_for_acceptance; explicit GO for sync through close."
+    }
+  ]
 }

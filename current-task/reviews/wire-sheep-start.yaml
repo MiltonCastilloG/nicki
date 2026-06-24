@@ -1,0 +1,12 @@
+approved: true
+content: |
+  All spec requirements met via sheep-start agent rewiring to create-worktree.py.
+  invoke-create-worktree, structured-handoff, retire-legacy-shell-path, and preserve-registration-flow satisfied in .cursor/agents/sheep-start.md — start-worktrees.sh and register-global-status.sh removed from agent path; unified worktrees/<project>-<slug> layout and stdout field mapping documented.
+  nicki-self-task-worktree: review E2E created worktrees/nicki-review-wire-self with scaffolded current-task/status.json and global-status entry nicki:7; stdout includes worktree_path, status_path, branch, task_id, registry_key.
+  managed-project-worktree: execution dry-run for castlemill-landing confirms target path layout; corroborated by existing worktrees/project-psychic-lemon-project-init (project-psychic-lemon:1) in global-status.json.
+  no-overwrite-existing: execution duplicate exec-verify-self exited 1 without overwrite; sheep-start failure guidance documents stderr JSON and WORKFLOW.md.
+  All 12 subtasks substantiated; grep shows no start-worktrees.sh on sheep-start agent path.
+  E2E verification (user request for 2 test worktrees): (1) nicki self-task live run — worktrees/nicki-review-wire-self; (2) managed layout — dry-run castlemill-landing plus existing project-psychic-lemon-project-init worktree (no second live managed clone created in review).
+  Verify reruns: create-worktree.py nicki/review-wire-self (exit 0), JSON handoff fields present.
+  [scope] Uncommitted changes to current-task/status.json, current-task/story.md, nicki.code-workspace outside spec scope.in.
+  Review test worktree worktrees/nicki-review-wire-self (nicki:7) left on disk for operator cleanup.
