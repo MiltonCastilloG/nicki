@@ -6,9 +6,9 @@ disable-model-invocation: true
 
 # Status update (current-task-update)
 
-Update per-task workflow state from Nicki summary. Invoked by **sheep-status**. Writes exactly one file: `current-task/status.json` under the task worktree.
+Update per-task workflow state from Nicki summary. Writes exactly one file: `current-task/status.json` under the task worktree.
 
-**Never write `global-status.json`.** Registry is sheep-start / sheep-close only.
+**Never write `global-status.json`.** Registry write boundary: [global-status-format.md](global-status-format.md).
 
 Schemas:
 

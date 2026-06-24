@@ -23,9 +23,10 @@ Agent spawns use `sheep-*` names; skills keep legacy folder names (`subtask-make
 | **sheep-subtask** | 3 | **185** | **3** | Spec → ordered checklist; terse body. |
 | **sheep-execute** | 3 | **368** | **5** | Only code-implementing sheep — edits, shell, strict scope. |
 | **sheep-review** | 4 | 409 | **4** | Verify diff; review + `validation-format.md` in one spawn. |
-| **sheep-sync** | 3 | 333 | **3** | Commit, merge `main` into feature, push feature branch. |
+| **sheep-sync** | 3 | 333 | **3** | Commit, merge `main` into feature, push feature branch (runs twice in tail). |
+| **sheep-archive** | 2 | **120** | **2** | Write `docs/archive/<slug>/` via task-archive; no git. |
 | **sheep-integrate** | 3 | 320 | **3** | Merge feature into `main`, push `main`. |
-| **sheep-close** | 3 | **185** | **3** | Archive (report + story), erase spec/subtasks, unregister, delete worktree. |
+| **sheep-close** | 2 | **120** | **2** | Unregister `global-status.json`, delete worktree (teardown only). |
 | **sheep-status** | 3 | **372** | **3** | Writes only `status.json`; schema-heavy. |
 
 ### Skill-only (not a separate spawn)
@@ -33,7 +34,7 @@ Agent spawns use `sheep-*` names; skills keep legacy folder names (`subtask-make
 | Skill | Lines | Notes |
 |-------|-------|-------|
 | `validation/validation-format.md` | 77 | Loaded by `sheep-review` — readiness + out-of-scope next-steps |
-| `task-archive/archive-format.md` | 106 | Loaded via task-archive/SKILL.md in close flow |
+| `task-archive/archive-format.md` | 106 | Loaded by `sheep-archive` via task-archive/SKILL.md |
 
 ---
 
@@ -42,7 +43,7 @@ Agent spawns use `sheep-*` names; skills keep legacy folder names (`subtask-make
 ```
 5 █    sheep-execute
 4 █    sheep-review
-3 ██████ nicki, sheep-start, sheep-spec, sheep-subtask, sheep-sync, sheep-integrate, sheep-close, sheep-status
+3 ██████ nicki, sheep-start, sheep-spec, sheep-subtask, sheep-sync, sheep-archive, sheep-integrate, sheep-close, sheep-status
 ```
 
 ---
@@ -106,17 +107,18 @@ Net vs triage era: **~1,132 fewer lines**, one fewer spawn. Net vs pre-triage re
 
 | | Before | After |
 |---|--------|-------|
-| Agents | commit, push, merge, publish | sync, integrate |
-| Steps | 4 | 2 |
-| Doc lines (approx.) | ~996 | ~662 |
-| User confirms | 4 | 2 |
+| Agents | commit, push, merge, publish | sync, archive, sync, integrate, close |
+| Steps | 4 | 5 (sync runs twice) |
+| Archive | inside close | `sheep-archive` before second sync |
+| Doc lines (approx.) | ~996 | ~700 |
+| User confirms | 4 | 4 (`sync`, `archive`, `integrate`, `close`) |
 
 ---
 
 ## Pipeline
 
 ```
-start → describe → spec → subtasks → execute → review → acceptance → sync → integrate → close
+start → describe → spec → subtasks → execute → review → acceptance → sync → archive → sync → integrate → close
 ```
 
 Nicki-only: `describe`, `acceptance`, `fix`. Validation (readiness + next-steps) runs inside `review`.
@@ -128,7 +130,8 @@ Nicki-only: `describe`, `acceptance`, `fix`. Validation (readiness + next-steps)
 | Agent | Lines | Why |
 |-------|------:|-----|
 | **sheep-review** | 409 | Reference implementation; validation merged |
-| **sheep-close** | 185 | Archive = `docs/archive/<slug>/` (report.yaml, report.md, story.md) |
+| **sheep-close** | 120 | Teardown only — unregister + delete worktree |
+| **sheep-archive** | 120 | task-archive write; commit/push deferred to second sync |
 | **sheep-start** | 175 | Single SKILL; agent-only registry script |
 | **sheep-sync** / **sheep-integrate** | 333 / 320 | `conflict-resolution` intentionally duplicated |
 
@@ -138,9 +141,9 @@ Nicki-only: `describe`, `acceptance`, `fix`. Validation (readiness + next-steps)
 
 1. **Peaks** — `sheep-execute` (implement), `sheep-review` (verify + validate).
 2. **Load list, not folder size** — writer vs reader docs; disk artifact is the contract.
-3. **Git tail** — sync + integrate halved confirms and agents.
+3. **Git tail** — sync → archive → sync → integrate → close; archive on feature before integrate.
 4. **No out-of-scope sheep** — deferred `[scope]` handled in validation step inside review.
-5. **Close archive** — three files under `docs/archive/<slug>/`; spec and subtasks erased, not copied.
+5. **Archive** — `sheep-archive` writes `docs/archive/<slug>/`; second sync publishes; integrate lands on `main`.
 6. **Cumulative trim** — subtask −231, nicki −166, execute/spec/status −67 combined.
 
 ---

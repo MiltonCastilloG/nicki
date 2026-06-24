@@ -84,9 +84,20 @@ steps:
     nicki_only: false
     artifact_key: sync
     expected_artifact: current-task/syncs/<slug>.yaml
-    default_next_step: integrate
+    default_next_step: archive
     gate: acceptance recorded or user override; readiness not fix_required or blocked
     user_confirm: local commit, merge main into feature branch, push feature branch
+    prompt: worktree path, task id
+    # Nicki: when artifacts.archive set, sync next_step is integrate (second pass)
+
+  archive:
+    sheep: sheep-archive
+    nicki_only: false
+    artifact_key: archive
+    expected_artifact: docs/archive/<slug>/report.yaml
+    default_next_step: sync
+    gate: sync artifact exists; pre_push_merge merged on sync handoff
+    user_confirm: write task archive to docs/archive
     prompt: worktree path, task id
 
   integrate:
@@ -95,18 +106,18 @@ steps:
     artifact_key: integrate
     expected_artifact: current-task/integrates/<slug>.yaml
     default_next_step: close
-    gate: sync artifact exists; user confirmed merge into main and push main
+    gate: sync artifact exists; archive artifact exists; user confirmed merge into main and push main
     user_confirm: merge feature into main and push main to remote
     prompt: worktree path, task id
 
   close:
     sheep: sheep-close
     nicki_only: false
-    artifact_key: archive
-    expected_artifact: docs/archive/<slug>/report.yaml
+    artifact_key: null
+    expected_artifact: null
     default_next_step: done
-    gate: integrate recorded or tail override; user confirmed close
-    user_confirm: archive worktree and delete scope
+    gate: integrate recorded; user confirmed close
+    user_confirm: delete worktree
     prompt: worktree path, task id
     skip_status_update: true
 

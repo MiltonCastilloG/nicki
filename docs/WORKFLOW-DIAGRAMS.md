@@ -20,6 +20,7 @@ flowchart TD
     SExec[sheep-execute]
     SRev[sheep-review]
     SSync[sheep-sync]
+    SArch[sheep-archive]
     Sint[sheep-integrate]
     SClose[sheep-close]
     SStat[sheep-status]
@@ -48,6 +49,11 @@ flowchart TD
     Nicki -->|sync| SSync
     SSync --> SStat
 
+    Nicki -->|archive| SArch
+    SArch --> SStat
+
+    Nicki -->|sync| SSync
+
     Nicki -->|integrate| Sint
     Sint --> SStat
 
@@ -73,14 +79,15 @@ flowchart TD
 | `review` | sheep-review | readiness-driven |
 | `acceptance` | Nicki checkpoint | `sync` |
 | `fix` | Nicki → re-route | `execute` |
-| `sync` | sheep-sync | `integrate` |
+| `sync` | sheep-sync | `archive` (first pass); `integrate` when `artifacts.archive` set |
+| `archive` | sheep-archive | `sync` |
 | `integrate` | sheep-integrate | `close` |
 | `close` | sheep-close | `done` |
 
 ### Rules Nicki enforces
 
 - After every sheep **except** `sheep-close`, Nicki auto-sends `sheep-status`.
-- `sync`, `integrate`, and `close` need explicit user confirmation.
+- `sync`, `archive`, `integrate`, and `close` need explicit user confirmation.
 - Post-review routing from validation YAML (not review prose):
   - `ready_for_acceptance` → acceptance (sync blocked until user accepts)
   - `fix_required` → execute (`## Fix` appended to subtasks)
@@ -219,8 +226,9 @@ flowchart TB
 | **sheep-execute** | `execute-plan` | `current-task/executions/<slug>.yaml` + checklist ticks |
 | **sheep-review** | `review-execution`, `validation` | review + validation YAML, optional next-steps |
 | **sheep-sync** | `sync-task`, `conflict-resolution` | `current-task/syncs/<slug>.yaml` |
+| **sheep-archive** | `task-archive` | `docs/archive/<slug>/` |
 | **sheep-integrate** | `integrate-task`, `conflict-resolution` | `current-task/integrates/<slug>.yaml` |
-| **sheep-close** | `close-task` → `task-archive` + `close-scope` | `docs/archive/<slug>/`; unregister; delete worktree |
+| **sheep-close** | `close-task` → `close-scope` | unregister; delete worktree |
 | **sheep-status** | `current-task-update` | `current-task/status.json` only |
 
 ### Skills outside the pipeline diagram

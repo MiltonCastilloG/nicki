@@ -233,7 +233,7 @@ When Cursor opens `projects/foo/worktrees/bar`, the workspace root is the worktr
 ## Canonical workflow (unchanged)
 
 ```
-start → describe → spec → subtasks → execute → review → acceptance → sync → integrate → close
+start → describe → spec → subtasks → execute → review → acceptance → sync → archive → sync → integrate → close
 ```
 
 With automatic `sheep-status` after each sheep except close. Validation (readiness + next-steps) runs inside `sheep-review`.

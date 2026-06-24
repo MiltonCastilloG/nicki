@@ -1,12 +1,12 @@
 ---
 name: close-scope
-description: "Close path resolution, global-status unregister, worktree teardown. close-task only — after report.yaml, report.md, story.md exist."
+description: "Close path resolution, global-status unregister, worktree teardown. close-task only — after integrate."
 disable-model-invocation: true
 ---
 
 # Close Scope
 
-Paths + registry teardown + worktree delete. Run **after** [task-archive](../task-archive/SKILL.md) writes `report.yaml`, `report.md`, and `story.md`.
+Paths + registry teardown + worktree delete. Run **after** integrate (archive already on `main`).
 
 ## 1. Resolve paths
 
@@ -24,7 +24,7 @@ Missing → ask. Stop.
 
 ## 2. Unregister
 
-**Only sheep-close** mutates `global-status.json`. Schema: [global-status-format.md](../current-task-update/global-status-format.md).
+**Only close-scope unregister** mutates `global-status.json`. Schema: [global-status-format.md](../current-task-update/global-status-format.md).
 
 Prereq: `docs/archive/<slug>/report.yaml`, `report.md`, and `story.md` exist.
 
@@ -36,7 +36,7 @@ Prereq: `docs/archive/<slug>/report.yaml`, `report.md`, and `story.md` exist.
 
 ## 3. Teardown
 
-Prereq: archive written + unregister done (or skip). Nicki confirm: archive and delete worktree.
+Prereq: integrate done + unregister done (or skip). Nicki confirm: delete worktree.
 
 Capture the task branch from `git worktree list` **before** delete (needed when the folder is already gone but registration is `prunable`).
 

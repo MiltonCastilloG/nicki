@@ -4,7 +4,7 @@ Per-task workflow state inside the active worktree. **JSON only.**
 
 Path: `current-task/status.json` relative to task worktree root.
 
-**Write boundary:** only `sheep-status`. Nicki and other sheep read via [status-read.md](status-read.md).
+**Write boundary:** only `current-task-update`. Readers use [status-read.md](status-read.md).
 
 Handoff YAML/Markdown bodies stay separate; status holds pointers and step position only.
 
@@ -38,7 +38,7 @@ Handoff YAML/Markdown bodies stay separate; status holds pointers and step posit
 | `next_step` | Yes | Next step Nicki should propose |
 | `completed_steps` | No | Step names completed so far (e.g. `["start", "describe", "spec"]`) |
 
-Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `integrate`, `close`, `done`.
+Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`.
 
 ## `scope`
 

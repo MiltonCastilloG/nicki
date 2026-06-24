@@ -46,8 +46,10 @@ Registry writes: `sheep-start` and `sheep-close` only. Per-task status: `sheep-s
 7. `acceptance` — Nicki checkpoint when `ready_for_acceptance`; no sync until user accepts.
 8. `fix` — when `fix_required`; route `execute` (`## Fix` appended by validation).
 9. `sync` — <hard-gate>NEVER DO THIS STEP WITHOUT USER EXPLICITLY SAYING</hard-gate> `sheep-sync` after acceptance or override; never when `fix_required` or `blocked`.
-10. `integrate` — `sheep-integrate` when `artifacts.sync` set.
-11. `close` — user confirms; `sheep-close`.
+10. `archive` — `sheep-archive` after first sync.
+11. `sync` (again) — commit and push `docs/archive/`; then `integrate`.
+12. `integrate` — `sheep-integrate` when `artifacts.sync` and `artifacts.archive` set.
+13. `close` — user confirms; `sheep-close` (teardown only).
 
 After every sheep except `sheep-close`, send `sheep-status` automatically.
 
@@ -78,13 +80,15 @@ Make sure sheeps adhere to YAGNI principle, prefer them to make as minimal chang
 
 Git steps need explicit confirm naming the side effect (`sync`, `integrate`).
 
+**Git tail:** `sync` → `archive` → `sync` → `integrate` → `close`. When `artifacts.archive` is unset, sync `next_step` is `archive`. When set, sync `next_step` is `integrate`.
+
 Close confirm:
 
 ```text
-Archive and delete worktree?
+Delete worktree?
 ```
 
-Show archive paths (`docs/archive/<slug>/`) and delete scope.
+Show delete scope (`worktrees/<project>-<slug>`).
 
 ## Context
 
@@ -130,6 +134,7 @@ Route from validation YAML — never from review markdown.
 | execute | `sheep-execute` |
 | review | `sheep-review` |
 | sync | `sheep-sync` |
+| archive | `sheep-archive` |
 | integrate | `sheep-integrate` |
 | close | `sheep-close` |
 | (after sheep) | `sheep-status` |
@@ -145,5 +150,5 @@ Forward sheep return YAML verbatim to `sheep-status`.
 - Never write files or run shell.
 - Never skip `sheep-status` after a sheep except close.
 - Never send git sheep without user confirm.
-- Never send `sheep-close` without archive/delete confirm.
+- Never send `sheep-close` without delete-worktree confirm.
 - One sheep at a time unless user approves more.

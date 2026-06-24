@@ -28,13 +28,13 @@ Pipeline leaf skills: `story-maker`, `spec-maker`, `subtask-maker`, `execute-pla
 
 These skills intentionally own task/workflow state or lifecycle:
 
-- `current-task-update/` — per-task `status.json` (sheep: `sheep-status`)
-- `start-task/` skill — worktree creation; **sheep-start** calls `register-global-status.sh` (registry write)
-- `close-task/`, `close-scope/`, `task-archive/` — archive, unregister, teardown (sheep: `sheep-close`)
+- `current-task-update/` — per-task `status.json`
+- `start-task/` — worktree creation; `register-global-status.sh` on register
+- `close-task/`, `close-scope/`, `task-archive/` — archive, unregister, teardown
 - `hook-contract/` — resolve task id → status for hooks
 
 ## Shared utilities
 
 - `caveman/` — markdown voice (not workflow)
-- `conflict-resolution/` — merge conflict protocol (used by sheep-sync and sheep-integrate)
-- `validation/` — review → validation YAML, readiness, and next-steps (used by sheep-review)
+- `conflict-resolution/` — merge conflict protocol for sync and integrate
+- `validation/` — review → validation YAML, readiness, and next-steps
