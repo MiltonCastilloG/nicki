@@ -1,0 +1,58 @@
+meta:
+  schema: task-archive.v1
+  generated_by: close-task
+  source_context: worktrees/nicki-wire-sheep-start/current-task/status.json
+  tail_override: null
+
+task:
+  slug: wire-sheep-start
+  title: P1-5 — Wire sheep-start to create-worktree.py
+  original: |
+    P1-5: Wire sheep-start to create-worktree.py — replace start-worktrees.sh call path in sheep-start;
+    keep register-global-status flow; retire start-worktrees.sh from the agent path.
+  type: chore
+  branch: chore/wire-sheep-start
+
+story: create-worktree.py · start-task skill · retire start-worktrees.sh agent path · JSON handoff · global-status via create-worktree
+
+outcome:
+  status: merged
+  target: main
+  pushed_branch: main
+  merge_sha: 94090891731477f4dc3c0b831addc493f81eda73
+  final_artifact: current-task/integrates/wire-sheep-start.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story — four scenarios for nicki self-task, managed project, agent-path retirement, no overwrite.
+  - step: spec
+    summary: Seven requirements; create-worktree.py per start-task skill; legacy shell retired from agent path only.
+  - step: subtasks
+    summary: Twelve-line OpenSpec checklist wiring sheep-start.md to create-worktree.py and verification lines.
+  - step: execute
+    summary: sheep-start.md defers to start-task skill, invokes create-worktree.py, maps JSON stdout handoff; legacy paths removed.
+  - step: review
+    summary: Approved ready_for_acceptance; E2E via nicki-review-wire-self; test worktree nicki:7 left for operator cleanup.
+  - step: acceptance
+    summary: User accepted at ready_for_acceptance; explicit GO for sync through close.
+  - step: sync
+    summary: Committed c4ae8e0 on chore/wire-sheep-start; merged origin/main; pushed feature branch.
+  - step: integrate
+    summary: Merged chore/wire-sheep-start into main at 9409089; resolved current-task conflicts (theirs); pushed origin/main.
+
+decisions:
+  - Integrate merge conflicts on current-task files resolved per user — keep incoming feature branch (theirs); archive supersedes main copy.
+  - start-worktrees.sh retired from sheep-start agent path only; script remains in repo for non-agent use.
+
+open_questions: []
+
+suggestions:
+  - area: orchestration
+    suggestion: Clean up review E2E worktree nicki-review-wire-self (nicki:7) separately after close; not in wire-sheep-start scope.
+    evidence: "review validation summary; operator OUT OF SCOPE note in close prompt."
+  - area: execute
+    suggestion: Remove nested verification worktrees (e.g. nicki-exec-verify-self) before integrate when they live inside the task worktree.
+    evidence: "execution unplanned path worktrees/nicki-exec-verify-self/ inside task worktree."
+  - area: subtasking
+    suggestion: Verify subtask file on disk before marking subtasks step complete in status history.
+    evidence: "status history subtasks failed when wire-sheep-start.md missing on first attempt."

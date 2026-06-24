@@ -5,14 +5,6 @@
       "path": "."
     },
     {
-      "name": "nicki-review-wire-self",
-      "path": "worktrees/nicki-review-wire-self"
-    },
-    {
-      "name": "nicki-wire-sheep-start",
-      "path": "worktrees/nicki-wire-sheep-start"
-    },
-    {
       "name": "project-psychic-lemon-project-init",
       "path": "worktrees/project-psychic-lemon-project-init"
     }

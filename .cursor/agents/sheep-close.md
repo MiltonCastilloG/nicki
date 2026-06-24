@@ -36,7 +36,7 @@ Read `.cursor/skills/close-task/SKILL.md`, `.cursor/skills/task-archive/SKILL.md
 1. close-scope §1 — resolve paths
 2. Tail gate — integrate handoff or user override
 3. task-archive — write archive; copy story; erase spec and subtasks
-4. close-scope §2–3 — unregister then `rm -rf` worktree
+4. close-scope §2–3 — unregister then `teardown-worktree.sh` (rm, `git worktree prune`, `git branch -D`)
 5. Report archive paths and teardown result
 
 No `sheep-status` after close — worktree gone.

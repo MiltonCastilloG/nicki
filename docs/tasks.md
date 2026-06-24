@@ -28,7 +28,6 @@ When goals **align**, do all three — e.g. add `check-gate.py` and trim duplica
 
 | # | Task | Notes |
 |---|------|-------|
-| 5 | Wire `sheep-start` to new script | Replace/extend `start-worktrees.sh` call path in `sheep-start.md`; use `create-worktree.py` + structured handoff. Keep register flow. |
 | 16 | **Context handling** | `sessionStart` Nicki should only read or the bootstrap hook should read the state files writting into current task. That's all the context it need in each step, shouldn't be loading the whole chat in each step, that's bad harness. |
 
 **Deferred suggestions (non-blocking):**

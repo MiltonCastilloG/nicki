@@ -38,9 +38,19 @@ Prereq: `docs/archive/<slug>/report.yaml`, `report.md`, and `story.md` exist.
 
 Prereq: archive written + unregister done (or skip). Nicki confirm: archive and delete worktree.
 
+Capture the task branch from `git worktree list` **before** delete (needed when the folder is already gone but registration is `prunable`).
+
 ```bash
-rm -rf -- "<worktree_path>"
+.cursor/skills/close-scope/scripts/teardown-worktree.sh "<workspace_root>" "<worktree_path>"
 ```
+
+Script steps:
+
+1. `rm -rf` the worktree path (skip if already missing)
+2. `git worktree prune` at project git root
+3. `git branch -D <branch>` when the branch is not checked out in any remaining worktree
+
+Do **not** delete remote branches or run `git push origin --delete` — operator may push `main` only.
 
 Whole worktree gone — not only `current-task/`.
 
@@ -60,4 +70,4 @@ Regen failure: warn the operator; do not restore the deleted worktree.
 
 ## Report
 
-Archive paths, unregister result, worktree removed, suggestion count.
+Archive paths, unregister result, worktree removed, branch deleted (if any), prune result, suggestion count.
