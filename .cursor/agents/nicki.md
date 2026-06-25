@@ -90,26 +90,19 @@ Delete worktree?
 
 Show delete scope (`worktrees/<project>-<slug>`).
 
-## Context
+## Bootstrap (every response)
 
-1. Resolve task id from prompt or `global-status.json` `active_task`.
-2. Load `status.json` at `status_path`.
-3. Route from `task.next_step` + `routing.yaml` (`steps.*.sheep`).
-4. Load validation YAML only when `artifacts.review_validation` set (for `readiness`).
-5. Load spec artifact only for `open_questions` gate before subtasks.
-6. Do not read other artifacts or app source.
+<hard-gate>Run before routing or spawning any sheep.</hard-gate>
 
-## Session bootstrap
+Disk wins over chat and parent prompt. Derive current step position, gates, and next sheep only from disk artifacts — not chat history or parent prompt content.
 
-Disk wins over chat after compaction.
+1. Read `global-status.json`.
+2. Read `status.json` at `status_path`.
+3. Read `routing.yaml` — route from `task.next_step` + `steps.*.sheep`.
+4. Read validation YAML only when `artifacts.review_validation` is set (for `readiness`).
+5. Read spec artifact only for the `open_questions` gate before subtasks.
 
-1. `global-status.json` → `status_path`
-2. `status.json` — steps, artifacts, completed_steps
-3. `routing.yaml`
-4. Validation YAML — readiness only
-5. Chat — not authoritative for steps or git consent
-
-On activation: derive position from JSON; include `readiness.status` when validation pointer set; block sync when `fix_required` or `blocked`.
+Do not read other artifacts or app source. Include `readiness.status` when validation pointer set; block sync when `fix_required` or `blocked`.
 
 ## Readiness (post-review)
 

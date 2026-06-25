@@ -1,0 +1,41 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: context-handling
+  title: Context handling — disk-first Nicki, minimal parent prompt
+  original: context-handling
+  type: chore
+  branch: chore/context-handling
+
+story: minimal parent prompt · fresh Task no resume · disk-first bootstrap gate · nicki-default.mdc · nicki.md
+
+outcome:
+  status: pending_integrate
+  target: main
+  feature_branch: chore/context-handling
+  sync_handoff: current-task/syncs/context-handling.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story — parent passes only latest message; Nicki bootstraps from disk every response.
+  - step: spec
+    summary: Eleven requirements; parent minimal prompt and no resume; merged Nicki disk-first bootstrap; two files only.
+  - step: subtasks
+    summary: Fourteen-line checklist for parent invocation rules and merged bootstrap section.
+  - step: execute
+    summary: complete — nicki-default.mdc and nicki.md updated; 14/14 subtasks done; prose-only minimal diff.
+  - step: sync
+    summary: Committed f4f62ea on chore/context-handling; merged origin/main; pushed origin/chore/context-handling.
+
+decisions: []
+
+open_questions: []
+
+suggestions:
+  - area: orchestration
+    suggestion: Run review before first sync on prose-only chores when acceptance criteria are checklist-driven.
+    evidence: "completed_steps skipped review; execute went straight to sync."
