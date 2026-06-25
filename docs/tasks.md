@@ -95,6 +95,7 @@ Only after P1–P2 run clean on a real task. See deletion map in [`investigation
 | P1 | Finalize `nicki-workspace.yaml` schema |
 | P2 | Minimal CLI — `workspace init`, `project clone`, `runtime install`, `doctor` |
 | P3 | Dogfood across managed projects |
+| **17** | **AWS deployment exploration** | All managed projects will deploy on AWS; **how** is TBD. One candidate to explore (not chosen): [Bedrock AgentCore MCP](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/mcp-getting-started.html) / AgentCore Runtime — whether it fits Nicki workflow, app hosting, or something else. Document findings and options; no fixed playbook yet. Tetris **#12** may dogfood once an approach looks worth trying. |
 
 May merge with completed P1 worktree tasks — see [`tasks-done.md`](tasks-done.md). Update PLAN when root `worktrees/` ships.
 
