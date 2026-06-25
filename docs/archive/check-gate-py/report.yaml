@@ -1,0 +1,43 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: check-gate-py
+  title: check-gate.py and permissions
+  original: check-gate.py routing gate and permissions allowlist
+  type: chore
+  branch: chore/check-gate-py
+
+story: check-gate.py · gates package · permissions.json · stdout JSON · all routing steps · git-tail first
+
+outcome:
+  status: pending_integrate
+  target: main
+  feature_branch: chore/check-gate-py
+  sync_handoff: current-task/syncs/check-gate-py.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story — gate script stdout contract, git-tail gates first, permissions allowlist for check-gate and create-worktree.
+  - step: spec
+    summary: Gate script plus permissions deliverables; git-tail gates prioritized; no nicki.md wiring or smoke fixtures.
+  - step: subtasks
+    summary: 22 subtasks — CLI, all routing gates, permissions entries, py_compile and gate output verification.
+  - step: execute
+    summary: complete — check-gate.py with gates.py and gate_utils.py; permissions.json updated; all subtasks done.
+  - step: review
+    summary: ready_for_acceptance — approved; deferred scope note for gate package sibling modules.
+  - step: sync
+    summary: Committed 3a1709d on chore/check-gate-py; merged origin/main; pushed feature branch.
+
+decisions: []
+
+open_questions: []
+
+suggestions:
+  - area: spec
+    suggestion: When the gate script refactors into a package, list supporting modules in scope.in alongside check-gate.py.
+    evidence: "review validation deferred d1 — gates.py and gate_utils.py outside literal single-file scope.in wording."
