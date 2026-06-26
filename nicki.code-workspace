@@ -5,8 +5,12 @@
       "path": "."
     },
     {
-      "name": "project-psychic-lemon-project-init",
-      "path": "worktrees/project-psychic-lemon-project-init"
+      "name": "project-psychic-lemon-backend-scaffold",
+      "path": "worktrees/project-psychic-lemon-backend-scaffold"
+    },
+    {
+      "name": "tetris-clone-frp-game-render-logic-split",
+      "path": "worktrees/tetris-clone-frp-game-render-logic-split"
     }
   ],
   "settings": {
