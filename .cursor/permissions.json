@@ -78,7 +78,7 @@
     "allow_instructions": [
       "Allow Nicki sheep workflow git: status, diff, log, branch (including -D/-d), remote, rev-parse, show-ref, worktree list/add/remove/prune, checkout, pull, fetch, merge (origin/main, --no-ff), add, commit, push (origin, -u origin HEAD, origin main, and SSH git@github.com: URLs).",
       "Allow git -C for managed project repos under projects/ (worktree prune, branch delete, worktree list).",
-      "Allow Nicki start/close Python scripts: create-worktree.py, register-global-status.py, check-gate.py, unregister-global-status.sh; bash variants of start/register scripts; PROJECT= prefixed runs.",
+      "Allow Nicki start/close Python scripts: create-worktree.py, register-global-status.py, check-gate.py (--worktree, --step, optional --user-confirmed and --override), unregister-global-status.sh; bash variants of start/register scripts; PROJECT= prefixed runs.",
       "Allow Nicki close teardown: unregister-global-status.sh and rm -rf -- on worktree paths after user confirmed close.",
       "Allow Nicki sync and integrate git (including SSH push fallback when HTTPS auth fails) after user confirmed the step.",
       "Allow python3 -m py_compile on workflow scripts during review.",

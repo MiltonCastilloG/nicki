@@ -28,7 +28,8 @@ When goals **align**, do all three — e.g. add `check-gate.py` and trim duplica
 
 | # | Task | Notes |
 |---|------|-------|
-| 16 | **Context handling** | `sessionStart` Nicki should only read or the bootstrap hook should read the state files writting into current task. That's all the context it need in each step, shouldn't be loading the whole chat in each step, that's bad harness. |
+| 16 | **Context handling** | Prose disk-first bootstrap shipped (nicki.md + nicki-default.mdc). **Remaining:** scripted reads — see **#18**. |
+| 18 | **Bootstrap script investigation** | **Next after nicki-gate-wiring.** Map how Nicki reads `global-status.json`, `status.json`, `routing.yaml`, validation/spec; design a `check-gate.py`-style sibling so orchestration context comes from script stdout. Follow-up spec: `current-task/next-steps/nicki-bootstrap-script.yaml` (nicki-gate-wiring archive). |
 
 **Deferred suggestions (non-blocking):**
 
@@ -48,7 +49,7 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 | # | Task | Notes |
 |---|------|-------|
 | 7 | `check-gate.py` | `.cursor/skills/nicki/scripts/check-gate.py` — `status.json` + `routing.yaml` (+ validation/spec when needed). Stdout: `allowed`, `sheep`, `reason`, `user_confirm`. All steps; git tail first. |
-| 8 | Nicki **calls** gate script | Add to `nicki.md`: before spawn, run script; on fail show `reason`, do not spawn. **Keep** existing gate prose until script is proven — add, don't delete yet. |
+| 8 | Nicki **calls** gate script | Add to `nicki.md`: before spawn, run script; on fail show `reason`, do not spawn. **Keep** existing gate prose until script is proven — add, don't delete yet. **In progress:** `nicki-gate-wiring` worktree. |
 | 9 | Return YAML validator | `sheep-status` path — validate `sheep_return_contract` before write. |
 | 10 | Smoke fixtures | Fixture `status.json` (+ spec/validation when needed) exercised **through `check-gate.py`** — pass and fail cases. **No separate `smoke-status-v2` script** — v2 shape checks and step gates live here once #7 ships. Optional: extend `create-worktree.py` / `smoke-status-boundary.sh` for scaffold-only asserts. |
 | 11 | Permissions | Allow `python …/check-gate.py` and `create-worktree.py` in `.cursor/permissions.json`. |
