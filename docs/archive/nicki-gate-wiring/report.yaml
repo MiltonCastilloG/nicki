@@ -1,0 +1,46 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: nicki-gate-wiring
+  title: Nicki gate-script wiring
+  original: P2 Nicki gate-script wiring
+  type: chore
+  branch: chore/nicki-gate-wiring
+
+story: check-gate.py · nicki.md spawn wiring · permissions · deny/allow · disk bootstrap complement
+
+outcome:
+  status: pending_integrate
+  target: main
+  feature_branch: chore/nicki-gate-wiring
+  sync_handoff: current-task/syncs/nicki-nicki-gate-wiring.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story — Nicki runs check-gate.py after transition card and confirm; deny blocks spawn; allow spawns from stdout; permissions for gate script.
+  - step: spec
+    summary: Wire Nicki agent instructions for gate-script spawn veto after bootstrap; verify permissions; preserve existing gate prose; gate package tweaks only if needed.
+  - step: subtasks
+    summary: Thirteen subtasks — CLI/permissions verify, nicki.md Safety exception, gate invocation block, spawn/deny/allow wiring, bootstrap complementarity.
+  - step: execute
+    summary: complete — nicki.md gate wiring; permissions and hook smoke updated; gate package unchanged; all subtasks done.
+  - step: review
+    summary: ready_for_acceptance — R2 approved; E2E gate matrix passed; deferred scope note for docs/tasks.md.
+  - step: sync
+    summary: Committed 7ad3839 on chore/nicki-gate-wiring; merged origin/main; pushed feature branch.
+
+decisions: []
+
+open_questions: []
+
+suggestions:
+  - area: execute
+    suggestion: Keep docs/tasks.md backlog edits out of gate-wiring commits — record follow-ups in next-steps YAML instead.
+    evidence: "review validation deferred d1 — docs/tasks.md P1 #16/#18 notes outside spec scope.in."
+  - area: orchestration
+    suggestion: Start nicki-bootstrap-script follow-up after integrate — P1 #18 bootstrap script investigation already filed at current-task/next-steps/nicki-bootstrap-script.yaml.
+    evidence: "validation next_steps id nicki-bootstrap-script; review content references docs/tasks.md."

@@ -3,7 +3,7 @@
     "read": true,
     "write": false,
     "delete": false,
-    "shell": false,
+    "shell": true,
     "grep": false,
     "glob": false,
     "semantic_search": false,
