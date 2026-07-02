@@ -1,0 +1,48 @@
+meta:
+  schema: errors.v1
+  worktree: sheep-fallback
+failures:
+- id: '2026-07-02T14:01:42Z'
+  recorded_at: '2026-07-02T14:01:42Z'
+  script_route: .cursor/skills/nicki/scripts/check-gate.py
+  input:
+    argv:
+    - --worktree
+    - worktrees/nicki-sheep-fallback
+    - --step
+    - acceptance
+    - --smoke-contract-fail
+  expected_output:
+    required_fields:
+    - allowed
+    - sheep
+    - reason
+  actual:
+    exit_code: 1
+    stdout: '{"allowed": false}'
+    stderr: null
+    validation_errors:
+    - 'missing field: sheep'
+    - 'missing field: reason'
+- id: '2026-07-02T14:03:54Z'
+  recorded_at: '2026-07-02T14:03:54Z'
+  script_route: .cursor/skills/nicki/scripts/check-gate.py
+  input:
+    argv:
+    - --worktree
+    - worktrees/nicki-sheep-fallback
+    - --step
+    - acceptance
+    - --smoke-contract-fail
+  expected_output:
+    required_fields:
+    - allowed
+    - sheep
+    - reason
+  actual:
+    exit_code: 1
+    stdout: '{"allowed": false}'
+    stderr: null
+    validation_errors:
+    - 'missing field: sheep'
+    - 'missing field: reason'

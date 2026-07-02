@@ -1,0 +1,38 @@
+meta:
+  schema: errors.v1
+  worktree: worktree
+failures:
+- id: '2026-07-02T13:37:09Z'
+  recorded_at: '2026-07-02T13:37:09Z'
+  script_route: .cursor/skills/nicki/scripts/check-gate.py
+  input:
+    argv:
+    - --worktree
+    - worktrees/nicki-sheep-fallback
+    - --step
+    - execute
+  expected_output:
+    required_fields:
+    - allowed
+    - sheep
+    - reason
+  actual:
+    exit_code: 1
+    stdout: '{"allowed":false}'
+    stderr: null
+    validation_errors:
+    - 'missing field: reason'
+- id: 2026-07-02T13:37:09Z-2
+  recorded_at: '2026-07-02T13:37:09Z'
+  script_route: .cursor/skills/nicki/scripts/validate-sheep-return.py
+  input:
+    stdin: 'worktree: x\ncompleted_step: execute'
+  expected_output:
+    required_fields:
+    - valid
+  actual:
+    exit_code: 2
+    stdout: '{"valid":false,"errors":["missing summary"]}'
+    stderr: null
+    validation_errors:
+    - valid is false

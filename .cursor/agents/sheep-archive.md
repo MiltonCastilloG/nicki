@@ -26,7 +26,7 @@ Read `.cursor/skills/task-archive/SKILL.md` and `.cursor/skills/task-archive/arc
 
 ## Output
 
-- **Write:** `docs/archive/<slug>/report.yaml`, `report.md`, `story.md` (via task-archive)
+- **Write:** `docs/archive/<slug>/report.yaml`, `report.md`, `story.md`, `errors.yaml` when present (via task-archive)
 - **Delete:** `artifacts.spec`, `artifacts.subtasks` from worktree when present
 - **Never write:** `current-task/status.json`
 - **No git** — commit and push are the next sync step

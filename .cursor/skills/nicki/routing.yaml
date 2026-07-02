@@ -160,3 +160,26 @@ sheep_return_contract:
     - open_questions
     - summary
   on_blocked: set completed_status to blocked; populate open_questions
+
+harness_failure:
+  sheep: sheep-fallback
+  nicki_only: true
+  artifact: current-task/specs/errors.yaml
+  prompt: worktree path, failed script route, script input, expected output contract, actual failure context, blocked pipeline step
+  scripts:
+    check-gate.py:
+      route: .cursor/skills/nicki/scripts/check-gate.py
+      expected_stdout:
+        required_fields: [allowed, sheep, reason]
+    bootstrap-context.py:
+      route: .cursor/skills/nicki/scripts/bootstrap-context.py
+      expected_stdout:
+        required_fields: [active_task, status_path, next_step, completed_steps, readiness, sheep]
+    validate-sheep-return.py:
+      route: .cursor/skills/nicki/scripts/validate-sheep-return.py
+      expected_stdout:
+        required_fields: [valid]
+    update-status.py:
+      route: .cursor/skills/current-task-update/scripts/update-status.py
+      expected_stdout:
+        required_fields: [path, completed_step, next_step, blockers]
