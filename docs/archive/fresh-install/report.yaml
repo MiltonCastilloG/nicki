@@ -1,0 +1,50 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: fresh-install
+  title: Post-clone bootstrap for the Nicki repository
+  original: fresh-install
+  type: chore
+  branch: chore/fresh-install
+
+story: install.py · nicki-workspace stub · worktrees/ · README quick-start · git prerequisite
+
+outcome:
+  status: pending_integrate
+  target: main
+  pushed_branch: chore/fresh-install
+  final_artifact: current-task/syncs/fresh-install.yaml
+
+process:
+  - step: describe
+    summary: Post-clone bootstrap story with Gherkin scenarios for first install, idempotent re-run, and missing-git failure.
+  - step: spec
+    summary: One-command stdlib install.py bootstrap for the Nicki repo clone with nicki-only registry and worktrees directory.
+  - step: subtasks
+    summary: Thirteen checklist items covering install.py, README quick-start, and manual verification scenarios.
+  - step: execute
+    summary: Complete — all 13 subtasks done; install.py and README.md within scope.
+  - step: review
+    summary: Ready for acceptance — no blocking findings; all requirements met.
+  - step: sync
+    summary: Committed c3a3006 on chore/fresh-install, merged origin/main, pushed at 5a00d96.
+
+decisions:
+  - topic: install entrypoint
+    decision: Repository-root install.py using stdlib Python only; no CLI flags in v1.
+  - topic: workspace registry
+    decision: Write minimal nicki-only nicki-workspace.yaml on first run; skip with notice when file exists.
+  - topic: prerequisites
+    decision: Check git on PATH before any filesystem writes; hard-fail with clear error when missing.
+  - topic: global-status
+    decision: Do not create global-status.json at install time.
+  - topic: cursor runtime
+    decision: No install action on committed .cursor files; symlink hook deferred to task #20.
+
+open_questions: []
+
+suggestions: []
