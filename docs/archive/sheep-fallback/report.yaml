@@ -1,0 +1,47 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: sheep-fallback
+  title: sheep-fallback failure recording
+  original: sheep-fallback
+  type: chore
+  branch: chore/sheep-fallback
+
+story: sheep-fallback agent · errors.v1 append · harness routing · archive errors copy · Nicki-only spawn
+
+outcome:
+  status: pending_integrate
+  target: main
+  feature_branch: chore/sheep-fallback
+  sync_handoff: current-task/syncs/sheep-fallback.yaml
+  harness_errors: docs/archive/sheep-fallback/errors.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story — thin sheep-fallback records harness script failures into append-only errors.yaml; Nicki-only spawn; archive conserves errors artifact.
+  - step: spec
+    summary: sheep-fallback failure recording — four authoritative harness triggers, errors.v1 schema, append semantics, task-archive errors copy.
+  - step: subtasks
+    summary: Fourteen subtasks — agent definition, errors-recording skill, routing registration, nicki.md harness failure wiring, archive extension, verification.
+  - step: execute
+    summary: complete — sheep-fallback agent, errors-recording skill, routing and nicki.md wiring, task-archive extension; smoke-harness-failure.sh passed; all subtasks done.
+  - step: review
+    summary: ready_for_acceptance — R2 approved; gate-deny vs harness-failure distinction verified; errors.v1 entry complete.
+  - step: sync
+    summary: Committed 64792b4 on chore/sheep-fallback; merged origin/main; pushed feature branch.
+
+decisions: []
+
+open_questions: []
+
+suggestions:
+  - area: orchestration
+    suggestion: Land bootstrap-context.py, validate-sheep-return.py, and update-status.py on disk before claiming full four-script fallback E2E coverage.
+    evidence: "execution subtask 1 — three scripts wired in routing only, not on disk yet."
+  - area: execute
+    suggestion: Keep smoke-harness-failure.sh as regression guard when changing check-gate stdout contract or harness-failure routing.
+    evidence: "smoke-harness-failure.sh E2E passed; R2 verified gate-deny vs harness-failure distinction."

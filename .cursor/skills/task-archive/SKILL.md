@@ -23,6 +23,7 @@ Draft + write archive. Format: [archive-format.md](archive-format.md).
 4. Draft `report.yaml` — task, story, outcome, process (from artifact handoffs per archive-format, not status history), decisions, open_questions, suggestions.
 5. Draft `report.md` — terse per caveman; mirror report.yaml.
 6. Write `report.yaml` and `report.md` under `docs/archive/<slug>/`.
-7. Copy `artifacts.story` → `docs/archive/<slug>/story.md`; delete `artifacts.spec` and `artifacts.subtasks` from worktree when present.
+7. Copy `artifacts.story` → `docs/archive/<slug>/story.md`; when `current-task/specs/errors.yaml` exists, copy it verbatim → `docs/archive/<slug>/errors.yaml`; delete `artifacts.spec` and `artifacts.subtasks` from worktree when present.
+8. When archived `errors.yaml` exists, note harness errors were recorded in `report.yaml` / `report.md` and reference `docs/archive/<slug>/errors.yaml` — do not paste full failure bodies.
 
 (Commit and push via next sync step.)

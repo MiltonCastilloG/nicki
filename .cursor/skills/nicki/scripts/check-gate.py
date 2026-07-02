@@ -83,7 +83,16 @@ def main() -> int:
         action="store_true",
         help="User override for sync without acceptance",
     )
+    parser.add_argument(
+        "--smoke-contract-fail",
+        action="store_true",
+        help="Smoke/review only: emit contract-invalid stdout and exit 1",
+    )
     args = parser.parse_args()
+
+    if args.smoke_contract_fail:
+        print(json.dumps({"allowed": False}))
+        return 1
 
     result = evaluate(
         resolve_worktree(args.worktree),
