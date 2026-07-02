@@ -33,28 +33,26 @@ Leaf skills are **portable** — no `status.json`, no pipeline step names, no �
 
 ## Quick start
 
-### 1. Install
+### 1. Clone and install
 
 ```bash
-cp -r /path/to/nicki/.cursor /path/to/your-project/.cursor
+git clone <repo-url> nicki
+cd nicki
+python3 install.py
 ```
 
-Add to `.gitignore`:
+This writes a minimal `nicki-workspace.yaml` (nicki-only registry) and ensures `worktrees/` exists. Committed `.cursor/` agents, skills, rules, and hooks ship with the clone — no manual copying.
 
-```gitignore
-worktrees/
-global-status.json
-nicki-workspace.yaml
-current-task/
-!current-task/status.example.json
-```
+### 2. Open in Cursor
 
-### 2. Run with Nicki
+Open the cloned repository folder in Cursor.
 
-Open the project in Cursor. Address Nicki by name:
+### 3. Run with Nicki
+
+Address Nicki by name:
 
 ```text
-nicki hero-section
+nicki start my-task
 nicki continue
 ```
 
