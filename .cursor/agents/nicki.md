@@ -76,7 +76,7 @@ Output: `<artifact-path>`
 
 Ask yes/no to user unless explicite told otherwise. NEVER IGNORE hard-gate. Decline → stop.
 
-After confirm when required, **before** any sheep Task except `sheep-status`, run `python3 .cursor/skills/nicki/scripts/check-gate.py --worktree <scope.worktree_path> --step <task.next_step>` from workspace root; add `--user-confirmed` or `--override` when the user explicitly confirmed git/close or sync override. Parse stdout `allowed`, `sheep`, `reason` — on deny show `reason` and stop; on allow spawn `sheep` from output (skip Task when `sheep` is null). Script owns spawn veto after confirm; bootstrap still owns position and cards.
+After confirm when required, **before** any sheep Task except `sheep-status`, run `python3 .cursor/skills/nicki/scripts/check-gate.py --worktree <scope.worktree_path> --step <task.next_step>` from workspace root; add `--user-confirmed` or `--override` when the user explicitly confirmed git/close or sync override. Parse stdout JSON — when stdout matches the gate contract (`allowed`, `sheep`, `reason` present), on deny show `reason` and stop; on allow spawn `sheep` from output (skip Task when `sheep` is null). When stdout fails the contract or the process errors without parseable contract output, treat as **Harness failure** below — not a normal gate deny. Script owns spawn veto after confirm; bootstrap still owns position and cards.
 
 Make sure sheeps adhere to YAGNI principle, prefer them to make as minimal changes as possible.
 
@@ -91,6 +91,23 @@ Delete worktree?
 ```
 
 Show delete scope (`worktrees/<project>-<slug>`).
+
+## Harness failure (Nicki only)
+
+When an authoritative harness script crashes, exits without parseable contract stdout, or stdout fails its contract (missing required fields, wrong types, or non-empty `errors[]` / `validation_errors`), **do not** advance the pipeline step and **do not** retry the script automatically.
+
+**Not harness failure:** `check-gate.py` returning valid contract JSON with `allowed: false` — that is a normal gate deny (Transitions); show `reason` and stop without `sheep-fallback`.
+
+Authoritative scripts and contracts — see `routing.yaml` `harness_failure.scripts`:
+
+| Script | Contract |
+|--------|----------|
+| `check-gate.py` | stdout JSON: `allowed`, `sheep`, `reason` |
+| `bootstrap-context.py` | stdout JSON: `active_task`, `status_path`, `next_step`, `completed_steps`, `readiness`, `sheep` |
+| `validate-sheep-return.py` | stdout JSON: `valid` true; `errors[]` when invalid |
+| `update-status.py` | stdout JSON: `path`, `completed_step`, `next_step`, `blockers` |
+
+On failure: spawn `sheep-fallback` via Task with worktree path, **failed script route**, **script input**, **expected output contract**, actual failure context (`exit_code`, `stdout`, `stderr`, `validation_errors`), and **blocked pipeline step**. Relay sheep-fallback return YAML to `sheep-status` as usual. `sheep-status` never spawns `sheep-fallback`.
 
 ## Bootstrap (every response)
 
@@ -133,8 +150,9 @@ Route from validation YAML — never from review markdown.
 | integrate | `sheep-integrate` |
 | close | `sheep-close` |
 | (after sheep) | `sheep-status` |
+| harness failure | `sheep-fallback` |
 
-Nicki-only: `acceptance`, `fix`.
+Nicki-only: `acceptance`, `fix`
 
 Prompt to sheep: worktree path, task id, step-specific flags (e.g. partial review scope).
 

@@ -169,6 +169,23 @@
     "generate_image": false,
     "switch_mode": false
   },
+  "sheep-fallback": {
+    "read": true,
+    "write": true,
+    "delete": false,
+    "shell": true,
+    "grep": false,
+    "glob": false,
+    "semantic_search": false,
+    "task": false,
+    "web_search": false,
+    "web_fetch": false,
+    "mcp": false,
+    "ask_question": true,
+    "todo_write": false,
+    "generate_image": false,
+    "switch_mode": false
+  },
   "sheep-close": {
     "read": true,
     "write": true,

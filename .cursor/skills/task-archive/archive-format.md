@@ -8,6 +8,7 @@
 docs/archive/<slug>/report.yaml
 docs/archive/<slug>/report.md
 docs/archive/<slug>/story.md      # copy from artifacts.story
+docs/archive/<slug>/errors.yaml   # verbatim copy when current-task/specs/errors.yaml exists
 ```
 
 Spec and subtask paths from status are **not** archived — delete from worktree after copy (see [task-archive/SKILL.md](SKILL.md) step 7).
@@ -111,6 +112,10 @@ Sections:
 7. Suggestions — top items only; omit when none
 
 No raw diffs/logs. Clear prose for irreversible warnings.
+
+## Harness errors reference
+
+When `docs/archive/<slug>/errors.yaml` was copied, `report.yaml` or `report.md` may include a short note that harness errors were recorded and point to the archived errors file — never paste full failure bodies.
 
 ## Rules
 
