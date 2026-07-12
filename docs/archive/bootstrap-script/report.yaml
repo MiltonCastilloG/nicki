@@ -1,0 +1,54 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: bootstrap-script
+  title: Bootstrap script investigation
+  original: "Bootstrap script investigation — bootstrap-context.py sibling to check-gate.py"
+  type: chore
+  branch: chore/bootstrap-script
+
+story: bootstrap-context.py · disk read map · stdout JSON contract · Nicki wiring · fixture smoke · trimmed read companions
+
+outcome:
+  status: pending_integrate
+  target: main
+  pushed_branch: chore/bootstrap-script
+  final_artifact: current-task/syncs/bootstrap-script.yaml
+
+process:
+  - step: describe
+    summary: P1 bootstrap investigation with approved design — bootstrap-context.py sibling to check-gate.py, gate_utils reuse, stdout contract.
+  - step: spec
+    summary: bootstrap_disk_reads map, script contract, Nicki wiring, fixture smoke, and trim scope captured in spec YAML.
+  - step: subtasks
+    summary: Nineteen subtasks from investigation through script, fixtures, permissions, Nicki wiring, and read-companion trim.
+  - step: execute
+    summary: Complete — bootstrap-context.py, happy-path and missing-status fixtures, nicki.md wiring, permissions, trimmed read companions; all 19 subtasks done.
+  - step: review
+    summary: ready_for_acceptance — review approved; E2E worktree verified.
+  - step: sync
+    summary: Synced — committed 3543ded, merged origin/main, pushed chore/bootstrap-script.
+
+decisions:
+  - topic: script boundary
+    decision: bootstrap-context.py owns position and routing context; check-gate.py owns spawn veto — no gate duplication.
+  - topic: stdout contract
+    decision: Six fields only — active_task, status_path, next_step, completed_steps, readiness, sheep; gate-only fields stay in check-gate.
+  - topic: CLI
+    decision: Required --worktree only in P1; no --task-id flag; Nicki resolves scope before invoke.
+  - topic: spec reads
+    decision: Bootstrap does not load spec YAML; check-gate gate_subtasks owns spec open_questions at spawn.
+
+open_questions: []
+
+suggestions:
+  - area: execute
+    suggestion: Document NICKI_WORKSPACE_ROOT fixture hook in gate_utils when adding harness fixtures.
+    evidence: "execution deviations: gate_utils.workspace_root honors NICKI_WORKSPACE_ROOT env for isolated fixture workspaces."
+  - area: subtasking
+    suggestion: Grep sheep agents for bootstrap disk-read prose before adding a trim subtask.
+    evidence: "subtask 18 done with note: no sheep agents contained bootstrap disk read lists."
