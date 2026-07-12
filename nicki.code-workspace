@@ -3,14 +3,6 @@
     {
       "name": "Shared",
       "path": "."
-    },
-    {
-      "name": "nicki-bootstrap-e2e-test",
-      "path": "worktrees/nicki-bootstrap-e2e-test"
-    },
-    {
-      "name": "nicki-bootstrap-script",
-      "path": "worktrees/nicki-bootstrap-script"
     }
   ],
   "settings": {

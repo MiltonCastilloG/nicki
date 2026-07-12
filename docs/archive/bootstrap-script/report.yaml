@@ -14,10 +14,12 @@ task:
 story: bootstrap-context.py · disk read map · stdout JSON contract · Nicki wiring · fixture smoke · trimmed read companions
 
 outcome:
-  status: pending_integrate
+  status: integrated
   target: main
-  pushed_branch: chore/bootstrap-script
-  final_artifact: current-task/syncs/bootstrap-script.yaml
+  feature_branch: chore/bootstrap-script
+  sync_handoff: current-task/syncs/bootstrap-script.yaml
+  integrate_handoff: current-task/integrates/bootstrap-script.yaml
+  merge_commit: 55dca0a
 
 process:
   - step: describe

@@ -10,7 +10,7 @@ bootstrap-context.py · disk read map · stdout JSON contract · Nicki wiring ·
 
 ## Outcome
 
-Pending integrate. Branch `chore/bootstrap-script` committed and pushed (3543ded); pre-push merge with `origin/main` succeeded. Final handoff: `current-task/syncs/bootstrap-script.yaml`.
+Integrated into `main` at `55dca0a`. Feature branch `chore/bootstrap-script` synced and pushed. Bootstrap conflict in `nicki.md` resolved — script-only `bootstrap-context.py` bootstrap kept. Local `main` push pending (credentials). Handoffs: `current-task/syncs/bootstrap-script.yaml`, `current-task/integrates/bootstrap-script.yaml`.
 
 ## Process
 
