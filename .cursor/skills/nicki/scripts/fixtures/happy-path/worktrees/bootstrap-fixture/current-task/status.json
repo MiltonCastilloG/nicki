@@ -1,0 +1,16 @@
+{
+  "meta": { "schema": "task-status.v2" },
+  "task": {
+    "slug": "bootstrap-fixture",
+    "current_step": "subtasks",
+    "next_step": "execute",
+    "completed_steps": ["start", "describe", "spec", "subtasks"]
+  },
+  "scope": { "worktree_path": "worktrees/bootstrap-fixture" },
+  "artifacts": {
+    "story": "current-task/story.md",
+    "spec": "current-task/specs/bootstrap-fixture.yaml",
+    "subtasks": "current-task/subtasks/bootstrap-fixture.md"
+  },
+  "open_questions": []
+}
