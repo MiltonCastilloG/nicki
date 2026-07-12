@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,9 @@ BLOCKED_READINESS = frozenset({"fix_required", "blocked"})
 
 
 def workspace_root() -> Path:
+    override = os.environ.get("NICKI_WORKSPACE_ROOT")
+    if override:
+        return Path(override).resolve()
     p = SCRIPT_DIR
     for _ in range(12):
         git = p / ".git"
