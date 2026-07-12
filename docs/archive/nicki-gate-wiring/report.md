@@ -10,7 +10,7 @@ check-gate.py · nicki.md spawn wiring · permissions · deny/allow · disk boot
 
 ## Outcome
 
-Pending integrate. Feature branch `chore/nicki-gate-wiring` synced and pushed. Sync handoff at `current-task/syncs/nicki-nicki-gate-wiring.yaml`.
+Integrated into `main` at `0f57668`. Feature branch `chore/nicki-gate-wiring` synced and pushed. Sync handoff at `current-task/syncs/nicki-nicki-gate-wiring.yaml`. Integrate handoff at `current-task/integrates/nicki-gate-wiring.yaml`.
 
 ## Process
 

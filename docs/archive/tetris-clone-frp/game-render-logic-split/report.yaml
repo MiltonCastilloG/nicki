@@ -1,0 +1,48 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: game-render-logic-split
+  title: Game render and logic folder split
+  original: "Game-logic/game-render split with shared collision.js and utils.js at js/ root"
+  type: refactor
+  branch: refactor/game-render-logic-split
+
+story: game-logic/ · game-render/ · shared/ collision utils · bootstrap at js root · no adapter · behavior-preserving refactor
+
+outcome:
+  status: pending_integrate
+  target: master
+  pushed_branch: refactor/game-render-logic-split
+  final_artifact: current-task/syncs/game-render-logic-split.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story for game-logic/game-render split with shared root modules and unchanged bootstrap.
+  - step: spec
+    summary: Move-only refactor spec — separate logic and render folders; collision/utils stay at js root.
+  - step: subtasks
+    summary: Thirteen subtasks covering folder layout, imports, lint, gameplay parity, save/load, and upload.
+  - step: execute
+    summary: Split shipped in prior passes; final audit inventoried 26 modules, confirmed acyclic graph, pnpm lint exit 0.
+  - step: review
+    summary: Approved at ready_for_acceptance; verify_only audit; menu.js and shared/ deviations user-approved.
+  - step: sync
+    summary: Committed b1a584f; merged origin/master; pushed origin/refactor/game-render-logic-split.
+
+decisions:
+  - menu.js placed in game-render/ despite ADR-4 js-root wording — user-approved presentation-adjacent placement.
+  - collision.js and utils.js grouped under shared/ at js root — user-approved deviation from flat root layout.
+
+open_questions: []
+
+suggestions:
+  - area: spec
+    suggestion: Align ADR-4 wording with approved menu.js placement in game-render/ to avoid repeat scope deferrals.
+    evidence: "review-validations/r13-validation.yaml deferred d1 — menu.js in game-render/ vs ADR-4."
+  - area: orchestration
+    suggestion: Scope late execute passes to verify-only audit subtasks when layout is already shipped.
+    evidence: "status completed_steps — six execute/review cycles before sync."

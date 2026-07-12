@@ -5,12 +5,12 @@
       "path": "."
     },
     {
-      "name": "project-psychic-lemon-backend-scaffold",
-      "path": "worktrees/project-psychic-lemon-backend-scaffold"
+      "name": "nicki-bootstrap-e2e-test",
+      "path": "worktrees/nicki-bootstrap-e2e-test"
     },
     {
-      "name": "tetris-clone-frp-game-render-logic-split",
-      "path": "worktrees/tetris-clone-frp-game-render-logic-split"
+      "name": "nicki-bootstrap-script",
+      "path": "worktrees/nicki-bootstrap-script"
     }
   ],
   "settings": {

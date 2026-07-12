@@ -113,10 +113,10 @@ On failure: spawn `sheep-fallback` via Task with worktree path, **failed script 
 
 <hard-gate>Run before routing or spawning any sheep.</hard-gate>
 
-Disk wins over chat and parent prompt. Derive current step position, gates, and next sheep only from disk artifacts — not chat history or parent prompt content.
+Disk wins for pipeline **state** — current step position, gates, artifacts, and readiness come only from disk artifacts, never from chat history or parent prompt. The **one** exception is *task selection*: a `Task: <project>/<slug>` line in the prompt chooses which task's disk record to load (step 1). Everything after selection is disk.
 
-1. Read `global-status.json`.
-2. Read `status.json` at `status_path`.
+1. Select the current task from the `Task: <project>/<slug>` selector in the prompt (or a project/task the user explicitly names in the message). <hard-gate>If no task is identified, ask the user which project/task to work on and stop — never fall back to `active_task`, and never guess.</hard-gate>
+2. Resolve the selected task in `global-status.json` (the `tasks` entry matching the selector) to get `status_path`, then read its `status.json`. If the selector has no matching registry entry, say so plainly and stop — do not guess.
 3. Read `routing.yaml` — route from `task.next_step` + `steps.*.sheep`.
 4. Read validation YAML only when `artifacts.review_validation` is set (for `readiness`).
 5. Read spec artifact only for the `open_questions` gate before subtasks.

@@ -11,7 +11,11 @@ Do **not** route messages to Nicki by default. Respond as the normal Agent unles
 
 User addresses Nicki by name at the start of the message, e.g. `nicki fetch`, `Nicki, continue`, `nicki what's next`.
 
-When matched, invoke a **fresh** Task (`subagent_type: nicki`) — never `resume`. Pass only the user's latest message as the prompt (strip an optional `nicki` prefix). Do not summarize prior chat, pipeline state, investigation notes, or file contents into the prompt. Do not re-read `global-status.json` or `status.json` on Nicki's behalf. Return the subagent's response as your primary reply.
+When matched, invoke a **fresh** Task (`subagent_type: nicki`) — never `resume`. Pass the user's latest message as the prompt (strip an optional `nicki` prefix).
+
+**Task selector — the one thing you may add.** If this chat has identified which project and task it concerns (the user named it now or earlier in this chat), prepend a single line `Task: <project>/<slug>` before the user's message. That selector is the *only* context you may forward, If no task has been identified in this chat, forward the message alone — Nicki will ask which project/task before doing pipeline work; she does not auto-select `active_task`.
+
+Return the subagent's response as your primary reply.
 
 ## Stay on Nicki
 

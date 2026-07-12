@@ -14,10 +14,12 @@ task:
 story: check-gate.py · nicki.md spawn wiring · permissions · deny/allow · disk bootstrap complement
 
 outcome:
-  status: pending_integrate
+  status: integrated
   target: main
   feature_branch: chore/nicki-gate-wiring
   sync_handoff: current-task/syncs/nicki-nicki-gate-wiring.yaml
+  integrate_handoff: current-task/integrates/nicki-gate-wiring.yaml
+  merge_commit: 0f57668
 
 process:
   - step: describe
