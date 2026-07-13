@@ -55,9 +55,9 @@ projects:
       - worktrees/
       - docs/archive/
 
-  project-psychic-lemon:
-    url: git@github.com:your-org/project-psychic-lemon.git
-    path: projects/project-psychic-lemon
+  project-jung:
+    url: git@github.com:your-org/project-jung.git
+    path: projects/project-jung
     git:
       default_branch: main
       remote: origin
