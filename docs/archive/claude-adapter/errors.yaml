@@ -1,0 +1,27 @@
+meta:
+  schema: errors.v1
+  worktree: claude-adapter
+failures:
+- id: '2026-07-13T18:54:43Z'
+  recorded_at: '2026-07-13T18:54:43Z'
+  script_route: python3 .cursor/skills/nicki/scripts/bootstrap-context.py
+  input:
+    argv:
+    - python3
+    - .cursor/skills/nicki/scripts/bootstrap-context.py
+    - --worktree
+    - worktrees/claude-adapter
+  expected_output:
+    contract: stdout JSON
+    required_fields:
+    - active_task
+    - status_path
+    - next_step
+    - completed_steps
+    - readiness
+    - sheep
+  actual:
+    exit_code: 1
+    stdout: no registry entry for worktree worktrees/claude-adapter
+    stderr: ''
+    validation_errors: null

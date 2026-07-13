@@ -16,7 +16,7 @@ After `git clone`, a developer runs `python3 install.py` at the repo root so the
 | `worktrees/` | Create if missing |
 | `global-status.json` | Not created at install |
 | `.cursor/` runtime | No install action (committed; symlink hook deferred to #20) |
-| Claude/Cursor adapters | Out of scope (`install-claude.sh` / #23) |
+| Claude/Cursor adapters | Out of scope (`install-claude.py` / #23) |
 | Project install | P1 — out of scope |
 
 ---
@@ -86,7 +86,7 @@ Then I can invoke Nicki to start or continue a task without additional local boo
 
 ## Out of scope
 
-- `install-claude.sh` / `install-cursor.sh` host adapters (#23)
+- `install-claude.py` / `install-cursor.py` host adapters (#23)
 - `nicki-workflow/` extract and symlink layout (#20)
 - `global-status.json` scaffold at install time
 - Managed projects in `nicki-workspace.yaml` (tetris, landing, …)

@@ -38,14 +38,14 @@ This is the **simplest P0 install path**. A separate **project install** (runtim
 | `worktrees/` | `mkdir -p` if missing |
 | `global-status.json` | Not created at install — first `sheep-start` / `create-worktree.py` |
 | `.cursor/` runtime | Committed today; no install action until **#20** (`nicki-workflow/` symlinks) |
-| Claude | Separate `install-claude.sh` (P0 #21–#23) — not this script |
+| Claude | Separate `install-claude.py` (P0 #21–#23) — not this script |
 | Project install | P1 — install runtime into managed projects |
 
 ---
 
 ## Out of scope
 
-- `install-claude.sh` / `install-cursor.sh` host adapters (**#23**)
+- `install-claude.py` / `install-cursor.py` host adapters (**#23**)
 - `nicki-workflow/` extract and symlink layout (**#20**)
 - `global-status.json` scaffold
 - `nicki-workspace.yaml` managed projects (tetris, landing, …)
@@ -162,7 +162,7 @@ Callable from `install.py` so one entrypoint remains after #20.
 
 - **Project install script** — install Nicki runtime into managed repos (`projects/<name>/`)
 - **Workspace init** — full registry, clone/register flows (PLAN.md CLI)
-- **Claude bootstrap** — `install-claude.sh` + adapter files
+- **Claude bootstrap** — `install-claude.py` + adapter files
 
 ---
 
