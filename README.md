@@ -43,6 +43,28 @@ python3 install.py
 
 This writes a minimal `nicki-workspace.yaml` (nicki-only registry) and ensures `worktrees/` exists. Committed `.cursor/` agents, skills, rules, and hooks ship with the clone — no manual copying.
 
+### Claude Code quick start
+
+Use this path when working in Claude Code instead of Cursor:
+
+```bash
+git clone <repo-url> nicki
+cd nicki
+python3 install.py          # repository bootstrap (worktrees + registry)
+python3 install-claude.py   # map .cursor/ runtime into Claude Code layout
+```
+
+Then open the cloned repository in Claude Code. The install script writes `.claude/agents/`, `.claude/skills/`, and root `CLAUDE.md` (opt-in Nicki routing). Generated Claude layout is gitignored — re-run `python3 install-claude.py` after pulling agent or skill updates.
+
+Invoke Nicki by name:
+
+```text
+nicki start my-task
+nicki continue
+```
+
+Claude Code does not replicate Cursor hooks; Nicki pipeline work uses the installed agents and skills only.
+
 ### 2. Open in Cursor
 
 Open the cloned repository folder in Cursor.

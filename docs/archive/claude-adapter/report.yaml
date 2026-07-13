@@ -1,0 +1,60 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: claude-adapter
+  title: Claude Code host bootstrap
+  original: "Claude Code host bootstrap: install-claude.sh maps .cursor/ into .claude/ for nicki start"
+  type: feature
+  branch: feature/claude-adapter
+
+story: install-claude.py · agent/skill mapping · CLAUDE.md opt-in routing · README quick-start · idempotent install
+
+outcome:
+  status: pending_integrate
+  target: main
+  feature_branch: feature/claude-adapter
+  sync_handoff: current-task/syncs/claude-adapter.yaml
+  archive_errors: docs/archive/claude-adapter/errors.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story for Claude Code host bootstrap — install-claude.py maps committed .cursor/ runtime into .claude/ layout; YAGNI scope excludes hooks and nicki-workflow extract.
+  - step: spec
+    summary: Spec captured install script, agent/skill mapping, CLAUDE.md invocation rules, idempotency, README quick-start, and manual fresh-clone nicki start proof.
+  - step: subtasks
+    summary: Twelve subtasks for gitignore, install-claude.py implementation, README, and manual verification; subtask 12 deferred to acceptance.
+  - step: execute
+    summary: partial — subtasks 1–11 done; subtask 12 blocked (manual Claude Code nicki start); install-claude.py recreated after acceptance rejection fix.
+  - step: review
+    summary: ready_for_acceptance — R2 re-review approved install-claude.py Python entrypoint; subtask 12 excluded per review_scope.skip_subtasks.
+  - step: sync
+    summary: Synced feature/claude-adapter (f365298); pre_push_merge not_needed; pushed origin/feature/claude-adapter.
+
+decisions:
+  - topic: install entrypoint
+    decision: Repository-root install-claude.py (Python stdlib); generated .claude/ and CLAUDE.md gitignored.
+  - topic: mapping mechanism
+    decision: Copy agents from .cursor/agents/; shutil copytree syncs .cursor/skills/ verbatim into .claude/skills/.
+  - topic: invocation rules
+    decision: Generate CLAUDE.md from nicki-default.mdc with Agent-tool adaptations for opt-in Nicki routing.
+  - topic: bootstrap coupling
+    decision: install-claude.py independent of install.py; README orders repository bootstrap before Claude install.
+  - topic: scope exclusions
+    decision: No nicki-workflow extract, no Cursor hooks parity, no .claude/settings.json unless proof requires it.
+
+open_questions: []
+
+suggestions:
+  - area: execute
+    suggestion: Run subtask 12 in Claude Code on a fresh clone before integrate to confirm nicki start completes end-to-end.
+    evidence: "execution subtask 12 status blocked; review_scope.skip_subtasks: [12]"
+  - area: orchestration
+    suggestion: Align worktree registry paths with bootstrap-context --worktree argument to avoid registry lookup failures.
+    evidence: docs/archive/claude-adapter/errors.yaml (no registry entry for worktrees/claude-adapter)
+  - area: review
+    suggestion: Batch install-claude.py naming updates in docs/archive/fresh-install and docs/superpowers when touching related bootstrap docs.
+    evidence: "review deferred finding d1: fresh-install story and superpowers spec naming outside scope.in"
