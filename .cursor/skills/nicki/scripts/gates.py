@@ -99,8 +99,11 @@ def gate_archive(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, A
     if not file_ok(sync_path):
         return deny("archive gate: sync artifact missing")
     ppm = (load_yaml(sync_path).get("pre_push_merge") or {}).get("status")
-    if ppm != "merged":
-        return deny("archive gate: pre_push_merge not merged on sync handoff")
+    # Back-compat: early sync handoffs used "not_needed" when the base branch
+    # was already up to date in the feature branch. Treat that as satisfying the
+    # archive gate, since the intent is "base incorporated before archiving".
+    if ppm not in {"merged", "not_needed"}:
+        return deny("archive gate: pre_push_merge not satisfied on sync handoff")
     return None
 
 

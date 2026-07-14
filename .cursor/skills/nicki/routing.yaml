@@ -175,11 +175,11 @@ harness_failure:
       route: .cursor/skills/nicki/scripts/bootstrap-context.py
       expected_stdout:
         required_fields: [active_task, status_path, next_step, completed_steps, readiness, sheep]
-    validate-sheep-return.py:
-      route: .cursor/skills/nicki/scripts/validate-sheep-return.py
-      expected_stdout:
-        required_fields: [valid]
     update-status.py:
       route: .cursor/skills/current-task-update/scripts/update-status.py
       expected_stdout:
-        required_fields: [path, completed_step, next_step, blockers]
+        required_fields: [written]
+      notes: >
+        Success: written true plus path, completed_step, next_step, blockers.
+        Input error (agent omitted required field): written false plus errors[] naming
+        exact fields — not a harness failure; retry sheep-status with corrected YAML.

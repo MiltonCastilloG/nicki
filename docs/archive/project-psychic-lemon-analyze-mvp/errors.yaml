@@ -1,0 +1,42 @@
+meta:
+  schema: errors.v1
+  worktree: psychic-lemon-analyze-mvp
+failures:
+- id: '2026-07-12T12:38:46Z'
+  recorded_at: '2026-07-12T12:38:46Z'
+  script_route: .cursor/skills/nicki/scripts/check-gate.py
+  input:
+    argv:
+    - --worktree
+    - worktrees/project-psychic-lemon-analyze-mvp
+    - --step
+    - review
+  expected_output:
+    required_fields:
+    - allowed
+    - sheep
+    - reason
+  actual:
+    exit_code: 1
+    stdout: null
+    stderr: "yaml.scanner.ScannerError: mapping values are not allowed here in execution\\\n  YAML line 65 column 31 \\u2014 unquoted `{ error: string }` in note field"
+    validation_errors: null
+- id: '2026-07-13T18:45:53Z'
+  recorded_at: '2026-07-13T18:45:53Z'
+  script_route: .cursor/skills/nicki/scripts/check-gate.py
+  input:
+    argv:
+    - --worktree
+    - worktrees/project-psychic-lemon-analyze-mvp
+    - --step
+    - review
+  expected_output:
+    required_fields:
+    - allowed
+    - sheep
+    - reason
+  actual:
+    exit_code: 1
+    stdout: ''
+    stderr: "yaml.scanner.ScannerError: mapping values are not allowed here\\n  in\\\n    \\ \"<unicode string>\", line 69, column 31:\\n    note: 404/400 with { error:\\\n      \\ string } bodies; tests cover b ...\\n                                  ^\\n\\\n    (gate_review calls load_yaml on executions/analyze-mvp.yaml)"
+    validation_errors: []

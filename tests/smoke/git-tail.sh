@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Smoke git tail: sync + integrate leaves, status pointers, close gate.
+# Sync + integrate wiring — agents, skills, status pointers, close gate
 set -euo pipefail
 
-ROOT="${1:-.}"
+ROOT="${1:-$(cd "$(dirname "$0")/../.." && pwd)}"
 cd "$ROOT"
 FAIL=0
 

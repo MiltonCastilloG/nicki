@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Fixture smoke: validation skill — readiness + out-of-scope paths documented.
-# Usage: smoke-readiness-mapping.sh <workspace_root>
+# Validation skill — readiness enums, fixtures, fix-append semantics
 set -euo pipefail
 
-ROOT="${1:-.}"
+ROOT="${1:-$(cd "$(dirname "$0")/../.." && pwd)}"
 FAIL=0
 FIXTURE_DIR="${ROOT}/.cursor/skills/validation/scripts/fixtures"
 
@@ -58,4 +57,4 @@ fi
 if [[ "$FAIL" -ne 0 ]]; then
   exit 1
 fi
-echo "ok: validation smoke passed"
+echo "smoke-readiness-mapping: ok"

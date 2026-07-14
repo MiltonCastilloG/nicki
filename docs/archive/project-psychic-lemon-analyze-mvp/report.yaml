@@ -1,0 +1,47 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: project-psychic-lemon-analyze-mvp
+  title: Analyze MVP
+  original: Minimal analyze MVP for Psychic Lemon — one-shot Gemini analysis for P1.2–1.8
+  type: feature
+  branch: feature/analyze-mvp
+
+story: fixed local transcript file · one-shot OpenRouter analysis · POST /api/analyze · UI renders patterns/discrepancies/SOAP/tips
+
+outcome:
+  status: pending_integrate
+  target: main
+  feature_branch: feature/analyze-mvp
+  sync_handoff: current-task/syncs/project-psychic-lemon-analyze-mvp.yaml
+  archive_errors: docs/archive/project-psychic-lemon-analyze-mvp/errors.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story defined analyze MVP flow and approved ADRs (file-only transcript; structured AnalysisResult; API status codes; UI sections; dev proxy).
+  - step: spec
+    summary: Spec captured requirements/acceptance and recorded provider switch amendment to OpenRouter with env + model defaults.
+  - step: subtasks
+    summary: Subtasks checklist produced for backend route/agent/types/tests + UI flow + docs updates.
+  - step: execute
+    summary: complete — implemented backend analyze route + agent using @openrouter/sdk JSON schema output, UI analyze button/results, tests, proxy, docs, env template.
+  - step: review
+    summary: ready_for_acceptance — R3 validation confirms provider amendment and evidence alignment with no blockers.
+  - step: sync
+    summary: Synced feature/analyze-mvp (af7da7078d67); merged origin/main locally pre-push; pushed origin/feature/analyze-mvp; current-task excluded.
+
+decisions:
+  - decision: Use OpenRouter provider instead of direct Gemini.
+    rationale: Direct Gemini model/quotas were unreliable; OpenRouter enables one key and swappable models while keeping structured output.
+    evidence: current-task/specs/analyze-mvp.yaml#amendments.provider-openrouter
+
+open_questions: []
+
+suggestions:
+  - area: orchestration
+    suggestion: Quote YAML note strings that include braces (e.g. "{ error: string }") to avoid gate parsing failures.
+    evidence: docs/archive/project-psychic-lemon-analyze-mvp/errors.yaml (yaml.scanner.ScannerError in check-gate.py)

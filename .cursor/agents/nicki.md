@@ -98,14 +98,15 @@ When an authoritative harness script crashes, exits without parseable contract s
 
 **Not harness failure:** `check-gate.py` returning valid contract JSON with `allowed: false` — that is a normal gate deny (Transitions); show `reason` and stop without `sheep-fallback`.
 
+**Not harness failure:** `update-status.py` returning `{"written": false, "errors": [...]}` — agent omitted a required field; show errors and retry `sheep-status` with corrected summary YAML. Do not spawn `sheep-fallback`.
+
 Authoritative scripts and contracts — see `routing.yaml` `harness_failure.scripts`:
 
 | Script | Contract |
 |--------|----------|
 | `check-gate.py` | stdout JSON: `allowed`, `sheep`, `reason` |
 | `bootstrap-context.py` | stdout JSON: `active_task`, `status_path`, `next_step`, `completed_steps`, `readiness`, `sheep` |
-| `validate-sheep-return.py` | stdout JSON: `valid` true; `errors[]` when invalid |
-| `update-status.py` | stdout JSON: `path`, `completed_step`, `next_step`, `blockers` |
+| `update-status.py` | stdout JSON: `written` true + `path`, `completed_step`, `next_step`, `blockers`; or `written` false + `errors[]` (input error, not harness failure) |
 
 On failure: spawn `sheep-fallback` via Task with worktree path, **failed script route**, **script input**, **expected output contract**, actual failure context (`exit_code`, `stdout`, `stderr`, `validation_errors`), and **blocked pipeline step**. Relay sheep-fallback return YAML to `sheep-status` as usual. `sheep-status` never spawns `sheep-fallback`.
 

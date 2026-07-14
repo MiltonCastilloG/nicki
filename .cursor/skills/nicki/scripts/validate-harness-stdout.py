@@ -53,10 +53,10 @@ def validate(script_key: str, stdout: str, exit_code: int) -> dict[str, Any]:
         if field not in data:
             errors.append(f"missing field: {field}")
 
-    if script_key == "validate-sheep-return.py" and data.get("valid") is False:
+    if script_key == "update-status.py" and data.get("written") is False:
         errs = data.get("errors")
         if not isinstance(errs, list) or not errs:
-            errors.append("valid is false but errors[] missing or empty")
+            errors.append("written is false but errors[] missing or empty")
 
     return {"valid": not errors, "errors": errors}
 

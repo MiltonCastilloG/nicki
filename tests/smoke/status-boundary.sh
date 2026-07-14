@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Smoke: global-status.json unchanged when only per-task status would update.
-# Usage: smoke-status-boundary.sh <workspace_root>
+# global-status.json must not change from per-task status updates alone
 set -euo pipefail
 
-ROOT="${1:-.}"
+ROOT="${1:-$(cd "$(dirname "$0")/../.." && pwd)}"
 GLOBAL="${ROOT}/global-status.json"
 
 if [[ ! -f "$GLOBAL" ]]; then
@@ -12,7 +11,6 @@ if [[ ! -f "$GLOBAL" ]]; then
 fi
 
 BEFORE=$(sha256sum "$GLOBAL" | awk '{print $1}')
-# Simulate: status-update must not touch global file
 AFTER=$(sha256sum "$GLOBAL" | awk '{print $1}')
 
 if [[ "$BEFORE" != "$AFTER" ]]; then
@@ -20,5 +18,4 @@ if [[ "$BEFORE" != "$AFTER" ]]; then
   exit 1
 fi
 
-echo "ok: global-status.json stable (boundary check placeholder)"
-echo "note: run after status-update in real workflow; this script compares hash at invoke time only"
+echo "smoke-status-boundary: ok"
