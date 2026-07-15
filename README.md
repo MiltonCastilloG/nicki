@@ -41,7 +41,7 @@ cd nicki
 python3 install.py
 ```
 
-This writes a minimal `nicki-workspace.yaml` (nicki-only registry) and ensures `worktrees/` exists. Committed `.cursor/` agents, skills, rules, and hooks ship with the clone — no manual copying.
+This writes a minimal `nicki-workspace.yaml` (nicki-only registry) and ensures `worktrees/` exists. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/PLAN.md`](docs/PLAN.md)). Committed `.cursor/` agents, skills, rules, and hooks ship with the clone — no manual copying.
 
 ### Claude Code quick start
 

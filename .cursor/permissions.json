@@ -3,13 +3,8 @@
     "bash .cursor/skills/start-task/scripts/start-worktrees.sh",
     "bash .cursor/skills/start-task/scripts/register-global-status.sh",
     "bash .cursor/skills/close-scope/scripts/unregister-global-status.sh",
-    "bash .cursor/hooks/scripts/smoke-agent-tools.sh",
-    "bash .cursor/skills/validation/scripts/smoke-readiness-mapping.sh",
-    "bash .cursor/skills/integrate-task/scripts/smoke-git-tail.sh",
-    ".cursor/skills/start-task/scripts/start-worktrees.sh",
-    ".cursor/skills/start-task/scripts/register-global-status.sh",
-    ".cursor/skills/close-scope/scripts/unregister-global-status.sh",
-    ".cursor/hooks/scripts/smoke-agent-tools.sh",
+    "python3 test.py",
+    "test.py",
     "PROJECT=",
 
     "git status",
@@ -85,7 +80,7 @@
       "Allow python3 -m py_compile on workflow scripts during review.",
       "Allow npm and pnpm install, lint, and test in worktrees.",
       "Allow jq, mkdir -p, cp, and cat for workflow scripts, archive copy, and HEREDOC commits.",
-      "Allow smoke scripts under .cursor/hooks/scripts/ and .cursor/skills/*/scripts/."
+      "Allow smoke tests via python3 test.py."
     ],
     "block_instructions": [
       "Block chmod; invoke Nicki scripts with bash instead.",

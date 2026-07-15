@@ -2,8 +2,8 @@ meta:
   schema: errors.v1
   worktree: worktree
 failures:
-- id: '2026-07-14T18:53:30Z'
-  recorded_at: '2026-07-14T18:53:30Z'
+- id: '2026-07-15T10:24:00Z'
+  recorded_at: '2026-07-15T10:24:00Z'
   script_route: .cursor/skills/nicki/scripts/check-gate.py
   input:
     argv:
@@ -22,8 +22,8 @@ failures:
     stderr: null
     validation_errors:
     - 'missing field: reason'
-- id: 2026-07-14T18:53:30Z-2
-  recorded_at: '2026-07-14T18:53:30Z'
+- id: 2026-07-15T10:24:00Z-2
+  recorded_at: '2026-07-15T10:24:00Z'
   script_route: .cursor/skills/current-task-update/scripts/update-status.py
   input:
     argv:

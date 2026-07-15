@@ -64,4 +64,4 @@ See `.cursor/hooks/examples/resolve-task-status.sh`.
 
 Agent identity from `subagent_type` then `agent_type` only — **not** task/description text (avoids false match on words like `nicki` in prompts). Unknown agent or unmapped tool → allow. Known agent + `false` permission → deny.
 
-Smoke test: `.cursor/hooks/scripts/smoke-agent-tools.sh`
+Smoke test: `python3 test.py` (includes agent-tools smoke)
