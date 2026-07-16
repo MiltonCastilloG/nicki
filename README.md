@@ -51,10 +51,18 @@ Use this path when working in Claude Code instead of Cursor:
 git clone <repo-url> nicki
 cd nicki
 python3 install.py          # repository bootstrap (worktrees + registry)
-python3 install-claude.py   # map .cursor/ runtime into Claude Code layout
+python3 install-claude.py   # symlink .claude/ agents+skills into .cursor/; generate CLAUDE.md
 ```
 
-Then open the cloned repository in Claude Code. The install script writes `.claude/agents/`, `.claude/skills/`, and root `CLAUDE.md` (opt-in Nicki routing). Generated Claude layout is gitignored — re-run `python3 install-claude.py` after pulling agent or skill updates.
+Then open the cloned repository in Claude Code.
+
+- **Edit runtime in `.cursor/`** (agents, skills, rules). That tree is canonical and committed.
+- **`.claude/agents` and `.claude/skills` are directory symlinks** into `.cursor/` — edits there are visible under Claude without reinstall.
+- **`CLAUDE.md`** is generated from `.cursor/rules/nicki-default.mdc` (independent adapter, not a symlink).
+- **Re-run `python3 install-claude.py` only** on a fresh clone, or after changing the invocation rule (regenerates `CLAUDE.md`). Agent/skill edits need no reinstall.
+- **Atomic-save warning:** some editors save via write-temp-then-rename and can replace a symlink with a regular file. Always edit the `.cursor/` path, never the `.claude/` symlink destination. Re-run the installer to self-repair if a link is severed.
+
+Generated Claude layout is gitignored. If the OS rejects directory symlinks, the installer falls back to copying and warns that re-runs are required after runtime edits.
 
 Invoke Nicki by name:
 

@@ -78,6 +78,12 @@ Only after P1–P2 run clean on a real task. See deletion map in [`investigation
 
 ---
 
+## Host runtime
+
+| # | Task | Notes |
+|---|------|-------|
+| **20** | **Approach B: neutral-dir extract** | Move committed agents/skills/rules out of `.cursor/` into a neutral canonical tree; flip `RUNTIME_ROOT`; add Cursor-side `link_dir` install. Design: [`docs/superpowers/specs/2026-07-15-host-runtime-single-source-design.md`](superpowers/specs/2026-07-15-host-runtime-single-source-design.md). Not Approach A (Claude→`.cursor/` symlinks). |
+
 ## Defer
 
 | Item | Why |

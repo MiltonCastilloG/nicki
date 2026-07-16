@@ -3,40 +3,68 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent
-CURSOR_AGENTS = REPO_ROOT / ".cursor" / "agents"
-CURSOR_SKILLS = REPO_ROOT / ".cursor" / "skills"
-INVOCATION_RULE = REPO_ROOT / ".cursor" / "rules" / "nicki-default.mdc"
+RUNTIME_ROOT = REPO_ROOT / ".cursor"
+INVOCATION_RULE = RUNTIME_ROOT / "rules" / "nicki-default.mdc"
 CLAUDE_DIR = REPO_ROOT / ".claude"
 CLAUDE_AGENTS = CLAUDE_DIR / "agents"
 CLAUDE_SKILLS = CLAUDE_DIR / "skills"
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 
+_COPY_FALLBACK = False
+
+
+def _same_link(dest: Path, src: Path) -> bool:
+    if not dest.is_symlink():
+        return False
+    try:
+        return dest.resolve() == src.resolve()
+    except OSError:
+        return False
+
+
+def _remove_dest(dest: Path) -> None:
+    if dest.is_symlink() or dest.is_file():
+        dest.unlink()
+    elif dest.is_dir():
+        shutil.rmtree(dest)
+    elif dest.exists():
+        dest.unlink()
+
+
+def link_dir(src: Path, dest: Path) -> str:
+    """Create-or-repair a relative directory symlink. Returns 'link' or 'copy'."""
+    global _COPY_FALLBACK
+    if not src.is_dir():
+        print(f"error: {src.relative_to(REPO_ROOT)}/ not found", file=sys.stderr)
+        sys.exit(1)
+    if _same_link(dest, src):
+        return "link"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if dest.exists() or dest.is_symlink():
+        _remove_dest(dest)
+    rel = os.path.relpath(src, start=dest.parent)
+    try:
+        dest.symlink_to(rel, target_is_directory=True)
+        return "link"
+    except OSError:
+        shutil.copytree(src, dest)
+        _COPY_FALLBACK = True
+        return "copy"
+
 
 def install_agents() -> int:
-    if not CURSOR_AGENTS.is_dir():
-        print("error: .cursor/agents/ not found", file=sys.stderr)
-        sys.exit(1)
-    if CLAUDE_AGENTS.exists():
-        shutil.rmtree(CLAUDE_AGENTS)
-    CLAUDE_AGENTS.mkdir(parents=True)
-    agents = sorted(CURSOR_AGENTS.glob("*.md"))
-    for path in agents:
-        shutil.copy2(path, CLAUDE_AGENTS / path.name)
-    return len(agents)
+    link_dir(RUNTIME_ROOT / "agents", CLAUDE_AGENTS)
+    return len(list((RUNTIME_ROOT / "agents").glob("*.md")))
 
 
 def install_skills() -> None:
-    if not CURSOR_SKILLS.is_dir():
-        print("error: .cursor/skills/ not found", file=sys.stderr)
-        sys.exit(1)
-    if CLAUDE_SKILLS.exists():
-        shutil.rmtree(CLAUDE_SKILLS)
-    shutil.copytree(CURSOR_SKILLS, CLAUDE_SKILLS)
+    link_dir(RUNTIME_ROOT / "skills", CLAUDE_SKILLS)
 
 
 def generate_claude_md() -> None:
@@ -66,9 +94,24 @@ def generate_claude_md() -> None:
 
 
 def print_success(agent_count: int) -> None:
-    print(f"Synced {agent_count} agents to .claude/agents/")
-    print("Synced .cursor/skills/ to .claude/skills/")
+    if _COPY_FALLBACK:
+        print(
+            "warning: directory symlinks unavailable; "
+            "copied agents/skills — re-run install-claude.py after runtime edits",
+            file=sys.stderr,
+        )
+        print(f"Copied {agent_count} agents to .claude/agents/")
+        print("Copied .cursor/skills/ to .claude/skills/")
+    else:
+        print(f"Linked {agent_count} agents → .claude/agents/ → .cursor/agents/")
+        print("Linked .claude/skills/ → .cursor/skills/")
     print("Wrote CLAUDE.md (opt-in Nicki routing)")
+    print()
+    print("Edit runtime under .cursor/ (agents, skills, rules) — not under .claude/.")
+    print("Re-run python3 install-claude.py only on a fresh clone or after changing")
+    print("  .cursor/rules/nicki-default.mdc (regenerates CLAUDE.md).")
+    if not _COPY_FALLBACK:
+        print("Agent/skill edits need no reinstall when using symlinks.")
     print()
     print("Next steps:")
     print("  1. If you have not already, run repository bootstrap: python3 install.py")
@@ -77,7 +120,10 @@ def print_success(agent_count: int) -> None:
     print("       nicki start my-task")
     print("       nicki continue")
     print()
-    print("Note: Claude Code does not replicate Cursor hooks; Nicki pipeline work uses the installed agents and skills only.")
+    print(
+        "Note: Claude Code does not replicate Cursor hooks; "
+        "Nicki pipeline work uses the installed agents and skills only."
+    )
 
 
 def main() -> None:

@@ -1,0 +1,50 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: host-runtime-symlink
+  title: Host runtime symlink (Approach A)
+  original: "host-runtime-symlink — rewrite install-claude.py so .claude/agents and .claude/skills are relative directory symlinks into .cursor/ (not copies); keep generating CLAUDE.md; add RUNTIME_ROOT and reusable link_dir; update README; Approach A only (YAGNI); design seed at docs/superpowers/specs/2026-07-15-host-runtime-single-source-design.md"
+  type: chore
+  branch: chore/host-runtime-symlink
+
+story: RUNTIME_ROOT · link_dir · agents/skills symlinks · CLAUDE.md adapter · copy fallback · README · Approach B backlog
+
+outcome:
+  status: pending_integrate
+  target: main
+  feature_branch: chore/host-runtime-symlink
+  sync_handoff: current-task/syncs/host-runtime-symlink.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story for Approach A — symlink .claude agents/skills into .cursor/; CLAUDE.md stays generated adapter.
+  - step: spec
+    summary: Spec captured RUNTIME_ROOT, link_dir, symlink install, copy fallback, README, and Approach B backlog row.
+  - step: subtasks
+    summary: Ten subtasks for installer symlink refactor, docs, and temp-clone manual check.
+  - step: execute
+    summary: complete — 10/10 subtasks; install-claude.py, README.md, docs/tasks.md; temp-clone asserts exit 0.
+  - step: review
+    summary: ready_for_acceptance — review approved; no blocking or deferred findings.
+  - step: sync
+    summary: Synced chore/host-runtime-symlink (573aa7d); pre_push_merge merged; pushed origin/chore/host-runtime-symlink.
+
+decisions:
+  - topic: Canonical source
+    decision: .cursor/agents and .cursor/skills remain committed canonical runtime.
+  - topic: Claude install
+    decision: Relative directory symlinks via link_dir; CLAUDE.md generated adapter (not symlinked).
+  - topic: Source-path knob
+    decision: RUNTIME_ROOT = .cursor as sole constant for future Approach B.
+  - topic: Symlink fallback
+    decision: OSError on symlink_to → copytree with re-run warning; exit 0.
+  - topic: Scope
+    decision: Approach A only — no neutral-dir extract, install-cursor.py, or host registry.
+
+open_questions: []
+
+suggestions: []
