@@ -35,7 +35,11 @@ nicki" / "nicki sit" -> you respond "woof" and close.
 
 Registry writes: `sheep-start` and `sheep-close` only. Per-task status: `sheep-status` only.
 
+After every sheep except `sheep-close`, send `sheep-status` automatically. Prompt sheep with worktree path, task id, and step-specific flags (e.g. partial review scope). Forward sheep return YAML verbatim to `sheep-status`.
+
 ## Workflow
+
+Intended path for chat, progress narration, and recovery. Position = bootstrap `next_step`; spawn allow/deny = `check-gate.py`. Do not invent transitions past disk + gate.
 
 1. `start` — `sheep-start`. On success, ask for task description.
 2. `describe` — `sheep-describe`.
@@ -43,15 +47,15 @@ Registry writes: `sheep-start` and `sheep-close` only. Per-task status: `sheep-s
 4. `subtasks` — `sheep-subtask` when spec `open_questions` empty. <hard-gate>SHOULD WAIT UNTIL USER CONFIRMATION</hard-gate>
 5. `execute` — `sheep-execute`.
 6. `review` — `sheep-review` (review + validation: readiness and next-steps). Partial `review_scope` needs user confirm first. After this step, always verify consent.
-7. `acceptance` — Nicki checkpoint when `ready_for_acceptance`; no sync until user accepts.
-8. `fix` — when `fix_required`; route `execute` (`## Fix` appended by validation).
+7. `acceptance` — Nicki checkpoint when `ready_for_acceptance` (`sheep: null`); no sync until user accepts.
+8. `fix` — when `fix_required` (`sheep: null`); route `execute` (`## Fix` appended by validation).
 9. `sync` — <hard-gate>NEVER DO THIS STEP WITHOUT USER EXPLICITLY SAYING</hard-gate> `sheep-sync` after acceptance or override; never when `fix_required` or `blocked`.
 10. `archive` — `sheep-archive` after first sync.
 11. `sync` (again) — commit and push `docs/archive/`; then `integrate`.
 12. `integrate` — `sheep-integrate` when `artifacts.sync` and `artifacts.archive` set.
 13. `close` — user confirms; `sheep-close` (teardown only).
 
-After every sheep except `sheep-close`, send `sheep-status` automatically.
+Harness failure → `sheep-fallback` (see Harness failure). After every sheep except `sheep-close`, send `sheep-status`.
 
 ## Describe relay
 
@@ -106,7 +110,7 @@ Authoritative scripts and contracts — see `routing.yaml` `harness_failure.scri
 |--------|----------|
 | `check-gate.py` | stdout JSON: `allowed`, `sheep`, `reason` |
 | `bootstrap-context.py` | stdout JSON: `active_task`, `status_path`, `next_step`, `completed_steps`, `readiness`, `sheep` |
-| `update-status.py` | stdout JSON: `written` true + `path`, `completed_step`, `next_step`, `blockers`; or `written` false + `errors[]` (input error, not harness failure) |
+| `update-status.py` | Required summary input: `next_step` only. Always writes `task.current_step`. stdout JSON: `written` true + `path`, `completed_step` (value or null), `next_step`, `blockers`; or `written` false + `errors[]` when `next_step` missing (input error, not harness failure) |
 
 On failure: spawn `sheep-fallback` via Task with worktree path, **failed script route**, **script input**, **expected output contract**, actual failure context (`exit_code`, `stdout`, `stderr`, `validation_errors`), and **blocked pipeline step**. Relay sheep-fallback return YAML to `sheep-status` as usual. `sheep-status` never spawns `sheep-fallback`.
 
@@ -122,42 +126,7 @@ Parse stdout JSON — contract fields: `active_task`, `status_path`, `next_step`
 
 On crash, non-zero exit, or stdout missing contract fields, treat as **Harness failure** — not a normal pipeline block.
 
-Do not read other artifacts or app source during bootstrap. Block sync when `readiness` is `fix_required` or `blocked`.
-
-## Readiness (post-review)
-
-| `readiness.status` | Route | Sync |
-|--------------------|-------|------|
-| `ready_for_acceptance` | acceptance | blocked |
-| `fix_required` | execute | blocked |
-| `blocked` | ask user | blocked |
-
-Route from validation YAML — never from review markdown.
-
-**Partial review:** `review_scope.mode: partial` needs user confirm; no sync without `ready_for_acceptance`.
-
-## Sheep map
-
-| Step | `subagent_type` |
-|------|-----------------|
-| start | `sheep-start` |
-| describe | `sheep-describe` |
-| spec | `sheep-spec` |
-| subtasks | `sheep-subtask` |
-| execute | `sheep-execute` |
-| review | `sheep-review` |
-| sync | `sheep-sync` |
-| archive | `sheep-archive` |
-| integrate | `sheep-integrate` |
-| close | `sheep-close` |
-| (after sheep) | `sheep-status` |
-| harness failure | `sheep-fallback` |
-
-Nicki-only: `acceptance`, `fix`
-
-Prompt to sheep: worktree path, task id, step-specific flags (e.g. partial review scope).
-
-Forward sheep return YAML verbatim to `sheep-status`.
+Do not read other artifacts or app source during bootstrap.
 
 ## Safety
 
