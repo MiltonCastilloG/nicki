@@ -40,7 +40,7 @@ open_questions: []
 
 suggestions:
   - area: orchestration
-    suggestion: Land bootstrap-context.py, validate-sheep-return.py, and update-status.py on disk before claiming full four-script fallback E2E coverage.
+    suggestion: "Superseded Jul 2026: bootstrap-context.py + update-status.py shipped; validate-sheep-return.py deleted (write-path required fields only). See docs/superpowers/specs/2026-07-17-harness-read-write-types-design.md."
     evidence: "execution subtask 1 — three scripts wired in routing only, not on disk yet."
   - area: execute
     suggestion: Keep smoke-harness-failure.sh as regression guard when changing check-gate stdout contract or harness-failure routing.

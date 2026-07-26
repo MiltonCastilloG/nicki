@@ -68,7 +68,7 @@ flowchart LR
 |-----|------|
 | **Orchestrator is `nicki.md`** | Every turn re-interprets routing, gates, confirm rules |
 | **User confirm is prompt policy** | Advisory to the model, not enforced |
-| **No runtime schema validation** | Malformed sheep output not rejected before `sheep-status` |
+| **No per-step return schema validator** | By design: write script checks required fields only; full schema validation deferred ([read/write ADR](superpowers/specs/2026-07-17-harness-read-write-types-design.md)) |
 | **No code runner** | Task tool is the orchestration engine |
 | **Duplication** | Step logic in both `routing.yaml` and `nicki.md` |
 | **Mixed gate checks** | Some JSON fields; others prose the model must honor |
@@ -83,23 +83,24 @@ Article punchline applies to Nicki's **orchestrator**: skip git confirm or misro
 
 ```
 status.json + routing.yaml → gate (code) → spawn sheep
-  → validate return YAML → sheep-status updates status.json → next node
+  → update-status.py writes status.json → next node
 ```
 
 `nicki.md` becomes optional UX. `routing.yaml` needs an executor, not more prose.
 
 **Sheep become `AgentDefinition`-shaped:** `id`, `toolSet` from `permissions.json`, I/O schemas from `*-format.md`, slim prompt from sheep MD. Skills stay Markdown — playbook in sheep, not orchestrator.
 
-**Validate at boundaries:**
+**Boundaries (current harness):**
 
-| Boundary | Validate |
-|----------|----------|
-| sheep → return YAML | `sheep_return_contract` fields |
-| sheep → artifact | spec/execution/validation YAML vs format docs |
-| review → route | `readiness.status` enum only |
-| sync / integrate | artifact pointer exists; readiness not `fix_required` |
+| Boundary | Who |
+|----------|-----|
+| position / bootstrap | `bootstrap-context.py` (read) |
+| spawn veto | `check-gate.py` (gate) |
+| sheep → status.json | `update-status.py` (write) — required fields only; no separate return validator |
+| review → route | `readiness.status` enum (gate / bootstrap when needed) |
+| sync / integrate | artifact pointer + readiness gates in `check-gate.py` |
 
-Documented + partially smoke-tested today. Not enforced every run.
+Full artifact schema validation vs format docs remains deferred. See [harness read/write design](superpowers/specs/2026-07-17-harness-read-write-types-design.md).
 
 **Context + permissions:** Sheep auto-load task paths; runner would formalize injection. `permissions.json` + hooks depend on Cursor wiring; code runner enforces before spawn.
 
@@ -143,10 +144,11 @@ Nicki does not need the article's long-lived QA service. Path is **invoke-and-ex
 | Approach | When |
 |----------|------|
 | LLM Nicki + Task (today) | Each chat turn |
+| `bootstrap-context.py` | Position / card / relay hints |
 | `check-gate.py` / `nicki gate` | Before risky step |
+| `update-status.py` via `sheep-status` | After each sheep (write) |
 | `nicki continue` CLI | One-shot read → decide → spawn |
 | Cursor hooks | On tool use |
-| Return validator in `sheep-status` | After each sheep |
 
 Server only if Nicki leaves IDE (CI webhooks, queues, headless farm) — PLAN.md phase 3+.
 
@@ -158,16 +160,18 @@ flowchart TB
     U[User] <-->|chat| N[Nicki]
   end
   subgraph code_edges["Deterministic edges"]
+    B[bootstrap-context.py]
     G[check-gate.py]
-    V[validate-return.sh]
+    W[update-status.py]
   end
   subgraph workers["Unchanged workers"]
     SH[sheep + skills]
   end
-  N --> G -->|allowed| SH --> V -->|status.json| N
+  N --> B
+  N --> G -->|allowed| SH --> W -->|status.json| N
 ```
 
-**Focus:** working pipeline first, guardrails second, trimming last. Script owns gates when P2 ships; trim only after harness is proven.
+**Focus:** working pipeline first, guardrails second, trimming last. Scripts own read / gate / write; trim only after harness is proven. No per-step return validator ([ADR](superpowers/specs/2026-07-17-harness-read-write-types-design.md)).
 
 Disk consent deferred.
 

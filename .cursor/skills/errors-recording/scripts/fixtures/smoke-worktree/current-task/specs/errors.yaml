@@ -24,15 +24,15 @@ failures:
     - 'missing field: reason'
 - id: 2026-07-02T13:37:09Z-2
   recorded_at: '2026-07-02T13:37:09Z'
-  script_route: .cursor/skills/nicki/scripts/validate-sheep-return.py
+  script_route: .cursor/skills/current-task-update/scripts/update-status.py
   input:
-    stdin: 'worktree: x\ncompleted_step: execute'
+    stdin: 'completed_step: execute'
   expected_output:
     required_fields:
-    - valid
+    - written
   actual:
-    exit_code: 2
-    stdout: '{"valid":false,"errors":["missing summary"]}'
+    exit_code: 1
+    stdout: '{"written": false, "errors": ["missing required field: next_step"]}'
     stderr: null
     validation_errors:
-    - valid is false
+    - 'missing required field: next_step'

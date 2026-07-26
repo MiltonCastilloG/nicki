@@ -29,6 +29,18 @@ Nicki (.cursor/agents/nicki.md + routing.yaml)
 
 Leaf skills are **portable** — no `status.json`, no pipeline step names, no “spawn X next”. Sheep own auto-load paths and Nicki handoff expectations.
 
+### Harness scripts (read / gate / write)
+
+Orchestration edges are invoke-and-exit Python — not a per-step schema validator:
+
+| Type | Script | Role |
+| ---- | ------ | ---- |
+| Read | `.cursor/skills/nicki/scripts/bootstrap-context.py` | Position, next step, relay hints |
+| Gate | `.cursor/skills/nicki/scripts/check-gate.py` | Spawn veto after user confirm |
+| Write | `.cursor/skills/current-task-update/scripts/update-status.py` | Sole writer for `current-task/status.json` |
+
+Missing required write fields → `written: false` + `errors[]` (retry YAML); not a harness crash. Design: [`docs/superpowers/specs/2026-07-17-harness-read-write-types-design.md`](docs/superpowers/specs/2026-07-17-harness-read-write-types-design.md).
+
 ---
 
 ## Quick start

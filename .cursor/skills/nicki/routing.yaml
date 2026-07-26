@@ -151,14 +151,16 @@ sheep_return_contract:
     Every sheep ends its final message with compact YAML for sheep-status.
     Nicki forwards this YAML verbatim — do not re-read the written artifact unless
     readiness routing requires validation YAML or spec open_questions gate check.
+    Sheep normally still send optional_fields; update-status.py requires only next_step.
   required_fields:
-    - worktree
-    - completed_step
-    - completed_status
-    - artifact
     - next_step
-    - open_questions
-    - summary
+  optional_fields:
+    - worktree          # Nicki passes path separately; may appear in YAML
+    - completed_step    # when present: drives task.current_step, completed_steps append, artifact pointer
+    - completed_status  # default complete
+    - artifact          # pointer when completed_step present
+    - open_questions    # default []
+    - summary           # relay prose only
   on_blocked: set completed_status to blocked; populate open_questions
 
 harness_failure:
@@ -180,6 +182,8 @@ harness_failure:
       expected_stdout:
         required_fields: [written]
       notes: >
-        Success: written true plus path, completed_step, next_step, blockers.
-        Input error (agent omitted required field): written false plus errors[] naming
-        exact fields — not a harness failure; retry sheep-status with corrected YAML.
+        Required summary field is next_step only. Missing next_step → written false.
+        Missing completed_step is allowed; task.current_step is always written.
+        Success: written true plus path, completed_step (value or null), next_step, blockers.
+        Input error (agent omitted next_step): written false plus errors[] naming
+        next_step — not a harness failure; retry sheep-status with corrected YAML.

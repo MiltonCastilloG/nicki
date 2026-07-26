@@ -18,4 +18,4 @@ Gherkin story defined a thin sheep-fallback agent that appends harness script fa
 
 ## Suggestions
 
-Land bootstrap-context.py, validate-sheep-return.py, and update-status.py before claiming full four-script fallback E2E coverage — three are routing-only today. Keep smoke-harness-failure.sh as regression guard when changing check-gate stdout or harness-failure routing.
+**Superseded (Jul 2026):** `bootstrap-context.py` and `update-status.py` shipped; `validate-sheep-return.py` was deleted — required-field checks live in the write script only ([harness ADR](../superpowers/specs/2026-07-17-harness-read-write-types-design.md)). Keep harness-failure smoke as regression guard when changing check-gate stdout or harness-failure routing.

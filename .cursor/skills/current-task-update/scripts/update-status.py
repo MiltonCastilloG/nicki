@@ -3,16 +3,20 @@
 
 Required inputs:
   --worktree (CLI)
-  summary YAML: completed_step, next_step
+  summary YAML: next_step
 
 Optional summary fields (defaults applied):
-  artifact — skip artifact pointer when absent
+  completed_step — when present, sets task.current_step, may append completed_steps,
+    and may set artifact pointer; when absent, current_step is still written
+    (preserved from existing status, or "start" on fresh init)
+  artifact — skip artifact pointer when absent or when completed_step absent
   completed_status — default "complete"
   open_questions — default []
   summary, task.* — ignored or derived
 
 Success stdout: {"written": true, "path", "completed_step", "next_step", "blockers"}
-Input error stdout: {"written": false, "errors": ["missing required field: <name>"]}
+  completed_step is the YAML value or null when omitted.
+Input error stdout: {"written": false, "errors": ["missing required field: next_step"]}
 Exit 0 on success, 1 on input error or write failure.
 """
 
@@ -22,7 +26,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-REQUIRED_SUMMARY_FIELDS = ("completed_step", "next_step")
+REQUIRED_SUMMARY_FIELDS = ("next_step",)
 
 
 def _fail(errors: list[str]) -> None:
@@ -54,9 +58,19 @@ def _load_json(path: Path) -> dict[str, Any] | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _init_status(worktree_path: str, slug: str, summary: dict[str, Any]) -> dict[str, Any]:
+def _init_status(
+    worktree_path: str,
+    slug: str,
+    summary: dict[str, Any],
+    completed_step: str | None,
+    next_step: str,
+    completed_status: str,
+) -> dict[str, Any]:
     task = summary.get("task") if isinstance(summary.get("task"), dict) else {}
     original = task.get("original") if isinstance(task.get("original"), str) else slug
+    completed_steps: list[str] = []
+    if completed_step is not None and completed_status == "complete":
+        completed_steps = [completed_step]
     return {
         "meta": {"schema": "task-status.v2"},
         "task": {
@@ -66,9 +80,9 @@ def _init_status(worktree_path: str, slug: str, summary: dict[str, Any]) -> dict
             "title": task.get("title"),
             "original": original,
             "type": task.get("type"),
-            "current_step": summary["completed_step"],
-            "next_step": summary["next_step"],
-            "completed_steps": [],
+            "current_step": completed_step if completed_step is not None else "start",
+            "next_step": next_step,
+            "completed_steps": completed_steps,
         },
         "scope": {"worktree_path": worktree_path},
         "artifacts": {},
@@ -114,6 +128,16 @@ def _validate_required(summary: dict[str, Any]) -> None:
         _fail(errors)
 
 
+def _optional_completed_step(summary: dict[str, Any]) -> str | None:
+    raw = summary.get("completed_step")
+    if raw is None:
+        return None
+    if not isinstance(raw, str):
+        _fail(["optional field must be a string when present: completed_step"])
+    stripped = raw.strip()
+    return stripped or None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--worktree", required=True, help="Repo-relative or absolute worktree path")
@@ -135,7 +159,7 @@ def main() -> int:
     summary = _parse_yaml(_read_text(args.yaml_path))
     _validate_required(summary)
 
-    completed_step = summary["completed_step"]
+    completed_step = _optional_completed_step(summary)
     next_step = summary["next_step"]
     completed_status = summary.get("completed_status", "complete")
     artifact = summary.get("artifact")
@@ -148,7 +172,14 @@ def main() -> int:
 
     status = _load_json(status_path)
     if status is None:
-        status = _init_status(str(Path(worktree_arg)), slug, summary)
+        status = _init_status(
+            str(Path(worktree_arg)),
+            slug,
+            summary,
+            completed_step,
+            next_step,
+            completed_status if isinstance(completed_status, str) else "complete",
+        )
 
     status["meta"] = {"schema": "task-status.v2"}
 
@@ -157,15 +188,22 @@ def main() -> int:
         task = {}
         status["task"] = task
     task["slug"] = task.get("slug") or slug
-    task["current_step"] = completed_step
     task["next_step"] = next_step
 
-    completed_steps = task.get("completed_steps")
-    if not isinstance(completed_steps, list):
-        completed_steps = []
-    if completed_status == "complete" and completed_step not in completed_steps:
-        completed_steps.append(completed_step)
-    task["completed_steps"] = completed_steps
+    if completed_step is not None:
+        task["current_step"] = completed_step
+        completed_steps = task.get("completed_steps")
+        if not isinstance(completed_steps, list):
+            completed_steps = []
+        if completed_status == "complete" and completed_step not in completed_steps:
+            completed_steps.append(completed_step)
+        task["completed_steps"] = completed_steps
+        _set_artifact_pointer(status, completed_step, artifact if isinstance(artifact, str) else None)
+    else:
+        existing = task.get("current_step")
+        if not isinstance(existing, str) or not existing.strip():
+            task["current_step"] = "start"
+        # Preserve completed_steps / artifacts when completed_step omitted.
 
     scope = status.setdefault("scope", {})
     if not isinstance(scope, dict):
@@ -174,7 +212,6 @@ def main() -> int:
     scope["worktree_path"] = scope.get("worktree_path") or str(Path(worktree_arg))
 
     status["open_questions"] = open_questions
-    _set_artifact_pointer(status, completed_step, artifact if isinstance(artifact, str) else None)
 
     try:
         status_path.write_text(

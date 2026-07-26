@@ -179,7 +179,7 @@ It should track:
 | `nicki task start <project> <description>` | Pull base branch, create worktree under `worktrees/<slug>` |
 | `nicki doctor` | Check registry, git, runtime files, gitignore for worktrees |
 
-Start with bash; add schema validation later if needed.
+Start with bash. Per-step sheep-return schema validation is deferred — harness is read / gate / write only ([harness ADR](superpowers/specs/2026-07-17-harness-read-write-types-design.md)).
 
 ---
 
@@ -247,7 +247,7 @@ Full detail: [`NICKI.md`](NICKI.md).
 Tracked in [`tasks.md`](tasks.md). Priority: (1) workflow functioning, (2) harness/guardrails, (3) trimming.
 
 1. **Worktree setup** — `create-worktree.py`, root `worktrees/`, copy gitignored locals.
-2. **Guardrails** — `check-gate.py`, return validator, smoke tests.
+2. **Guardrails** — `bootstrap-context.py`, `check-gate.py`, `update-status.py`, smoke fixtures (#10). No separate return validator (#9 deferred).
 3. **Trim orchestrator prompt** — after harness proven.
 4. **Minimal CLI** — later.
 

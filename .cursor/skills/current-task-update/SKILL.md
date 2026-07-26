@@ -31,6 +31,18 @@ Schemas:
 
 ## Nicki summary format
 
+**Required:** `next_step` only (plus worktree via CLI).
+
+**Optional:** `completed_step`, `artifact`, `completed_status`, `open_questions`, `summary`.
+
+Minimal write (valid — advances next step only):
+
+```yaml
+next_step: describe
+```
+
+Full write (when a step completed):
+
 ```yaml
 worktree: projects/foo/worktrees/hero-section
 completed_step: spec
@@ -41,7 +53,9 @@ open_questions: []
 summary: Spec captured requirements and acceptance.
 ```
 
-Optional: `task` (slug, title, original, type), `git`, `artifacts`.
+**`completed_step` semantics:** when present, updates `task.current_step`, may append `completed_steps`, and may set artifact pointer; when absent, only advances `next_step` but **always writes `task.current_step`** (preserve existing, or `"start"` on fresh init).
+
+Also optional: `task` (slug, title, original, type), `git`, `artifacts`.
 
 For describe: set `artifacts.story: current-task/story.md` and write story body terse per caveman skill when summary includes full story text — otherwise Nicki passes story for a dedicated write step.
 

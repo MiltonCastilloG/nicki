@@ -1,6 +1,6 @@
 # Nicki — workflow orchestrator context
 
-Nicki is the read-only orchestrator for the CastleMill current-task pipeline. Nicki controls workflow order, not implementation. Nicki asks before each step, sends the correct sheep, passes prior inputs and outputs, and sends `sheep-status` after every step — except close, which deletes the task context folder.
+Nicki is the orchestrator for the CastleMill current-task pipeline. Nicki controls workflow order, not implementation. Nicki asks before each step, runs harness scripts for position and gates, sends the correct sheep, and sends `sheep-status` after every step — except close, which deletes the task context folder.
 
 Use this document as a rebuild guide: what Nicki is, what it controls, how the pieces fit together, and the key decisions that shaped the design.
 
@@ -10,14 +10,28 @@ Use this document as a rebuild guide: what Nicki is, what it controls, how the p
 
 | Nicki does | Nicki does not |
 | ---------- | -------------- |
-| Read workflow docs, `global-status.json`, `current-task/status.json`, and task artifacts | Write files |
-| Send sheep via the Task tool | Run shell commands |
-| Ask for confirmation before each transition | Search or edit application source |
-| Pass worktree path, context, and prior artifacts to sheep | Improvise workflow transitions |
-| Send `sheep-status` automatically after each sheep (except close) | Spawn nested sheep from workers |
-| Track orchestration progress with todos | Sync, integrate, or delete without explicit user confirmation |
+| Run `bootstrap-context.py` and `check-gate.py` (shell allowlist) | Write files or run other shell |
+| Send sheep via the Task tool | Search or edit application source |
+| Ask for confirmation before each transition | Improvise workflow transitions |
+| Pass worktree path, context, and prior artifacts to sheep | Spawn nested sheep from workers |
+| Send `sheep-status` automatically after each sheep (except close) | Sync, integrate, or delete without explicit user confirmation |
+| Track orchestration progress with todos | Re-derive gates/sheep map from prose (scripts + `routing.yaml` own that) |
 
-Nicki = `.cursor/agents/nicki.md` subagent (`readonly: true`; `read`, `task`, `ask_question`, `todo_write`). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
+Nicki = `.cursor/agents/nicki.md` subagent (`readonly: true`; shell only for those two scripts; `read`, `task`, `ask_question`, `todo_write`). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
+
+### Harness scripts
+
+Authoritative read / gate / write surface (see [harness read/write design](superpowers/specs/2026-07-17-harness-read-write-types-design.md)):
+
+| Type | Script | Role |
+| ---- | ------ | ---- |
+| Read | `bootstrap-context.py` | Position, readiness, intended sheep on stdout |
+| Gate | `check-gate.py` | After user confirm: `allowed` / `sheep` / `reason` |
+| Write | `update-status.py` | `sheep-status` path — required summary field `next_step` only; always writes `task.current_step` |
+
+### Bootstrap chain
+
+**Session** cold start (hooks / parent) may surface registry pointers. **Disk** bootstrap is Nicki’s every-response gate: resolve worktree → run `bootstrap-context.py` → card and route from stdout only. After chat confirm, `check-gate.py` vetoes or returns the `sheep` to spawn. Do not re-read `status.json` / validation YAML for routing while those scripts succeed.
 
 ---
 
@@ -43,7 +57,7 @@ See `.cursor/skills/README.md` for rules and workflow exceptions.
 
 ## Canonical workflow
 
-Step order, automatic `sheep-status` after each sheep (except close), and post-review readiness branching are in the diagram below. Nicki routes from validation readiness (`fix_required` → execute with `## Fix`, `ready_for_acceptance` → acceptance, `blocked` → ask user); sync and integrate require explicit user confirmation.
+Step order and automatic `sheep-status` after each sheep (except close) are in the diagram below. Post-review readiness routing and step→sheep mapping live in `routing.yaml` + `bootstrap-context.py` / `check-gate.py` — not duplicated here. Sync and integrate still require explicit user confirmation in chat.
 
 ```mermaid
 flowchart LR
@@ -166,36 +180,9 @@ Exception: **do not send `sheep-status` after sheep-close** — close deletes `c
 
 ## Transition discipline
 
-Before sending any sheep except `sheep-status`, Nicki shows a compact state view and asks for confirmation:
+Before sending any sheep except `sheep-status`, Nicki shows a compact state card and asks for confirmation. On yes, she runs `check-gate.py`; deny → show `reason` and stop; allow → spawn `sheep` from stdout (skip Task when `sheep` is null).
 
-```markdown
-Current task: `hero-section` — Hero section redesign
-Progress: `describe` → `spec` → `subtasks`
-Next action: send `sheep-spec`
-Expected output: `current-task/specs/hero-section.yaml`
-```
-
-If the user declines, Nicki stops.
-
-### Git side effects require explicit confirmation
-
-| Agent | Must name this side effect |
-| ----- | -------------------------- |
-| `sync-task` | Local commit, merge `main` into feature branch, push feature branch |
-| `integrate-task` | Merge feature into `main` and push `main` to remote |
-
-### Close requires the feedback prompt
-
-Before close-task, Nicki asks exactly:
-
-```text
-Archive and delete worktree?
-```
-
-And shows:
-
-- Archive: `docs/archive/<slug>/report.yaml`, `report.md`, `story.md`; spec and subtasks erased
-- Delete scope: whole `<worktree>/` after archive
+Git side effects (`sync`, `integrate`) and close (delete worktree) still need explicit chat confirmation naming the side effect — the gate script records `--user-confirmed` / `--override` only after that.
 
 ---
 
@@ -203,9 +190,9 @@ And shows:
 
 These decisions are load-bearing. Changing them requires updating Nicki, sheep, and docs together.
 
-### 1. Nicki is read-only; state has a dedicated writer
+### 1. Nicki does not write state; harness owns position and gates
 
-Nicki orchestrates but never writes files. sheep-status writes per-task `status.json`; sheep-start / sheep-close own `global-status.json`. This prevents the orchestrator from corrupting workflow state while improvising.
+Nicki orchestrates but never writes files. She may run only `bootstrap-context.py` and `check-gate.py`. sheep-status writes per-task `status.json` via `update-status.py`; sheep-start / sheep-close own `global-status.json`. This keeps the orchestrator from corrupting workflow state while improvising.
 
 ### 2. Sheep are atomic; no nested delegation
 
@@ -258,21 +245,21 @@ close-task checks integrate handoff, unregisters `global-status.json`, deletes w
 - **Execute-plan** follows unchecked subtasks in order, marks completed items `- [x]`, and asks on ambiguity.
 - **Review-execution** independently inspects the diff; execution YAML is a map, not an approval.
 
-### 12. Review emits readiness
+### 12. Review emits readiness; scripts route
 
-`validation` skill runs after review in same spawn: readiness, `next-steps/*.yaml` for deferred `[scope]`, `## Fix` when needed. Nicki routes from validation enum, not review prose.
+`validation` skill runs after review in same spawn: readiness, `next-steps/*.yaml` for deferred `[scope]`, `## Fix` when needed. Bootstrap/check-gate read validation YAML; Nicki does not re-map readiness tables from prose.
 
 ### 13. Acceptance before sync
 
-`ready_for_acceptance` → Nicki-only checkpoint with disk summary. No `sync-task` until user accepts. Reject → blockers + fix or describe route.
+`ready_for_acceptance` → Nicki-only checkpoint (gate returns `sheep: null`). No sync until user accepts or overrides; `check-gate.py` enforces.
 
 ### 14. Spec open_questions gate
 
-Non-empty spec `open_questions` blocks `subtask-maker`; mirrored in status until cleared.
+Non-empty spec `open_questions` blocks subtasks — enforced by `check-gate.py`, mirrored in status until cleared.
 
 ### 15. Partial execution review
 
-All subtasks done or no `review_scope` → full review. `review_scope.mode: partial` → user confirm scoped review; no sync without full readiness.
+`review_scope.mode: partial` needs user confirm before review spawn — enforced by `check-gate.py`. No sync without full readiness.
 
 ---
 
@@ -346,7 +333,7 @@ Nicki sends `sheep-start`, then `sheep-status`, describe, and each sheep after c
 
 ## Compaction + mode picker
 
-Cursor compacts chats — disk wins: `global-status.json`, `status.json`, artifacts, `readiness` in validation YAML. Re-read on every Nicki activation; re-confirm git on sync/integrate. Nicki = subagent via Task today; custom mode picker future when Cursor supports repo-defined modes.
+Cursor compacts chats — disk wins via harness: `bootstrap-context.py` stdout, then artifacts as needed. Re-bootstrap on every Nicki activation; re-confirm git on sync/integrate. Nicki = subagent via Task today; custom mode picker future when Cursor supports repo-defined modes.
 
 ---
 
@@ -354,5 +341,6 @@ Cursor compacts chats — disk wins: `global-status.json`, `status.json`, artifa
 
 - Full contributor workflow: [`CONTRIBUTING.md`](../CONTRIBUTING.md) — agent workflow pipeline section
 - Nicki agent definition: [`.cursor/agents/nicki.md`](../.cursor/agents/nicki.md)
+- Harness read/write types: [`docs/superpowers/specs/2026-07-17-harness-read-write-types-design.md`](superpowers/specs/2026-07-17-harness-read-write-types-design.md)
 - Status schemas: [`.cursor/skills/current-task-update/status-format.md`](../.cursor/skills/current-task-update/status-format.md), [`.cursor/skills/current-task-update/global-status-format.md`](../.cursor/skills/current-task-update/global-status-format.md)
 - Archive format: [`.cursor/skills/task-archive/archive-format.md`](../.cursor/skills/task-archive/archive-format.md)

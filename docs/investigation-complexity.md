@@ -10,7 +10,7 @@ This doc is the **trimming** deletion map — use when functioning and harness a
 
 ## When to use this doc
 
-After `check-gate.py` and validators are proven on a real task. Then delete duplicated prose the harness already enforces.
+After `check-gate.py` (and #10 gate fixtures) are proven on a real task. Then delete duplicated prose the harness already enforces. No per-step return validator — see [harness read/write design](superpowers/specs/2026-07-17-harness-read-write-types-design.md).
 
 ---
 

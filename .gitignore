@@ -22,5 +22,7 @@ CLAUDE.md
 
 # Dependencies and caches (worktrees, managed clones, legacy paths)
 **/node_modules/
+**/__pycache__/
+*.py[cod]
 **/saved_games/
 .pnpm-store/

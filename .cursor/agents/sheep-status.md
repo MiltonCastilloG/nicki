@@ -18,12 +18,14 @@ Read and follow `.cursor/skills/current-task-update/SKILL.md`, `.cursor/skills/c
 
 - `.cursor/skills/current-task-update/scripts/update-status.py`
 
-Required summary fields: `completed_step`, `next_step`. Optional: `artifact`, `completed_status`, `open_questions`.
+Required summary field: **`next_step` only**. Optional: `completed_step`, `artifact`, `completed_status`, `open_questions`, `summary`.
+
+Nicki still forwards full YAML; the write script ignores missing optional fields. `task.current_step` always ends up in `status.json` (from `completed_step` when present, else preserved existing, else `"start"` on fresh init).
 
 ## Required inputs
 
 1. **Worktree path** — absolute or repo-relative (e.g. `worktrees/hero-section`).
-2. **Nicki summary YAML** — compact result with completed step, next step, and optional fields.
+2. **Nicki summary YAML** — at least `next_step`; optional completed step, artifact, and other fields.
 
 ## Your task
 
