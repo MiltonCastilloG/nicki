@@ -13,6 +13,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ROUTING_PATH = SCRIPT_DIR.parent / "routing.json"
 BLOCKED_READINESS = frozenset({"fix_required", "blocked"})
 
+# Artifact pointers whose value is workspace-root-relative, not worktree-relative.
+# The archive report must outlive the worktree, so it is never written under it.
+ROOT_SCOPED_ARTIFACTS = frozenset({"archive"})
+
 
 class ArtifactParseError(ValueError):
     """Structured artifact could not be parsed as an object."""
@@ -85,7 +89,10 @@ def resolve_worktree(path: str) -> Path:
 
 def artifact_path(worktree: Path, status: dict[str, Any], key: str) -> Path | None:
     rel = (status.get("artifacts") or {}).get(key)
-    return worktree / rel if rel else None
+    if not rel:
+        return None
+    base = workspace_root() if key in ROOT_SCOPED_ARTIFACTS else worktree
+    return base / rel
 
 
 def file_ok(path: Path | None) -> bool:
@@ -97,21 +104,72 @@ def completed(status: dict[str, Any]) -> set[str]:
 
 
 def readiness(status: dict[str, Any], worktree: Path) -> str | None:
-    rel = (status.get("artifacts") or {}).get("review_validation")
-    if not rel:
-        return None
-    path = worktree / rel
-    if not path.is_file():
+    path = artifact_path(worktree, status, "review_validation")
+    if not file_ok(path):
         return None
     return (load_artifact(path).get("readiness") or {}).get("status")
 
 
+def next_step_for(
+    step: str,
+    status: dict[str, Any],
+    readiness_status: str | None = None,
+) -> str | None:
+    """Resolve the step that follows `step` from routing plus status.
+
+    Returns None when routing cannot decide yet — e.g. `review`, whose successor
+    depends on a readiness value that does not exist until the step has run.
+    """
+    routing = load_routing()
+    cfg = ((routing.get("steps") or {}).get(step)) or {}
+    if not cfg:
+        return None
+    archived = cfg.get("next_step_when_archived")
+    if archived and (status.get("artifacts") or {}).get("archive"):
+        return archived
+    default = cfg.get("default_next_step")
+    if default:
+        return default
+    route = (routing.get("readiness_routing") or {}).get(readiness_status or "") or {}
+    return route.get("route_step")
+
+
+def expected_artifact_for(step: str, status: dict[str, Any]) -> str | None:
+    """Routing's declared output path for `step`, with `<slug>` resolved."""
+    cfg = ((load_routing().get("steps") or {}).get(step)) or {}
+    rel = cfg.get("expected_artifact")
+    if not rel:
+        return None
+    slug = (status.get("task") or {}).get("slug")
+    return rel.replace("<slug>", slug) if slug else rel
+
+
 def deny(reason: str) -> dict[str, Any]:
-    return {"allowed": False, "sheep": None, "reason": reason, "user_confirm": None}
+    return {
+        "allowed": False,
+        "sheep": None,
+        "reason": reason,
+        "user_confirm": None,
+        "next_step": None,
+        "artifact": None,
+    }
 
 
-def allow(sheep: str | None, user_confirm: Any) -> dict[str, Any]:
-    return {"allowed": True, "sheep": sheep, "reason": "", "user_confirm": user_confirm or False}
+def allow(
+    sheep: str | None,
+    user_confirm: Any,
+    *,
+    next_step: str | None = None,
+    artifact: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "allowed": True,
+        "sheep": sheep,
+        "reason": "",
+        "user_confirm": user_confirm or False,
+        "next_step": next_step,
+        "artifact": artifact,
+    }
 
 
 def load_status(worktree: Path) -> dict[str, Any]:

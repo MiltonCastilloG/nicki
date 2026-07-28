@@ -117,13 +117,16 @@ def gate_archive(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, A
     return None
 
 
-def gate_integrate(status: dict, worktree: Path, user_confirmed: bool, _: bool) -> dict[str, Any] | None:
+def gate_integrate(status: dict, worktree: Path, user_confirmed: bool, _override: bool) -> dict[str, Any] | None:
     if not file_ok(artifact_path(worktree, status, "sync")):
         return deny("integrate gate: sync artifact missing")
     if not file_ok(artifact_path(worktree, status, "archive")):
         return deny("integrate gate: archive artifact missing")
     if not user_confirmed:
-        return deny("integrate gate: merge-into-main consent not recorded")
+        return deny(
+            "integrate gate: merge-into-main consent not recorded "
+            "(safety gate; --override does not apply)"
+        )
     return None
 
 

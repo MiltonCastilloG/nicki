@@ -11,12 +11,18 @@ def script(root: Path, rel: str) -> Path:
     return root / rel
 
 
-def run_py(path: Path, *args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def run_py(
+    path: Path,
+    *args: str,
+    cwd: Path | None = None,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, str(path), *args],
         cwd=cwd or path.parent,
         capture_output=True,
         text=True,
+        env=env,
     )
 
 

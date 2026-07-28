@@ -15,7 +15,7 @@ Handoff JSON/Markdown bodies stay separate; status holds pointers and step posit
 | `meta` | Yes | Schema identifier only |
 | `task` | Yes | Identity and step pointers |
 | `scope` | Yes | Worktree path |
-| `artifacts` | Yes | Paths to handoff files (relative to worktree) |
+| `artifacts` | Yes | Paths to handoff files — see [scope](#artifacts) |
 | `open_questions` | Yes | Blockers; empty array when unblocked |
 
 ## `meta`
@@ -48,6 +48,11 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
 
 ## `artifacts`
 
+**Path scope.** Every pointer is **worktree-relative** except `archive`, which is
+**workspace-root-relative** — the archived report must outlive the worktree, so it
+is never written under it. Gates resolve `archive` against the workspace root and
+all other keys against the worktree (`gate_utils.ROOT_SCOPED_ARTIFACTS`).
+
 | Field | Required | Description |
 |-------|----------|-------------|
 | `story` | No | `current-task/story.md` |
@@ -59,7 +64,7 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
 | `next_steps` | No | Array of follow-up spec paths |
 | `sync` | No | Sync handoff path (`current-task/syncs/<slug>.json`) |
 | `integrate` | No | Integrate handoff path (`current-task/integrates/<slug>.json`) |
-| `archive` | No | `docs/archive/<slug>/report.json` (dir also holds `report.md`, `story.md`) |
+| `archive` | No | `docs/archive/<slug>/report.json` — **workspace-root-relative** (dir also holds `report.md`, `story.md`) |
 
 ## `open_questions`
 

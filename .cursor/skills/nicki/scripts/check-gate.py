@@ -20,8 +20,10 @@ from gate_utils import (
     ArtifactParseError,
     allow,
     deny,
+    expected_artifact_for,
     load_routing,
     load_status,
+    next_step_for,
     readiness,
     resolve_worktree,
 )
@@ -46,7 +48,14 @@ def evaluate(
 
     if step == "start":
         fail = gate_start({}, worktree, user_confirmed, override)
-        return fail if fail else allow(sheep, user_confirm)
+        if fail:
+            return fail
+        return allow(
+            sheep,
+            user_confirm,
+            next_step=next_step_for(step, {}),
+            artifact=expected_artifact_for(step, {}),
+        )
 
     try:
         status = load_status(worktree)
@@ -69,7 +78,12 @@ def evaluate(
             fail["user_confirm"] = user_confirm
             return fail
 
-    return allow(sheep, user_confirm)
+    return allow(
+        sheep,
+        user_confirm,
+        next_step=next_step_for(step, status),
+        artifact=expected_artifact_for(step, status),
+    )
 
 
 def main() -> int:

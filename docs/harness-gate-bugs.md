@@ -2,6 +2,7 @@
 
 Date: 2026-07-28. Replaces the deleted per-bug notes (`bug_1`–`bug_3`).
 Recurrence evidence for Finding 5: [`fallback_bug_investigation.md`](fallback_bug_investigation.md).
+Target these fixes serve: [`flexibility.md`](flexibility.md).
 
 Scope: `check-gate.py`, `gates.py`, `gate_utils.py`, `bootstrap-context.py`,
 `update-status.py`, `routing.json`, `test.py`, `tests/smoke/`.
@@ -13,13 +14,18 @@ read, and Python that decides. They drifted apart, and nothing tests the
 deciding half. `python3 test.py` passes all seven smoke modules today while a
 gate bug in `main` makes `integrate` unreachable for every task.
 
-| # | Finding | State |
-|---|---------|-------|
-| 1 | `gate_integrate` resolves the archive path against the worktree; archive is workspace-root-relative | Real, reproduced, unbypassable |
-| 2 | `completed_status` must be the literal `"complete"` or `completed_steps` silently skips the append | Real, reproduced; reported mechanism was wrong |
-| 3 | `routing.json` per-step fields are unread by any script | Real; caused a wrong root cause and a wasted investigation cycle |
-| 4 | `bootstrap-context.py` still crashes on a malformed artifact | Real, reproduced; the 07-26 fix landed on one of two entry points |
-| 5 | Sheep hand-author prose YAML with no quoting rule | Real, recurring; impact now capped at `check-gate.py` only |
+None of these are isolated defects. Each one sits on the path to the flexibility
+goal, so fixing them is not cleanup before the real work — it is the first part
+of the real work.
+
+| # | Finding | State | Flexibility impact |
+|---|---------|-------|--------------------|
+| 1 | `gate_integrate` resolves the archive path against the worktree; archive is workspace-root-relative | **Fixed 2026-07-28** (follow-up 1) | Foundation. External sources of truth need the same scope model. |
+| 2 | `completed_status` must be the literal `"complete"` or `completed_steps` silently skips the append | Real, reproduced; reported mechanism was wrong | Vocabulary grows: needs "ran, did not advance" and "satisfied by external". |
+| 3 | `routing.json` per-step fields are unread by any script | Real; caused a wrong root cause and a wasted investigation cycle | Direct block. Ad-hoc needs per-step metadata; adding unread fields deepens the trap. |
+| 4 | `bootstrap-context.py` still crashes on a malformed artifact | Real, reproduced; the 07-26 fix landed on one of two entry points | Worse. External input is less controlled, and bootstrap runs every response. |
+| 5 | Sheep hand-author prose YAML with no quoting rule | Real, recurring; impact now capped at `check-gate.py` only | Sideways. New surface: user-authored markdown instead of sheep YAML. |
+| 6 | `sync` and `archive` gates allow with no user consent; the rule is prose-only | Real, reproduced | Fixed by flexibility Decision 3 — consent becomes a routing property the script enforces. |
 
 ## Finding 1 — integrate gate cannot see the archive
 
@@ -112,6 +118,28 @@ Finding 4 means the same content still hard-blocks bootstrap. The JSON migration
 (`8fa5569`) reduces exposure; it does not remove it, since sheep still
 hand-author artifacts against a schema.
 
+## Finding 6 — consent is declared everywhere, enforced almost nowhere
+
+Three layers hold the consent rule and none of them agree.
+
+| Layer | Holds |
+|---|---|
+| `nicki.md` | "NEVER DO THIS STEP WITHOUT USER EXPLICITLY SAYING" for `sync`. Prose only. |
+| `routing.json` `user_confirm` | The sentence to say. Returned in the gate contract as advice (`check-gate.py:44`), never enforced. |
+| `gates.py` | Hardcoded `user_confirmed` checks in 4 of 13 gates: `start`, `review` (partial only), `integrate`, `close`. |
+
+`gate_sync` and `gate_archive` check nothing. Verified on a fixture with
+`acceptance` in `completed_steps` and `readiness: ready_for_acceptance`, with no
+`--user-confirmed`:
+
+```
+--step sync    → {"allowed": true, "sheep": "sheep-sync", "user_confirm": "local commit, merge main into feature branch, push feature branch"}
+--step archive → {"allowed": true, "sheep": "sheep-archive", "user_confirm": "write task archive to docs/archive"}
+```
+
+The loudest rule in the system is the one the harness does not enforce. Purest
+instance of this report's thesis: prose shouts, script shrugs.
+
 ## Why these recur
 
 - **Gates are untested.** 12 of 13 gate functions have zero coverage. The one
@@ -139,75 +167,111 @@ hand-author artifacts against a schema.
 
 ## Follow-ups
 
-Ordered. Each is a prerequisite for the direction below.
+Ordered. Each is a prerequisite for [`flexibility.md`](flexibility.md), and
+names the blocker there it clears. Each states current behavior, target, and a
+done-when check so a future session can pick one up cold.
 
-1. **Fix `gate_integrate` archive resolution.** Teach artifact resolution about
-   scope (worktree-relative vs workspace-root-relative) instead of one blind
-   join. Wire the override parameter or drop it from the signature. Hard blocker
-   in `main` today.
-2. **Close `docs/tasks.md` #10 with real gate fixtures.** One per finding above,
-   run through `check-gate.py`, pass and fail cases. Import them plus
-   `smoke-archive-gate.py` into `test.py`. Delete or rewrite the
-   doc-substring assertions in `git_tail.py` and `readiness_mapping.py`; drop the
-   `if path.is_file()` guards so a missing fixture fails.
-3. **Validate `completed_status` in `update-status.py`.** Closed set, unknown
-   value returns `written: false` with an error naming the field. Document the
-   set in `status-format.md` and `routing.json`.
-4. **Give `bootstrap-context.py` a contract-safe failure path**, same as
-   `check-gate.py`: always print contract JSON, carry the parse error in a field.
-5. **Resolve the `routing.json` fiction.** Either read the per-step fields in the
-   scripts or move them to Markdown. Do not leave prose shaped like config.
+### 1. Scope-aware artifact resolution — **done 2026-07-28**
 
-## Direction — flexibility without losing the harness
+Unblocked flexibility B1.
 
-Goal: Nicki stops being a strict linear march. Two capabilities, both built on
-the existing scripts. `status.json` stays the source of truth for pipeline
-state; `check-gate.py`, `update-status.py`, `bootstrap-context.py` stay
-authoritative. Nothing moves back into prose.
+- **Was:** `artifact_path()` was `worktree / rel` for every key.
+  `gate_integrate` discarded its override argument.
+- **Now:** `gate_utils.ROOT_SCOPED_ARTIFACTS` declares which pointers are
+  workspace-root-relative (`archive`); everything else resolves against the
+  worktree. `readiness()` goes through `artifact_path()` instead of its own join.
+  `gate_integrate`'s consent deny states that `--override` does not apply, since
+  integrate is a safety gate — full safety/sequence classing is follow-up 6 and
+  flexibility step 5.
+- **Documented:** path-scope rule in `status-format.md` `artifacts`.
+- **Proven:** `tests/smoke/gate_paths.py`, wired into `test.py`. Six cases:
+  archive at root resolves; archive genuinely absent still denies; archive under
+  the worktree is *not* accepted; worktree-scoped `sync` is *not* read from the
+  root; integrate without consent denies; `--override` cannot buy consent.
+  Reverting the resolution change turns the suite red.
 
-### A. Out-of-band steps that do not move the workflow
+### 2. Real gate fixtures in `test.py`
 
-Case: sync mid-`execute`. Today `--override` allows the sheep, then
-`sheep-status` writes `completed_step: sync` / `next_step: archive` and the task
-believes it is in the git tail with implementation half done. The step and the
-bookkeeping are welded together.
+Closes `docs/tasks.md` #10. Guards every later step.
 
-Needed: an explicit ad-hoc invocation that is still gated but does not advance
-state.
+- **Now:** 12 of 13 gates untested. The one gate test
+  (`scripts/smoke-archive-gate.py`) is not imported by `test.py`.
+- **Target:** a fixture per finding above, pass and fail, run through
+  `check-gate.py`. Import them plus `smoke-archive-gate.py` into `test.py`.
+- **Also:** delete or rewrite the doc-substring assertions in `git_tail.py` and
+  `readiness_mapping.py`; drop the `if path.is_file()` guards so a missing
+  fixture fails instead of vanishing.
+- **Done when:** reverting follow-up 1 turns `test.py` red.
 
-- Split gates into two classes. **Safety** gates guard irreversible effects
-  (push to main, merge, worktree delete) and always hold. **Sequence** gates
-  guard bookkeeping (`acceptance` recorded before `sync`) and are waivable in
-  ad-hoc mode. The split half-exists already and is never named: `gate_sync`
-  lets `--override` waive the acceptance check but not the readiness block,
-  `gate_integrate` ignores override entirely, and `close`/`integrate` lean on
-  `--user-confirmed` for the same job. Name the two classes and apply them
-  uniformly.
-- Add per-step metadata for this — `irreversible`, `sequence_gate`,
-  `adhoc_allowed` — and actually read it. Same work as follow-up 5.
-- Add an ad-hoc write mode: record the artifact pointer and the side effect,
-  leave `current_step`, `next_step`, and `completed_steps` untouched. Depends on
-  follow-up 3 having a real status vocabulary to say "ran, did not advance".
+### 3. Status vocabulary
 
-### B. Source of truth from outside the workflow
+Unblocks flexibility A1, A5, B5.
 
-Case: a spec produced by the `brainstorm` skill, outside the pipeline. Today
-`gate_subtasks` wants `artifacts.spec` under the worktree with empty
-`open_questions`, so an external spec means faking `describe` and `spec`.
+- **Now:** `completed_status` is an open string; anything but `"complete"`
+  silently skips the `completed_steps` append and still reports
+  `written: true` (`update-status.py:212`).
+- **Target:** closed set, validated. Unknown value returns `written: false` with
+  an error naming the field. Document the set in `status-format.md` and
+  `routing.json`.
+- **Design with flexibility in mind:** the same enum needs members for "ran, did
+  not advance" and "satisfied by external artifact". Add them in this pass rather
+  than reopening the contract twice.
+- **Done when:** a bad `completed_status` fails loudly, and a fixture covers it.
 
-Needed: artifact adoption.
+### 4. Contract-safe bootstrap failure
 
-- Register an external path as an artifact pointer with provenance (origin,
-  external flag). Gates validate **shape** — parses, root is an object,
-  `open_questions` empty — not provenance.
-- Requires scope-aware artifact resolution, so follow-up 1 is the foundation
-  here, not just a bug fix. External sources of truth and the archive path have
-  the same underlying need.
-- Mark the producing step satisfied-by-adoption rather than completed by a
-  sheep. Again a status-vocabulary change (follow-up 3).
+- **Now:** `bootstrap-context.py` returns exit 1 with stderr and empty stdout on
+  a malformed artifact, which `nicki.md` classifies as a harness failure — on a
+  script that runs every response.
+- **Target:** always print contract JSON, carry the parse error in a field, same
+  as `check-gate.py` already does.
+- **Done when:** a truncated validation artifact yields contract stdout, not a
+  `sheep-fallback` dispatch.
 
-### Sequencing
+### 5. Resolve the `routing.json` fiction — **mostly done 2026-07-28**
 
-Both features multiply gate paths. Adding them on top of an untested gate layer
-with a blunt override reproduces exactly the failure mode this report documents.
-Follow-ups 1–3 first, then A, then B.
+Implements [`flexibility.md`](flexibility.md) Decision 1 (routing owns
+`next_step`). Unblocks A6.
+
+- **Was:** only `sheep` and `user_confirm` were read. Seven other per-step fields
+  were prose in a file shaped like config.
+- **Now read:** `default_next_step` and a new `next_step_when_archived` via
+  `gate_utils.next_step_for(step, status, readiness_status)`, which is the single
+  authority on position — including the git tail (first `sync` → `archive`,
+  second `sync` → `integrate`) and `review`, whose successor comes from
+  `readiness_routing` and is `None` until validation exists.
+  `expected_artifact` is read by `gate_utils.expected_artifact_for()` with
+  `<slug>` resolved.
+- **Echoed:** `check-gate.py` output gained `next_step` and `artifact`, so
+  position and output path travel in the gate contract instead of being
+  re-derived. Both keys appear on allow and deny (null on deny); required fields
+  are unchanged, so `validate-harness-stdout.py` is unaffected.
+- **Deleted as duplicates** (content verified present elsewhere): `nicki_only`
+  (duplicates `sheep: null`), `also_writes` (in `review-execution/SKILL.md` and
+  `review-format.md`), `skip_status_update` (in `nicki.md` twice).
+- **Proven:** `tests/smoke/routing_next_step.py`, wired into `test.py` — 15
+  resolver cases plus three gate-contract cases.
+- **Remainder:** `artifact_key` and `secondary_artifact_key` are still unread.
+  They are the intended source for `update-status.py`'s hardcoded `key_by_step`
+  map (`update-status.py:110-119`) — duplication today. Wire them in flexibility
+  step 7, when the write path gains `--step`/`--mode`; that pass must also settle
+  how a script outside `.cursor/skills/nicki/scripts/` reads routing.
+- **Not done here, deliberately:** `nicki.md` still documents the old four-field
+  gate contract and does not mention the echoed `next_step`/`artifact`. Agent
+  prose changes land together in flexibility step 6.
+
+### 6. Enforce consent from routing
+
+Implements [`flexibility.md`](flexibility.md) Decision 3.
+
+- **Now:** `sync` and `archive` allow with no `--user-confirmed`. Consent is
+  hardcoded in 4 of 13 gates and shouted in `nicki.md` prose for a step the
+  script does not check.
+- **Target:** per-step `user_confirm_required` in `routing.json`, enforced once
+  in `check-gate.py` using routing's own `user_confirm` sentence as the deny
+  reason. Drop the hardcoded checks from `gate_start`, `gate_review`,
+  `gate_integrate`, `gate_close`.
+- **Watch:** this is a behavior change — `sync` and `archive` start denying
+  without the flag. Nicki must pass it after every confirm.
+- **Done when:** every step with a `user_confirm` string denies without the flag,
+  proven by a fixture per step.

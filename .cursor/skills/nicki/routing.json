@@ -2,7 +2,6 @@
   "steps": {
     "start": {
       "sheep": "sheep-start",
-      "nicki_only": false,
       "artifact_key": "status",
       "expected_artifact": "current-task/status.json",
       "default_next_step": "describe",
@@ -11,7 +10,6 @@
     },
     "describe": {
       "sheep": "sheep-describe",
-      "nicki_only": false,
       "artifact_key": "story",
       "expected_artifact": "current-task/story.md",
       "default_next_step": "spec",
@@ -20,7 +18,6 @@
     },
     "spec": {
       "sheep": "sheep-spec",
-      "nicki_only": false,
       "artifact_key": "spec",
       "expected_artifact": "current-task/specs/<slug>.json",
       "default_next_step": "subtasks",
@@ -29,7 +26,6 @@
     },
     "subtasks": {
       "sheep": "sheep-subtask",
-      "nicki_only": false,
       "artifact_key": "subtasks",
       "expected_artifact": "current-task/subtasks/<slug>.md",
       "default_next_step": "execute",
@@ -38,7 +34,6 @@
     },
     "execute": {
       "sheep": "sheep-execute",
-      "nicki_only": false,
       "artifact_key": "execution",
       "expected_artifact": "current-task/executions/<slug>.json",
       "default_next_step": "review",
@@ -47,21 +42,15 @@
     },
     "review": {
       "sheep": "sheep-review",
-      "nicki_only": false,
       "artifact_key": "review_validation",
       "secondary_artifact_key": "review",
       "expected_artifact": "current-task/review-validations/rN-validation.json",
       "default_next_step": null,
       "gate": "execution artifact exists; partial review_scope needs user confirm first",
-      "prompt": "worktree path, task id, review_scope when partial",
-      "also_writes": [
-        "current-task/reviews/<slug>.json",
-        "current-task/next-steps/*.json"
-      ]
+      "prompt": "worktree path, task id, review_scope when partial"
     },
     "acceptance": {
       "sheep": null,
-      "nicki_only": true,
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "sync",
@@ -70,7 +59,6 @@
     },
     "fix": {
       "sheep": null,
-      "nicki_only": true,
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "execute",
@@ -79,17 +67,16 @@
     },
     "sync": {
       "sheep": "sheep-sync",
-      "nicki_only": false,
       "artifact_key": "sync",
       "expected_artifact": "current-task/syncs/<slug>.json",
       "default_next_step": "archive",
+      "next_step_when_archived": "integrate",
       "gate": "acceptance recorded or user override; readiness not fix_required or blocked",
       "user_confirm": "local commit, merge main into feature branch, push feature branch",
       "prompt": "worktree path, task id"
     },
     "archive": {
       "sheep": "sheep-archive",
-      "nicki_only": false,
       "artifact_key": "archive",
       "expected_artifact": "docs/archive/<slug>/report.json",
       "default_next_step": "sync",
@@ -99,7 +86,6 @@
     },
     "integrate": {
       "sheep": "sheep-integrate",
-      "nicki_only": false,
       "artifact_key": "integrate",
       "expected_artifact": "current-task/integrates/<slug>.json",
       "default_next_step": "close",
@@ -109,18 +95,15 @@
     },
     "close": {
       "sheep": "sheep-close",
-      "nicki_only": false,
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "done",
       "gate": "integrate recorded; user confirmed close",
       "user_confirm": "delete worktree",
-      "prompt": "worktree path, task id",
-      "skip_status_update": true
+      "prompt": "worktree path, task id"
     },
     "done": {
       "sheep": null,
-      "nicki_only": true,
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": null,
@@ -130,7 +113,6 @@
   },
   "status_update": {
     "sheep": "sheep-status",
-    "nicki_only": false,
     "skip_user_confirm": true
   },
   "readiness_routing": {
@@ -164,7 +146,6 @@
   },
   "harness_failure": {
     "sheep": "sheep-fallback",
-    "nicki_only": true,
     "artifact": "current-task/specs/errors.json",
     "prompt": "worktree path, failed script route, script input, expected output contract, actual failure context, blocked pipeline step",
     "scripts": {
