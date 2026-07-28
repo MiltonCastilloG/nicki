@@ -2,9 +2,13 @@
 """Evaluate a Nicki pipeline step gate from status.json + routing.json.
 
 Usage:
-  check-gate.py --worktree worktrees/nicki-my-task --step sync [--user-confirmed] [--override]
+  check-gate.py --worktree worktrees/nicki-my-task --step sync
+                [--user-confirmed] [--override] [--mode normal|adhoc]
 
-Stdout JSON: allowed, sheep, reason, user_confirm
+Stdout JSON: allowed, sheep, reason, user_confirm, next_step, artifact, mode,
+gate_class. `gate_class` names why a denial happened — `safety` denials never
+waive, `sequence` denials waive on `--override` or on an ad-hoc run of a step
+routing marks `adhoc_allowed`. See routing.json `gate_policy`.
 """
 
 from __future__ import annotations
@@ -17,6 +21,8 @@ from typing import Any
 
 from gate_utils import (
     BLOCKED_READINESS,
+    MODES,
+    SEQUENCE,
     ArtifactParseError,
     allow,
     deny,
@@ -27,7 +33,22 @@ from gate_utils import (
     readiness,
     resolve_worktree,
 )
-from gates import GATES, READINESS_STEPS, gate_start
+from gates import GATES, READINESS_STEPS
+
+
+def _policy_denial(step: str, cfg: dict[str, Any], mode: str, user_confirmed: bool):
+    """Routing-declared checks, run before any per-step gate."""
+    irreversible = bool(cfg.get("irreversible"))
+    adhoc_allowed = bool(cfg.get("adhoc_allowed"))
+
+    if irreversible and adhoc_allowed:
+        return deny(f"routing error: {step} is marked both irreversible and adhoc_allowed")
+    if mode == "adhoc" and not adhoc_allowed:
+        return deny(f"{step} cannot run out of band (routing: adhoc_allowed is not set)")
+    if cfg.get("user_confirm_required") and not user_confirmed:
+        sentence = cfg.get("user_confirm") or f"confirm {step}"
+        return deny(f"{step} gate: user consent required — {sentence}")
+    return None
 
 
 def evaluate(
@@ -36,6 +57,22 @@ def evaluate(
     *,
     user_confirmed: bool = False,
     override: bool = False,
+    mode: str = "normal",
+) -> dict[str, Any]:
+    result = _evaluate(
+        worktree, step, user_confirmed=user_confirmed, override=override, mode=mode
+    )
+    result["mode"] = mode
+    return result
+
+
+def _evaluate(
+    worktree: Path,
+    step: str,
+    *,
+    user_confirmed: bool,
+    override: bool,
+    mode: str,
 ) -> dict[str, Any]:
     routing = load_routing()
     steps = routing.get("steps") or {}
@@ -46,10 +83,11 @@ def evaluate(
     user_confirm = step_cfg.get("user_confirm") or False
     sheep = step_cfg.get("sheep")
 
+    fail = _policy_denial(step, step_cfg, mode, user_confirmed)
+    if fail:
+        return fail
+
     if step == "start":
-        fail = gate_start({}, worktree, user_confirmed, override)
-        if fail:
-            return fail
         return allow(
             sheep,
             user_confirm,
@@ -71,18 +109,26 @@ def evaluate(
         if rs and rr.get("sync_blocked") and step == "sync" and rs in BLOCKED_READINESS:
             return deny(f"sync gate: readiness routing blocks sync ({rs})")
 
+    waived = ""
     gate_fn = GATES.get(step)
     if gate_fn:
         fail = gate_fn(status, worktree, user_confirmed, override)
         if fail:
-            fail["user_confirm"] = user_confirm
-            return fail
+            waivable = fail.get("gate_class") == SEQUENCE and (
+                override or mode == "adhoc"
+            )
+            if not waivable:
+                fail["user_confirm"] = user_confirm
+                return fail
+            by = "--override" if override else "ad-hoc run"
+            waived = f"sequence check waived by {by}: {fail['reason']}"
 
     return allow(
         sheep,
         user_confirm,
         next_step=next_step_for(step, status),
         artifact=expected_artifact_for(step, status),
+        reason=waived,
     )
 
 
@@ -98,7 +144,13 @@ def main() -> int:
     parser.add_argument(
         "--override",
         action="store_true",
-        help="User override for sync without acceptance",
+        help="User override: waives sequence denials only",
+    )
+    parser.add_argument(
+        "--mode",
+        default="normal",
+        choices=MODES,
+        help="adhoc runs the step out of band; allowed only where routing says so",
     )
     parser.add_argument(
         "--smoke-contract-fail",
@@ -117,9 +169,11 @@ def main() -> int:
             args.step,
             user_confirmed=args.user_confirmed,
             override=args.override,
+            mode=args.mode,
         )
     except Exception as exc:  # noqa: BLE001 — contract must always print
         result = deny(f"gate harness error: {exc}")
+        result["mode"] = args.mode
     print(json.dumps(result))
     return 0 if result["allowed"] else 1
 

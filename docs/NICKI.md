@@ -182,7 +182,9 @@ Exception: **do not send `sheep-status` after sheep-close** — close deletes `c
 
 Before sending any sheep except `sheep-status`, Nicki shows a compact state card and asks for confirmation. On yes, she runs `check-gate.py`; deny → show `reason` and stop; allow → spawn `sheep` from stdout (skip Task when `sheep` is null).
 
-Git side effects (`sync`, `integrate`) and close (delete worktree) still need explicit chat confirmation naming the side effect — the gate script records `--user-confirmed` / `--override` only after that.
+Git side effects (`sync`, `integrate`) and close (delete worktree) still need explicit chat confirmation naming the side effect — the gate script records `--user-confirmed` only after that. Which steps require it is declared per step in `routing.json` (`user_confirm_required`) and enforced once in `check-gate.py`, so consent is data rather than a check repeated in each gate.
+
+`--override` waives ordering only: a denial carries `gate_class`, and `safety` denials — consent, readiness blocks, missing inputs — ignore every flag.
 
 ---
 

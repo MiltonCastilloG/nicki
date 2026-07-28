@@ -1,4 +1,8 @@
-"""Artifact path scope: archive is workspace-root-relative, the rest worktree-relative."""
+"""Artifact path scope: archive is workspace-root-relative, the rest worktree-relative.
+
+Consent on `integrate` is no longer asserted here — it left the gate for
+`routing.json`, and `gates_matrix.POLICY_CASES` covers it for every step at once.
+"""
 
 from __future__ import annotations
 
@@ -108,18 +112,6 @@ def run(root: Path) -> None:
             _gate(root, ws, wt, "--user-confirmed"),
             "sync artifact missing",
             "worktree-scoped sync is not read from workspace root",
-        )
-
-        ws, wt = _fixture(tmp / "e", archive_at_root=True)
-        _expect_deny(
-            _gate(root, ws, wt),
-            "consent not recorded",
-            "integrate without consent denies",
-        )
-        _expect_deny(
-            _gate(root, ws, wt, "--override"),
-            "--override does not apply",
-            "override cannot buy integrate consent",
         )
 
     print("smoke-gate-paths: ok")

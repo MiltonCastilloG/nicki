@@ -17,6 +17,13 @@ BLOCKED_READINESS = frozenset({"fix_required", "blocked", "rerun_review"})
 # The archive report must outlive the worktree, so it is never written under it.
 ROOT_SCOPED_ARTIFACTS = frozenset({"archive"})
 
+# Gate classes. SAFETY must hold; SEQUENCE is ordering only and can be waived.
+# Declared in routing.json gate_policy.classes.
+SAFETY = "safety"
+SEQUENCE = "sequence"
+
+MODES = ("normal", "adhoc")
+
 
 class ArtifactParseError(ValueError):
     """Structured artifact could not be parsed as an object."""
@@ -144,7 +151,8 @@ def expected_artifact_for(step: str, status: dict[str, Any]) -> str | None:
     return rel.replace("<slug>", slug) if slug else rel
 
 
-def deny(reason: str) -> dict[str, Any]:
+def deny(reason: str, gate_class: str = SAFETY) -> dict[str, Any]:
+    """Deny with a class. Default SAFETY: an unclassified check is never waived."""
     return {
         "allowed": False,
         "sheep": None,
@@ -152,7 +160,13 @@ def deny(reason: str) -> dict[str, Any]:
         "user_confirm": None,
         "next_step": None,
         "artifact": None,
+        "gate_class": gate_class,
     }
+
+
+def deny_sequence(reason: str) -> dict[str, Any]:
+    """Deny on ordering alone — waivable by --override or an ad-hoc run."""
+    return deny(reason, SEQUENCE)
 
 
 def allow(
@@ -161,14 +175,16 @@ def allow(
     *,
     next_step: str | None = None,
     artifact: str | None = None,
+    reason: str = "",
 ) -> dict[str, Any]:
     return {
         "allowed": True,
         "sheep": sheep,
-        "reason": "",
+        "reason": reason,
         "user_confirm": user_confirm or False,
         "next_step": next_step,
         "artifact": artifact,
+        "gate_class": None,
     }
 
 

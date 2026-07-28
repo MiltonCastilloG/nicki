@@ -30,7 +30,7 @@ Standing. Do not trade these for convenience.
 
 | Layer | Behavior today | Evidence |
 |---|---|---|
-| Gate | `gate_sync` waives the acceptance check on `--override`, not the readiness block | `gates.py:94-101` |
+| Gate | `gate_sync` waives the acceptance check on `--override`, not the readiness block — **as of 2026-07-29 this is the intended split, named and enforced centrally** | `gates.py` |
 | Sheep | `sheep-sync` blocks itself: "invoke only after user acceptance" | `sheep-sync.md:26-31` |
 | Sheep | `sheep-sync` returns `next_step: archive` (or `integrate`) — the sheep decides position | `sheep-sync.md:40` |
 | Write | `next_step` is the *only* required field; there is no way to say "do not move" | `update-status.py:31` |
@@ -59,7 +59,8 @@ the summary instead of routing (step 7).
 from routing and `check-gate.py` echoes it. Remaining: the write path must call
 it (step 7) and the sheep must stop sending it (step 6).
 
-**A3 — gates live in three layers.** `check-gate.py`, prose `Gate:` lines in
+**A3 — gates live in three layers.** *Script layer settled 2026-07-29; the prose
+layers are step 6.* `check-gate.py`, prose `Gate:` lines in
 every `sheep-*.md` (`sheep-sync`, `sheep-spec`, `sheep-subtask`,
 `sheep-archive`, `sheep-integrate`, `sheep-close`), and hard-gates in
 `nicki.md`. The script can allow ad-hoc and the sheep will still refuse — mid
@@ -67,11 +68,11 @@ every `sheep-*.md` (`sheep-sync`, `sheep-spec`, `sheep-subtask`,
 prose with. **Decided (4):** sequence gating leaves the sheep entirely; the
 script is the only authority on whether a sheep runs.
 
-**A4 — safety vs sequence is unnamed.** The split half-exists and is applied
-inconsistently: `gate_sync` waives acceptance on override but not readiness,
-`gate_integrate` discards its override argument entirely, `close`/`integrate`
-use `--user-confirmed` for the same job. Name the two classes, mark each gate,
-apply uniformly.
+**A4 — safety vs sequence is unnamed. Cleared 2026-07-29.** Both classes are
+named in `routing.json` `gate_policy.classes` and carried in every denial as
+`gate_class`. `deny()` is safety and never waives; `deny_sequence()` is ordering
+only and `check-gate.py` waives it centrally on `--override` or an ad-hoc run,
+naming the waiver in the allow reason. Consent left the gates for routing.
 
 **A5 — no side-effect trail. Cleared 2026-07-29.** `task.side_effects[]` is
 append-only, one entry per ad-hoc write, with step, mode, UTC timestamp, and
@@ -79,9 +80,11 @@ artifact. Documented in `status-format.md`. Still open: `archive-format.md`
 derives `process` from artifact handoffs, so the archive report must learn to read
 this log (step 8).
 
-**A6 — per-step metadata is unread.** Ad-hoc needs `irreversible`,
-`sequence_gate`, `adhoc_allowed` per step. Adding fields to a `routing.json`
-that no script reads makes the Finding 3 trap worse. Resolve read-or-move first.
+**A6 — per-step metadata is unread. Cleared 2026-07-29.** `adhoc_allowed`,
+`irreversible`, and `user_confirm_required` are read by `check-gate.py`, and a
+fixture fails if `gate_policy.sequence_denials` drifts from the `deny_sequence`
+calls in `gates.py`. Only `sync` opts into ad-hoc; widening it is a routing edit,
+not a code change. Still unread: `artifact_key`, `secondary_artifact_key` (step 7).
 
 ### Acceptance checks
 
@@ -164,7 +167,7 @@ a blunt override reproduces the exact failure this project just documented.
 | ~~2~~ | ~~Resolve `routing.json`: read `default_next_step`~~ — **done 2026-07-28**; `artifact_key`/`secondary_artifact_key` deferred to step 7 | bug doc follow-up 5 · unblocks A6 · implements Decision 1 |
 | ~~3~~ | ~~Gate fixtures in `test.py`~~ — **done 2026-07-28**, 45 cases | bug doc follow-up 2 · guards everything after |
 | ~~4~~ | ~~Status vocabulary: enum, no-advance mode, side-effect log~~ — **done 2026-07-29**; enum closed at `complete`/`blocked`, see Decision 5 | bug doc follow-up 3 · cleared A1, A5, B5 |
-| 5 | Consent from routing + name safety vs sequence gates, enforced in `check-gate.py` only | A4 · Decisions 2, 3 · bug doc follow-up 6 |
+| ~~5~~ | ~~Consent from routing + name safety vs sequence gates, enforced in `check-gate.py` only~~ — **done 2026-07-29**; `--mode` and `gate_class` in the contract | A4, A6 · Decisions 2, 3 · bug doc follow-ups 6, 7 |
 | 6 | Strip workflow knowledge from every `sheep-*.md`; shrink the return contract | A3 · Decision 4 |
 | 7 | Write path takes `--step`/`--mode`; calls `next_step_for()` on normal, leaves position on ad-hoc; wire `artifact_key` to replace `key_by_step` | A1, A2 · Decisions 1, 2, 4 |
 | 8 | Ad-hoc sync end to end | Capability A complete |
@@ -213,6 +216,11 @@ Decided 2026-07-28.
   sentence as the reason.
 - Remove the hardcoded `user_confirmed` checks from `gate_start`, `gate_review`,
   `gate_integrate`, `gate_close`. One check, one place.
+- **Amended on implementation (2026-07-29):** `gate_review` keeps its check.
+  Review's confirm is conditional on the execution artifact's `review_scope`, not
+  on the step, so declaring it per step would need a condition language in JSON.
+  Steps get static declarations; artifact-dependent confirms stay in code.
+  `gate_start` was deleted outright — consent was its only check.
 - **Strict:** every step that has a `user_confirm` string declares
   `user_confirm_required: true`. Ad-hoc included — no session grants, no
   exemptions. "Sync now" from the user is itself the confirm, so the cost is one

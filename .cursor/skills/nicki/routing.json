@@ -6,6 +6,8 @@
       "expected_artifact": "current-task/status.json",
       "default_next_step": "describe",
       "gate": "no worktree yet; user confirmed start",
+      "user_confirm": "create the task worktree",
+      "user_confirm_required": true,
       "prompt": "work items / slugs from user message"
     },
     "describe": {
@@ -73,6 +75,8 @@
       "next_step_when_archived": "integrate",
       "gate": "acceptance recorded or user override; readiness not fix_required or blocked",
       "user_confirm": "local commit, merge main into feature branch, push feature branch",
+      "user_confirm_required": true,
+      "adhoc_allowed": true,
       "prompt": "worktree path, task id"
     },
     "archive": {
@@ -82,6 +86,7 @@
       "default_next_step": "sync",
       "gate": "sync artifact exists; pre_push_merge merged on sync handoff",
       "user_confirm": "write task archive to docs/archive",
+      "user_confirm_required": true,
       "prompt": "worktree path, task id"
     },
     "integrate": {
@@ -91,6 +96,8 @@
       "default_next_step": "close",
       "gate": "sync artifact exists; archive artifact exists; user confirmed merge into main and push main",
       "user_confirm": "merge feature into main and push main to remote",
+      "user_confirm_required": true,
+      "irreversible": true,
       "prompt": "worktree path, task id"
     },
     "close": {
@@ -100,6 +107,8 @@
       "default_next_step": "done",
       "gate": "integrate recorded; user confirmed close",
       "user_confirm": "delete worktree",
+      "user_confirm_required": true,
+      "irreversible": true,
       "prompt": "worktree path, task id"
     },
     "done": {
@@ -114,6 +123,17 @@
   "status_update": {
     "sheep": "sheep-status",
     "skip_user_confirm": true
+  },
+  "gate_policy": {
+    "description": "Read by check-gate.py. Per-step flags above: user_confirm_required (deny without --user-confirmed, using that step's user_confirm sentence as the reason), adhoc_allowed (may run with --mode adhoc), irreversible (never ad-hoc; consent can never be waived). Absent means false.\n",
+    "classes": {
+      "safety": "Must hold. Consent, readiness blocks, missing inputs, anything guarding an irreversible or remote-visible action. Never waived by --override or --mode adhoc.",
+      "sequence": "Pure ordering. Waived by --override or by --mode adhoc on a step where adhoc_allowed is true; the waiver is named in the allow reason."
+    },
+    "sequence_denials": [
+      "sync gate: acceptance not recorded",
+      "done gate: close not completed"
+    ]
   },
   "readiness_routing": {
     "ready_for_acceptance": {

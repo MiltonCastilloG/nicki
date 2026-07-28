@@ -1,4 +1,13 @@
-"""Per-step gate checks for Nicki pipeline routing."""
+"""Per-step gate checks for Nicki pipeline routing.
+
+Every check returns a classed denial. `deny` is a safety check — it must hold, and
+no flag waives it. `deny_sequence` is ordering only; `check-gate.py` waives it on
+`--override` or on an ad-hoc run of a step routing marks `adhoc_allowed`.
+
+Consent is not checked here. `user_confirm_required` in `routing.json` is enforced
+once in `check-gate.py`, before any of these run. The one exception is `review`,
+whose confirm depends on the execution artifact's contents rather than on the step.
+"""
 
 from __future__ import annotations
 
@@ -11,6 +20,7 @@ from gate_utils import (
     artifact_path,
     completed,
     deny,
+    deny_sequence,
     file_ok,
     load_artifact,
     readiness,
@@ -19,12 +29,6 @@ from gate_utils import (
 GateFn = Callable[[dict[str, Any], Path, bool, bool], dict[str, Any] | None]
 
 READINESS_STEPS = frozenset({"review", "acceptance", "sync", "fix"})
-
-
-def gate_start(_: dict, __: Path, user_confirmed: bool, ___: bool) -> dict[str, Any] | None:
-    if not user_confirmed:
-        return deny("start requires user confirmation")
-    return None
 
 
 def gate_describe(status: dict, _: Path, __: bool, ___: bool) -> dict[str, Any] | None:
@@ -91,13 +95,12 @@ def gate_fix(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] 
     return None
 
 
-def gate_sync(status: dict, worktree: Path, _: bool, override: bool) -> dict[str, Any] | None:
+def gate_sync(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
     rs = readiness(status, worktree)
     if rs in BLOCKED_READINESS:
         return deny(f"sync gate: readiness is {rs}")
-    done = completed(status)
-    if "acceptance" not in done and not override:
-        return deny("sync gate: acceptance not recorded and no override")
+    if "acceptance" not in completed(status):
+        return deny_sequence("sync gate: acceptance not recorded")
     return None
 
 
@@ -117,38 +120,30 @@ def gate_archive(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, A
     return None
 
 
-def gate_integrate(status: dict, worktree: Path, user_confirmed: bool, _override: bool) -> dict[str, Any] | None:
+def gate_integrate(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
     if not file_ok(artifact_path(worktree, status, "sync")):
         return deny("integrate gate: sync artifact missing")
     if not file_ok(artifact_path(worktree, status, "archive")):
         return deny("integrate gate: archive artifact missing")
-    if not user_confirmed:
-        return deny(
-            "integrate gate: merge-into-main consent not recorded "
-            "(safety gate; --override does not apply)"
-        )
     return None
 
 
-def gate_close(status: dict, worktree: Path, user_confirmed: bool, _: bool) -> dict[str, Any] | None:
+def gate_close(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
     integrate_ok = "integrate" in completed(status) or file_ok(
         artifact_path(worktree, status, "integrate")
     )
     if not integrate_ok:
         return deny("close gate: integrate not recorded")
-    if not user_confirmed:
-        return deny("close gate: close consent not satisfied")
     return None
 
 
 def gate_done(status: dict, _: Path, __: bool, ___: bool) -> dict[str, Any] | None:
     if "close" not in completed(status):
-        return deny("done gate: close not completed")
+        return deny_sequence("done gate: close not completed")
     return None
 
 
 GATES: dict[str, GateFn] = {
-    "start": gate_start,
     "describe": gate_describe,
     "spec": gate_spec,
     "subtasks": gate_subtasks,

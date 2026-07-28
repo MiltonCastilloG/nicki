@@ -1,14 +1,16 @@
 """Every gate, allow and deny, exercised through check-gate.py.
 
-Consent enforcement for `sync` and `archive` is deliberately not asserted here:
-those gates ignore `--user-confirmed` today (harness-gate-bugs Finding 6) and
-flexibility step 5 owns the fix plus its cases.
+CASES cover the per-step checks in `gates.py`. POLICY_CASES cover what
+`routing.json` `gate_policy` decides before those run — consent, ad-hoc
+admission, and which denials a waiver may reach — and assert the `gate_class`
+and `mode` the gate contract echoes back.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -29,6 +31,8 @@ ARCHIVE = f"docs/archive/{SLUG}/report.json"
 
 MERGED = {"pre_push_merge": {"status": "merged"}}
 BROKEN_JSON = '{"open_questions": ['
+CONFIRMED = ("--user-confirmed",)
+ADHOC = ("--mode", "adhoc")
 
 
 def _status(**over: Any) -> dict[str, Any]:
@@ -60,7 +64,7 @@ def _validation(value: str) -> dict[str, Any]:
 
 # label, step, cli args, status, files, expected allowed, reason needle
 CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
-    ("start needs confirmation", "start", (), None, {}, False, "start requires user confirmation"),
+    ("start needs confirmation", "start", (), None, {}, False, "user consent required"),
     ("start with confirmation", "start", ("--user-confirmed",), None, {}, True, ""),
     ("describe needs task.original", "describe", (), _status(original=" "), {}, False, "task.original missing"),
     ("describe with task.original", "describe", (), _status(), {}, True, ""),
@@ -233,7 +237,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
     (
         "sync blocked by readiness routing",
         "sync",
-        (),
+        CONFIRMED,
         _status(artifacts={"review_validation": VALIDATION}, completed=["acceptance"]),
         {VALIDATION: _readiness("fix_required")},
         False,
@@ -242,7 +246,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
     (
         "sync blocked while a review rerun is pending",
         "sync",
-        (),
+        CONFIRMED,
         _status(artifacts={"review_validation": VALIDATION}, completed=["acceptance"]),
         {VALIDATION: _readiness("rerun_review")},
         False,
@@ -251,7 +255,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
     (
         "sync needs acceptance recorded",
         "sync",
-        (),
+        CONFIRMED,
         _status(artifacts={"review_validation": VALIDATION}),
         {VALIDATION: _readiness("ready_for_acceptance")},
         False,
@@ -260,26 +264,26 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
     (
         "sync with override instead of acceptance",
         "sync",
-        ("--override",),
+        CONFIRMED + ("--override",),
         _status(artifacts={"review_validation": VALIDATION}),
         {VALIDATION: _readiness("ready_for_acceptance")},
         True,
-        "",
+        "waived by --override",
     ),
     (
         "sync with acceptance recorded",
         "sync",
-        (),
+        CONFIRMED,
         _status(artifacts={"review_validation": VALIDATION}, completed=["acceptance"]),
         {VALIDATION: _readiness("ready_for_acceptance")},
         True,
         "",
     ),
-    ("archive needs sync handoff", "archive", (), _status(), {}, False, "sync artifact missing"),
+    ("archive needs sync handoff", "archive", CONFIRMED, _status(), {}, False, "sync artifact missing"),
     (
         "archive needs pre_push_merge satisfied",
         "archive",
-        (),
+        CONFIRMED,
         _status(artifacts={"sync": SYNC}),
         {SYNC: {"pre_push_merge": {"status": "skipped"}}},
         False,
@@ -288,7 +292,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
     (
         "archive denies cleanly on unparseable sync",
         "archive",
-        (),
+        CONFIRMED,
         _status(artifacts={"sync": SYNC}),
         {SYNC: BROKEN_JSON},
         False,
@@ -297,7 +301,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
     (
         "archive after merged sync",
         "archive",
-        (),
+        CONFIRMED,
         _status(artifacts={"sync": SYNC}),
         {SYNC: MERGED},
         True,
@@ -306,7 +310,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
     (
         "archive accepts not_needed merge",
         "archive",
-        (),
+        CONFIRMED,
         _status(artifacts={"sync": SYNC}),
         {SYNC: {"pre_push_merge": {"status": "not_needed"}}},
         True,
@@ -329,7 +333,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         _status(completed=["integrate"]),
         {},
         False,
-        "close consent not satisfied",
+        "user consent required",
     ),
     (
         "close accepts integrate handoff on disk",
@@ -355,6 +359,169 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
 ]
 
 
+READY = {VALIDATION: _readiness("ready_for_acceptance")}
+MID_EXECUTE = _status(next_step="review", completed=["spec", "subtasks"])
+
+# label, step, cli args, status, files, expected allowed, reason needle, gate_class
+POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str, str | None]] = [
+    # Consent comes from routing user_confirm_required, and the routing sentence
+    # is the reason. Every step that declares it denies without the flag.
+    (
+        "sync denies without consent",
+        "sync",
+        (),
+        _status(artifacts={"review_validation": VALIDATION}, completed=["acceptance"]),
+        READY,
+        False,
+        "push feature branch",
+        "safety",
+    ),
+    (
+        "archive denies without consent",
+        "archive",
+        (),
+        _status(artifacts={"sync": SYNC}),
+        {SYNC: MERGED},
+        False,
+        "write task archive",
+        "safety",
+    ),
+    (
+        "integrate denies without consent",
+        "integrate",
+        (),
+        _status(artifacts={"sync": SYNC, "archive": ARCHIVE}),
+        {SYNC: MERGED, ROOT_PREFIX + ARCHIVE: {"task": SLUG}},
+        False,
+        "push main",
+        "safety",
+    ),
+    (
+        "close denies without consent",
+        "close",
+        (),
+        _status(completed=["integrate"]),
+        {},
+        False,
+        "delete worktree",
+        "safety",
+    ),
+    (
+        "start denies without consent",
+        "start",
+        (),
+        None,
+        {},
+        False,
+        "create the task worktree",
+        "safety",
+    ),
+    # Consent is a safety check, so no flag reaches it.
+    (
+        "override cannot buy consent",
+        "integrate",
+        ("--override",),
+        _status(artifacts={"sync": SYNC, "archive": ARCHIVE}),
+        {SYNC: MERGED, ROOT_PREFIX + ARCHIVE: {"task": SLUG}},
+        False,
+        "user consent required",
+        "safety",
+    ),
+    (
+        "ad-hoc cannot buy consent",
+        "sync",
+        ADHOC,
+        MID_EXECUTE,
+        {},
+        False,
+        "user consent required",
+        "safety",
+    ),
+    # Ad-hoc admission is routing data: sync opts in, nothing else does.
+    (
+        "ad-hoc sync mid-execute allows",
+        "sync",
+        CONFIRMED + ADHOC,
+        MID_EXECUTE,
+        {},
+        True,
+        "waived by ad-hoc run",
+        None,
+    ),
+    (
+        "ad-hoc archive is refused",
+        "archive",
+        CONFIRMED + ADHOC,
+        _status(artifacts={"sync": SYNC}),
+        {SYNC: MERGED},
+        False,
+        "cannot run out of band",
+        "safety",
+    ),
+    (
+        "ad-hoc integrate is refused",
+        "integrate",
+        CONFIRMED + ADHOC,
+        _status(artifacts={"sync": SYNC, "archive": ARCHIVE}),
+        {SYNC: MERGED, ROOT_PREFIX + ARCHIVE: {"task": SLUG}},
+        False,
+        "cannot run out of band",
+        "safety",
+    ),
+    (
+        "ad-hoc execute is refused",
+        "execute",
+        ADHOC,
+        _status(artifacts={"subtasks": SUBTASKS}),
+        {SUBTASKS: "- [ ] work\n"},
+        False,
+        "cannot run out of band",
+        "safety",
+    ),
+    # A waiver reaches ordering only. Missing inputs and readiness blocks hold.
+    (
+        "ad-hoc sync still blocked by fix_required",
+        "sync",
+        CONFIRMED + ADHOC,
+        _status(artifacts={"review_validation": VALIDATION}),
+        {VALIDATION: _readiness("fix_required")},
+        False,
+        "readiness routing blocks sync",
+        "safety",
+    ),
+    (
+        "override cannot conjure a missing spec",
+        "subtasks",
+        ("--override",),
+        _status(artifacts={"spec": SPEC}),
+        {},
+        False,
+        "spec artifact missing",
+        "safety",
+    ),
+    (
+        "override cannot skip integrate before close",
+        "close",
+        CONFIRMED + ("--override",),
+        _status(),
+        {},
+        False,
+        "integrate not recorded",
+        "safety",
+    ),
+    (
+        "done is ordering only, so override waives it",
+        "done",
+        ("--override",),
+        _status(),
+        {},
+        True,
+        "waived by --override",
+        None,
+    ),
+]
+
+
 def _build(base: Path, status: dict | None, files: dict[str, Any]) -> tuple[Path, Path]:
     workspace = base / "workspace"
     worktree = workspace / "worktrees" / SLUG
@@ -369,6 +536,32 @@ def _build(base: Path, status: dict | None, files: dict[str, Any]) -> tuple[Path
     return workspace, worktree
 
 
+def _policy_declarations(root: Path) -> list[str]:
+    """routing.json gate_policy must describe the gates that actually exist."""
+    bad: list[str] = []
+    routing = json.loads((root / ".cursor/skills/nicki/routing.json").read_text(encoding="utf-8"))
+    steps = routing.get("steps") or {}
+    policy = routing.get("gate_policy") or {}
+
+    for name, cfg in steps.items():
+        if cfg.get("user_confirm") and not cfg.get("user_confirm_required"):
+            bad.append(f"fail: {name} has a user_confirm sentence but does not require it")
+        if cfg.get("user_confirm_required") and not cfg.get("user_confirm"):
+            bad.append(f"fail: {name} requires consent with no sentence to show the user")
+        if cfg.get("irreversible") and cfg.get("adhoc_allowed"):
+            bad.append(f"fail: {name} is both irreversible and adhoc_allowed")
+
+    if set(policy.get("classes") or {}) != {"safety", "sequence"}:
+        bad.append("fail: gate_policy must name exactly the safety and sequence classes")
+
+    source = (root / ".cursor/skills/nicki/scripts/gates.py").read_text(encoding="utf-8")
+    in_code = sorted(re.findall(r'deny_sequence\(\s*"([^"]+)"', source))
+    declared = sorted(policy.get("sequence_denials") or [])
+    if in_code != declared:
+        bad.append(f"fail: gate_policy sequence_denials {declared} != gates.py {in_code}")
+    return bad
+
+
 def _put(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     text = payload if isinstance(payload, str) else json.dumps(payload, indent=2) + "\n"
@@ -380,7 +573,8 @@ def run(root: Path) -> None:
     failures: list[str] = []
 
     with tempfile.TemporaryDirectory() as td:
-        for i, (label, step, args, status, files, want_allow, needle) in enumerate(CASES):
+        cases = [(*c, None) for c in CASES] + POLICY_CASES
+        for i, (label, step, args, status, files, want_allow, needle, want_class) in enumerate(cases):
             workspace, worktree = _build(Path(td) / f"c{i}", status, files)
             proc = run_py(
                 gate,
@@ -396,12 +590,36 @@ def run(root: Path) -> None:
                 continue
             result = json_line(proc.stdout)
             reason = result.get("reason") or ""
+            expect_mode = "adhoc" if "adhoc" in args else "normal"
             if result.get("allowed") is not want_allow:
                 failures.append(f"fail: {label}: expected allowed={want_allow}, got {result}")
             elif needle and needle not in reason:
                 failures.append(f"fail: {label}: reason {reason!r} lacks {needle!r}")
             elif "gate harness error" in reason:
                 failures.append(f"fail: {label}: leaked internal error: {reason}")
+            elif result.get("mode") != expect_mode:
+                failures.append(f"fail: {label}: mode {result.get('mode')!r} != {expect_mode!r}")
+            elif want_allow and result.get("gate_class") is not None:
+                failures.append(f"fail: {label}: allow should carry no gate_class")
+            elif want_class is not None and result.get("gate_class") != want_class:
+                failures.append(
+                    f"fail: {label}: gate_class {result.get('gate_class')!r} != {want_class!r}"
+                )
+
+        bad_mode = run_py(
+            gate,
+            "--worktree",
+            str(Path(td) / "c0/workspace/worktrees" / SLUG),
+            "--step",
+            "sync",
+            "--mode",
+            "sideways",
+            env={**os.environ, "NICKI_WORKSPACE_ROOT": str(Path(td) / "c0/workspace")},
+        )
+        if bad_mode.returncode == 0:
+            failures.append("fail: unknown --mode should be rejected")
+
+        failures.extend(_policy_declarations(root))
 
         missing_status = Path(td) / "no-status/workspace/worktrees" / SLUG
         missing_status.mkdir(parents=True)
@@ -420,5 +638,8 @@ def run(root: Path) -> None:
     if failures:
         raise AssertionError("\n".join(failures))
 
-    print(f"ok: {len(CASES) + 1} gate cases through check-gate.py")
+    print(
+        f"ok: {len(CASES)} gate cases + {len(POLICY_CASES)} policy cases "
+        "through check-gate.py"
+    )
     print("smoke-gates-matrix: ok")

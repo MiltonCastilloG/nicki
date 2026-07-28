@@ -25,7 +25,7 @@ of the real work.
 | 3 | `routing.json` per-step fields are unread by any script | Real; caused a wrong root cause and a wasted investigation cycle | Direct block. Ad-hoc needs per-step metadata; adding unread fields deepens the trap. |
 | 4 | `bootstrap-context.py` still crashes on a malformed artifact | Real, reproduced; the 07-26 fix landed on one of two entry points | Worse. External input is less controlled, and bootstrap runs every response. |
 | 5 | Sheep hand-author prose YAML with no quoting rule | Real, recurring; impact now capped at `check-gate.py` only | Sideways. New surface: user-authored markdown instead of sheep YAML. |
-| 6 | `sync` and `archive` gates allow with no user consent; the rule is prose-only | Real, reproduced | Fixed by flexibility Decision 3 — consent becomes a routing property the script enforces. |
+| 6 | `sync` and `archive` gates allow with no user consent; the rule is prose-only | **Fixed 2026-07-29** (follow-up 6) | Consent is routing data enforced once; ad-hoc gets no exemption. |
 | 7 | `rerun_review` readiness is documented but absent from `routing.json`; the gate crashed on it and it never blocked sync | **Fixed 2026-07-28** (follow-up 2) | Found by writing the gate matrix — the coverage gap was hiding it. |
 
 ## Finding 1 — integrate gate cannot see the archive
@@ -176,7 +176,8 @@ and `readiness_mapping.py` now asserts every documented status has a route.
   across every incident.
 - **`--override` keeps broken gates alive.** Findings 1 and 2 were both worked
   around with `--override`; the task archived and closed. The only gate that got
-  a correct root cause is the one whose override is broken.
+  a correct root cause is the one whose override is broken. (Addressed in
+  follow-up 7: a denial now says whether a waiver can even reach it.)
 - **Path scope is unwritten.** `archive` is workspace-root-relative; every other
   artifact is worktree-relative. `artifact_path()` knows one rule. No format doc
   states the difference.
@@ -199,15 +200,14 @@ Unblocked flexibility B1.
 - **Now:** `gate_utils.ROOT_SCOPED_ARTIFACTS` declares which pointers are
   workspace-root-relative (`archive`); everything else resolves against the
   worktree. `readiness()` goes through `artifact_path()` instead of its own join.
-  `gate_integrate`'s consent deny states that `--override` does not apply, since
-  integrate is a safety gate — full safety/sequence classing is follow-up 6 and
-  flexibility step 5.
+  `gate_integrate`'s consent deny said that `--override` does not apply; follow-up
+  7 replaced that sentence with the `gate_class` field.
 - **Documented:** path-scope rule in `status-format.md` `artifacts`.
-- **Proven:** `tests/smoke/gate_paths.py`, wired into `test.py`. Six cases:
+- **Proven:** `tests/smoke/gate_paths.py`, wired into `test.py`. Four path cases:
   archive at root resolves; archive genuinely absent still denies; archive under
   the worktree is *not* accepted; worktree-scoped `sync` is *not* read from the
-  root; integrate without consent denies; `--override` cannot buy consent.
-  Reverting the resolution change turns the suite red.
+  root. Reverting the resolution change turns the suite red. Its two consent cases
+  moved to the policy matrix in follow-up 6, which covers every step.
 
 ### 2. Real gate fixtures in `test.py` — **done 2026-07-28**
 
@@ -216,7 +216,7 @@ Closes `docs/tasks.md` #10. Guards every later step.
 - **Was:** 12 of 13 gates untested; the one gate test
   (`scripts/smoke-archive-gate.py`) was not imported by `test.py`, so it ran only
   by hand.
-- **Now:** `tests/smoke/gates_matrix.py` drives 45 cases through
+- **Now:** `tests/smoke/gates_matrix.py` drives 44 gate cases through
   `check-gate.py` — every one of the 13 gates with at least one allow and one
   deny, plus unparseable artifacts at three gates, a legacy v1 status shape
   (`task.story_artifact` + `history`), a missing `status.json`, and an unknown
@@ -308,18 +308,49 @@ Implements [`flexibility.md`](flexibility.md) Decision 1 (routing owns
   gate contract and does not mention the echoed `next_step`/`artifact`. Agent
   prose changes land together in flexibility step 6.
 
-### 6. Enforce consent from routing
+### 6. Enforce consent from routing — **done 2026-07-29**
 
-Implements [`flexibility.md`](flexibility.md) Decision 3.
+Implements [`flexibility.md`](flexibility.md) Decision 3, and closes Finding 6.
 
-- **Now:** `sync` and `archive` allow with no `--user-confirmed`. Consent is
-  hardcoded in 4 of 13 gates and shouted in `nicki.md` prose for a step the
-  script does not check.
-- **Target:** per-step `user_confirm_required` in `routing.json`, enforced once
-  in `check-gate.py` using routing's own `user_confirm` sentence as the deny
-  reason. Drop the hardcoded checks from `gate_start`, `gate_review`,
-  `gate_integrate`, `gate_close`.
-- **Watch:** this is a behavior change — `sync` and `archive` start denying
-  without the flag. Nicki must pass it after every confirm.
-- **Done when:** every step with a `user_confirm` string denies without the flag,
-  proven by a fixture per step.
+- **Was:** `sync` and `archive` allowed with no `--user-confirmed`. Consent was
+  hardcoded in 4 of 13 gates and shouted in `nicki.md` prose for steps the script
+  did not check.
+- **Now:** `user_confirm_required` per step in `routing.json`, enforced once in
+  `check-gate.py` before any gate runs, with that step's `user_confirm` sentence
+  as the deny reason. `gate_start` is gone entirely (consent was its only check);
+  `gate_integrate` and `gate_close` lost theirs. `start` gained the
+  `user_confirm` sentence it had always needed.
+- **Kept in code, deliberately:** `gate_review`'s confirm depends on the
+  execution artifact's `review_scope`, not on the step, so it cannot be declared
+  per step without inventing a condition language in JSON.
+- **Behavior change, as warned:** `start`, `sync`, and `archive` now deny without
+  the flag. `nicki.md` says to pass it after any confirm, and
+  `permissions.json` lists it.
+- **Proven:** `gates_matrix.POLICY_CASES` — five consent denials, two cases
+  showing no flag buys consent, plus a declaration check asserting that every
+  step with a `user_confirm` sentence requires it and vice versa.
+
+### 7. Name safety and sequence gates — **done 2026-07-29**
+
+Implements [`flexibility.md`](flexibility.md) A4 and Decision 2.
+
+- **Was:** the split half-existed and was applied by accident. `gate_sync`
+  waived acceptance on `--override` but not readiness, `gate_integrate` took an
+  override argument and discarded it, and no output said whether a denial was
+  waivable — so `--override` was tried on everything (see "Why these recur").
+- **Now:** every denial is classed. `deny()` is `safety` and never waives;
+  `deny_sequence()` is ordering only. `check-gate.py` applies the waiver
+  centrally — a `sequence` denial waives on `--override` or on an ad-hoc run of a
+  step routing marks `adhoc_allowed`, and the allow reason names what was waived.
+  Exactly two sequence denials exist: `sync`'s missing acceptance and `done`'s
+  missing close.
+- **In the contract:** stdout gained `gate_class` (null on allow) and `mode`, so
+  Nicki can tell "fix the cause" from "ask the user for a waiver" instead of
+  guessing. `--mode normal|adhoc` is the third flag, per Decision 2.
+- **New routing data, all read:** `user_confirm_required`, `adhoc_allowed`,
+  `irreversible`, plus a `gate_policy` block naming the two classes and listing
+  the sequence denials. `irreversible` and `adhoc_allowed` together are a routing
+  error the gate reports rather than resolving.
+- **Proven:** 15 policy cases, plus a drift check that fails if
+  `gate_policy.sequence_denials` and the `deny_sequence` calls in `gates.py`
+  disagree — the same class of drift as Finding 3, now caught by the suite.
