@@ -3,18 +3,23 @@
 
 Required inputs:
   --worktree (CLI)
-  summary JSON: next_step
+  summary JSON: next_step — required in normal mode, ignored in adhoc mode
+
+Modes (--mode):
+  normal — default; advances task.current_step / next_step / completed_steps
+  adhoc  — step ran out of band: position fields are left untouched, the artifact
+           pointer is still recorded, and one task.side_effects entry is appended
 
 Optional summary fields (defaults applied):
   completed_step — when present, sets task.current_step, may append completed_steps,
     and may set artifact pointer; when absent, current_step is still written
-    (preserved from existing status, or "start" on fresh init)
-  artifact — skip artifact pointer when absent or when completed_step absent
-  completed_status — default "complete"
+    (preserved from existing status, or "start" on fresh init). --step overrides it.
+  artifact — skip artifact pointer when absent or when the step is unknown
+  completed_status — default "complete"; must be one of COMPLETED_STATUSES
   open_questions — default []
   summary, task.* — ignored or derived
 
-Success stdout: {"written": true, "path", "completed_step", "next_step", "blockers"}
+Success stdout: {"written": true, "path", "completed_step", "next_step", "mode", "blockers"}
   completed_step is the JSON value or null when omitted.
 Input error stdout: {"written": false, "errors": ["missing required field: next_step"]}
 Exit 0 on success, 1 on input error or write failure.
@@ -25,10 +30,17 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 REQUIRED_SUMMARY_FIELDS = ("next_step",)
+
+# Closed set. "complete" is the only value that appends to task.completed_steps;
+# anything unknown used to skip the append silently and still report success.
+COMPLETED_STATUSES = ("complete", "blocked")
+
+MODES = ("normal", "adhoc")
 
 
 def _fail(errors: list[str]) -> None:
@@ -122,16 +134,38 @@ def _set_artifact_pointer(
         artifacts[key] = artifact_path
 
 
-def _validate_required(summary: dict[str, Any]) -> None:
+def _validate_required(summary: dict[str, Any], *, mode: str) -> None:
     errors: list[str] = []
-    for field in REQUIRED_SUMMARY_FIELDS:
-        value = summary.get(field)
-        if value is None or (isinstance(value, str) and not value.strip()):
-            errors.append(f"missing required field: {field}")
-        elif not isinstance(value, str):
-            errors.append(f"required field must be a string: {field}")
+    if mode == "normal":
+        for field in REQUIRED_SUMMARY_FIELDS:
+            value = summary.get(field)
+            if value is None or (isinstance(value, str) and not value.strip()):
+                errors.append(f"missing required field: {field}")
+            elif not isinstance(value, str):
+                errors.append(f"required field must be a string: {field}")
+    status = summary.get("completed_status", "complete")
+    if status not in COMPLETED_STATUSES:
+        errors.append(
+            f"completed_status must be one of {list(COMPLETED_STATUSES)}: got {status!r}"
+        )
     if errors:
         _fail(errors)
+
+
+def _append_side_effect(status: dict[str, Any], step: str | None, artifact: str | None) -> None:
+    task = status.setdefault("task", {})
+    effects = task.get("side_effects")
+    if not isinstance(effects, list):
+        effects = []
+    effects.append(
+        {
+            "step": step,
+            "mode": "adhoc",
+            "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "artifact": artifact,
+        }
+    )
+    task["side_effects"] = effects
 
 
 def _optional_completed_step(summary: dict[str, Any]) -> str | None:
@@ -155,6 +189,16 @@ def main() -> int:
         "--yaml-path",
         help="Deprecated: path to Nicki summary YAML (in-flight only)",
     )
+    parser.add_argument(
+        "--step",
+        help="Pipeline step Nicki dispatched; overrides summary completed_step",
+    )
+    parser.add_argument(
+        "--mode",
+        default="normal",
+        choices=MODES,
+        help="normal advances position; adhoc leaves position untouched",
+    )
     args = parser.parse_args()
 
     if not args.worktree.strip():
@@ -171,10 +215,10 @@ def main() -> int:
 
     source = args.json_path or args.yaml_path
     summary = _parse_summary(_read_text(source), source_path=source)
-    _validate_required(summary)
+    _validate_required(summary, mode=args.mode)
 
-    completed_step = _optional_completed_step(summary)
-    next_step = summary["next_step"]
+    completed_step = (args.step or "").strip() or _optional_completed_step(summary)
+    next_step = summary.get("next_step")
     completed_status = summary.get("completed_status", "complete")
     artifact = summary.get("artifact")
     open_questions = summary.get("open_questions", [])
@@ -186,6 +230,8 @@ def main() -> int:
 
     status = _load_json(status_path)
     if status is None:
+        if args.mode == "adhoc":
+            _fail(["adhoc mode needs an existing status.json"])
         status = _init_status(
             str(Path(worktree_arg)),
             slug,
@@ -202,9 +248,16 @@ def main() -> int:
         task = {}
         status["task"] = task
     task["slug"] = task.get("slug") or slug
-    task["next_step"] = next_step
 
-    if completed_step is not None:
+    if args.mode == "adhoc":
+        # Out-of-band run: record what happened, leave pipeline position alone.
+        _set_artifact_pointer(status, completed_step or "", artifact if isinstance(artifact, str) else None)
+        _append_side_effect(status, completed_step, artifact if isinstance(artifact, str) else None)
+        next_step = task.get("next_step")
+    else:
+        task["next_step"] = next_step
+
+    if args.mode == "normal" and completed_step is not None:
         task["current_step"] = completed_step
         completed_steps = task.get("completed_steps")
         if not isinstance(completed_steps, list):
@@ -213,7 +266,7 @@ def main() -> int:
             completed_steps.append(completed_step)
         task["completed_steps"] = completed_steps
         _set_artifact_pointer(status, completed_step, artifact if isinstance(artifact, str) else None)
-    else:
+    elif args.mode == "normal":
         existing = task.get("current_step")
         if not isinstance(existing, str) or not existing.strip():
             task["current_step"] = "start"
@@ -225,7 +278,8 @@ def main() -> int:
         status["scope"] = scope
     scope["worktree_path"] = scope.get("worktree_path") or str(Path(worktree_arg))
 
-    status["open_questions"] = open_questions
+    if args.mode == "normal" or "open_questions" in summary:
+        status["open_questions"] = open_questions
 
     try:
         status_path.write_text(
@@ -248,6 +302,7 @@ def main() -> int:
                 "path": str(status_path),
                 "completed_step": completed_step,
                 "next_step": next_step,
+                "mode": args.mode,
                 "blockers": blockers,
             }
         )

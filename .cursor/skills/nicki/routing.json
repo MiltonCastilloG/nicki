@@ -146,6 +146,10 @@
       "open_questions",
       "summary"
     ],
+    "completed_status_values": [
+      "complete",
+      "blocked"
+    ],
     "on_blocked": "set completed_status to blocked; populate open_questions"
   },
   "harness_failure": {

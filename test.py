@@ -23,6 +23,7 @@ from tests.smoke import (  # noqa: E402
     routing_next_step,
     status_boundary,
     status_update,
+    status_vocabulary,
 )
 
 MODULES = [
@@ -30,6 +31,7 @@ MODULES = [
     ("harness_failure", harness_failure),
     ("errors_append", errors_append),
     ("status_update", status_update),
+    ("status_vocabulary", status_vocabulary),
     ("status_boundary", status_boundary),
     ("readiness_mapping", readiness_mapping),
     ("gates_matrix", gates_matrix),

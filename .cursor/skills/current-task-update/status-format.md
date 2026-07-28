@@ -37,8 +37,23 @@ Handoff JSON/Markdown bodies stay separate; status holds pointers and step posit
 | `current_step` | Yes | Step Nicki is on or just completed |
 | `next_step` | Yes | Next step Nicki should propose |
 | `completed_steps` | No | Step names completed so far (e.g. `["start", "describe", "spec"]`) |
+| `side_effects` | No | Append-only log of out-of-band runs — see below |
 
 Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`.
+
+### `side_effects`
+
+An ad-hoc step (`update-status.py --mode adhoc`) runs without moving the task:
+`current_step`, `next_step`, and `completed_steps` are left exactly as they were.
+The artifact pointer is still recorded, and one entry is appended here so the run
+is not invisible. Position fields stay the source of truth for *where the task is*;
+this log is the source of truth for *what else happened*.
+
+```json
+"side_effects": [
+  {"step": "sync", "mode": "adhoc", "at": "2026-07-29T08:14:02Z", "artifact": "current-task/syncs/foo.json"}
+]
+```
 
 ## `scope`
 

@@ -45,10 +45,11 @@ An ad-hoc invocation that is gated for safety, runs the sheep, and leaves
 
 ### Blockers
 
-**A1 — no no-advance write mode.** `REQUIRED_SUMMARY_FIELDS = ("next_step",)`.
-Ad-hoc is unexpressible in the write contract. Needs an explicit mode where
-position is preserved and only the artifact pointer plus a side-effect record
-are written.
+**A1 — no no-advance write mode. Cleared 2026-07-29.** `update-status.py --mode
+adhoc` writes the artifact pointer and a `task.side_effects` entry and leaves
+`current_step`, `next_step`, and `completed_steps` untouched; `next_step` is not
+required in that mode. Remaining for A2: normal mode still takes `next_step` from
+the summary instead of routing (step 7).
 
 **A2 — sheep hardcode position.** `sheep-sync` says `archive`/`integrate`,
 `sheep-execute` says `review` (`sheep-execute.md:42`), `sheep-spec` says
@@ -72,10 +73,11 @@ inconsistently: `gate_sync` waives acceptance on override but not readiness,
 use `--user-confirmed` for the same job. Name the two classes, mark each gate,
 apply uniformly.
 
-**A5 — no side-effect trail.** If state does not advance, ad-hoc git work leaves
-no record. `archive-format.md` derives `process` from artifact handoffs, so the
-archive report will silently omit it. Needs a log — e.g. `task.side_effects[]`
-with step, timestamp, artifact.
+**A5 — no side-effect trail. Cleared 2026-07-29.** `task.side_effects[]` is
+append-only, one entry per ad-hoc write, with step, mode, UTC timestamp, and
+artifact. Documented in `status-format.md`. Still open: `archive-format.md`
+derives `process` from artifact handoffs, so the archive report must learn to read
+this log (step 8).
 
 **A6 — per-step metadata is unread.** Ad-hoc needs `irreversible`,
 `sequence_gate`, `adhoc_allowed` per step. Adding fields to a `routing.json`
@@ -122,8 +124,10 @@ optional `git` and `artifacts` summary fields; the script never reads them
 scope and can change after adoption. Record path plus commit or hash, else the
 spec drifts and nothing notices.
 
-**B5 — status vocabulary.** Needs a way to say "satisfied by external artifact"
-rather than "completed by a sheep". Same enum work as bug-doc follow-up 3.
+**B5 — status vocabulary. Resolved 2026-07-29 by Decision 5.** Not an enum member:
+"satisfied by external artifact" becomes `--mode adopt` on the write path, keeping
+`completed_status` about the sheep's outcome only. The mode axis and the
+`side_effects` log both exist now, so adoption has somewhere to land.
 
 ### Two paths
 
@@ -159,7 +163,7 @@ a blunt override reproduces the exact failure this project just documented.
 | ~~1~~ | ~~Scope model for artifact paths~~ — **done 2026-07-28** | bug doc follow-up 1 · cleared B1 |
 | ~~2~~ | ~~Resolve `routing.json`: read `default_next_step`~~ — **done 2026-07-28**; `artifact_key`/`secondary_artifact_key` deferred to step 7 | bug doc follow-up 5 · unblocks A6 · implements Decision 1 |
 | ~~3~~ | ~~Gate fixtures in `test.py`~~ — **done 2026-07-28**, 45 cases | bug doc follow-up 2 · guards everything after |
-| 4 | Status vocabulary: enum, no-advance mode, side-effect log | bug doc follow-up 3 · A1, A5, B5 |
+| ~~4~~ | ~~Status vocabulary: enum, no-advance mode, side-effect log~~ — **done 2026-07-29**; enum closed at `complete`/`blocked`, see Decision 5 | bug doc follow-up 3 · cleared A1, A5, B5 |
 | 5 | Consent from routing + name safety vs sequence gates, enforced in `check-gate.py` only | A4 · Decisions 2, 3 · bug doc follow-up 6 |
 | 6 | Strip workflow knowledge from every `sheep-*.md`; shrink the return contract | A3 · Decision 4 |
 | 7 | Write path takes `--step`/`--mode`; calls `next_step_for()` on normal, leaves position on ad-hoc; wire `artifact_key` to replace `key_by_step` | A1, A2 · Decisions 1, 2, 4 |
@@ -263,5 +267,16 @@ trimming goal in `docs/tasks.md`.
 ## Open decisions
 
 None. All four decided 2026-07-28.
-4. Do sheep learn the ad-hoc concept, or does Nicki pass it as a prompt flag and
-   the prose gates get rewritten to defer to the script?
+
+### 5. `completed_status` stays two-valued; mode carries the rest
+
+Decided 2026-07-29 while implementing step 4, because follow-up 3 and Decision 2
+pulled in opposite directions.
+
+`completed_status` reports **what the sheep did** — `complete` or `blocked`.
+`--mode` reports **what the write should do to position** — `normal`, `adhoc`,
+later `adopt`. They are orthogonal: an ad-hoc sync is `complete` (it did its job)
+*and* must not advance. Putting "ran, did not advance" in the enum would encode
+position in a field the sheep owns, which is the coupling Decisions 1 and 4
+remove. So B5 and follow-up 3's "vocabulary must grow" resolve as: the enum
+closes at two, and adoption becomes `--mode adopt`.

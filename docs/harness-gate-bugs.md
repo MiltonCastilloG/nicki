@@ -21,7 +21,7 @@ of the real work.
 | # | Finding | State | Flexibility impact |
 |---|---------|-------|--------------------|
 | 1 | `gate_integrate` resolves the archive path against the worktree; archive is workspace-root-relative | **Fixed 2026-07-28** (follow-up 1) | Foundation. External sources of truth need the same scope model. |
-| 2 | `completed_status` must be the literal `"complete"` or `completed_steps` silently skips the append | Real, reproduced; reported mechanism was wrong | Vocabulary grows: needs "ran, did not advance" and "satisfied by external". |
+| 2 | `completed_status` must be the literal `"complete"` or `completed_steps` silently skips the append | **Fixed 2026-07-29** (follow-up 3) | Closed enum plus a `--mode` axis; ad-hoc writes no longer move position. |
 | 3 | `routing.json` per-step fields are unread by any script | Real; caused a wrong root cause and a wasted investigation cycle | Direct block. Ad-hoc needs per-step metadata; adding unread fields deepens the trap. |
 | 4 | `bootstrap-context.py` still crashes on a malformed artifact | Real, reproduced; the 07-26 fix landed on one of two entry points | Worse. External input is less controlled, and bootstrap runs every response. |
 | 5 | Sheep hand-author prose YAML with no quoting rule | Real, recurring; impact now capped at `check-gate.py` only | Sideways. New surface: user-authored markdown instead of sheep YAML. |
@@ -239,20 +239,32 @@ Closes `docs/tasks.md` #10. Guards every later step.
   `python3 test.py`. The `./test.sh` reference in
   `harness-alignment-subagents.md:290` remains stale — `test.py` is the entrypoint.
 
-### 3. Status vocabulary
+### 3. Status vocabulary — **done 2026-07-29**
 
-Unblocks flexibility A1, A5, B5.
+Cleared flexibility A1, A5, B5.
 
-- **Now:** `completed_status` is an open string; anything but `"complete"`
-  silently skips the `completed_steps` append and still reports
-  `written: true` (`update-status.py:212`).
-- **Target:** closed set, validated. Unknown value returns `written: false` with
-  an error naming the field. Document the set in `status-format.md` and
-  `routing.json`.
-- **Design with flexibility in mind:** the same enum needs members for "ran, did
-  not advance" and "satisfied by external artifact". Add them in this pass rather
-  than reopening the contract twice.
-- **Done when:** a bad `completed_status` fails loudly, and a fixture covers it.
+- **Was:** `completed_status` was an open string; anything but `"complete"`
+  silently skipped the `completed_steps` append and still reported
+  `written: true`.
+- **Now:** closed set `complete` | `blocked`, validated before any write. An
+  unknown value — including `"COMPLETE"`, `""`, and non-strings — returns
+  `written: false` with an error naming the field, and does not create
+  `status.json`. Declared in `update-status.py` `COMPLETED_STATUSES`,
+  `routing.json` `sheep_return_contract.completed_status_values`, and
+  `current-task-update/SKILL.md`; the fixture asserts all three agree.
+- **Enum did not grow.** The plan said to add members for "ran, did not advance"
+  and "satisfied by external artifact". That would have put position back in a
+  field the sheep owns, against flexibility Decisions 1 and 4. Those two cases
+  became the `--mode` axis instead — recorded as flexibility Decision 5.
+- **`--mode adhoc`** writes the artifact pointer and appends one
+  `task.side_effects` entry (step, mode, UTC timestamp, artifact) while leaving
+  `current_step`, `next_step`, and `completed_steps` byte-identical. `next_step`
+  is not required in that mode, and ad-hoc refuses to initialise a fresh
+  `status.json`. `--step` was added in the same pass so the dispatched step name
+  can come from Nicki rather than the sheep.
+- **Proven:** `tests/smoke/status_vocabulary.py`, wired into `test.py` — both enum
+  members, five rejected values, no-advance semantics, side-effect append across
+  two runs, unknown `--mode`, and normal mode still requiring `next_step`.
 
 ### 4. Contract-safe bootstrap failure
 

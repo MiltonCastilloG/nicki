@@ -31,9 +31,15 @@ Schemas:
 
 ## Nicki summary format
 
-**Required:** `next_step` only (plus worktree via CLI).
+**Required:** `next_step` only (plus worktree via CLI). Not required with `--mode adhoc`.
 
 **Optional:** `completed_step`, `artifact`, `completed_status`, `open_questions`, `summary`.
+
+**`completed_status` is a closed set:** `complete` or `blocked`. Any other value is an
+input error — nothing is written. Only `complete` appends to `completed_steps`.
+
+**CLI:** `--step <name>` names the dispatched step and wins over summary
+`completed_step`. `--mode normal|adhoc` selects whether the write moves the task.
 
 Minimal write (valid — advances next step only):
 
@@ -106,6 +112,7 @@ Emit simplified shape on every write. **Legacy migration:** when loading v1 stat
 - **completed_steps:** append `completed_step` name when `completed_status: complete` (init `[]` when absent); omit verbose `history`
 - Fix-loop: when `completed_step: fix` or review reruns after fix, append `fix` to `completed_steps`
 - Acceptance: when `completed_step: acceptance`, append `acceptance` to `completed_steps`; reject may populate `open_questions`
+- **Ad-hoc (`--mode adhoc`):** leave `current_step`, `next_step`, and `completed_steps` untouched; record the artifact pointer and append one `task.side_effects` entry. Needs an existing `status.json` — ad-hoc never initialises a task.
 - `open_questions` from summary; blocked when non-empty
 
 ### Step 4: Write and report
