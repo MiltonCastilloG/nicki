@@ -16,15 +16,13 @@ Read and follow `.cursor/skills/start-task/SKILL.md` — classification, branch/
 
 ## Agent-only (after skill)
 
-1. **Return JSON for Nicki** — per created worktree, map fields from `create-worktree.py` JSON stdout for `sheep-status`:
+1. **Return JSON for Nicki** — per created worktree, map fields from `create-worktree.py` JSON stdout:
 
 ```json
 {
   "worktree": "worktrees/nicki-my-task",
-  "completed_step": "start",
   "completed_status": "complete",
   "artifact": "current-task/status.json",
-  "next_step": "describe",
   "task": {
     "slug": "my-task",
     "original": "create-worktree.py scripted flow",
@@ -38,7 +36,7 @@ Read and follow `.cursor/skills/start-task/SKILL.md` — classification, branch/
 }
 ```
 
-Stdout → handoff: `worktree_path` → `worktree`; `status_path` → `artifact` as `current-task/status.json` relative to worktree; `branch` → `git.branch`; `slug`, `original`, `type` from invocation/JSON; include `task_id` / `registry_key` when present.
+Stdout → handoff: `worktree_path` → `worktree`; `status_path` → `artifact` as `current-task/status.json` relative to worktree; `branch` → `git.branch`; `slug`, `original`, `type` from invocation/JSON; include `task_id` / `registry_key` when present. Do not name pipeline position — Nicki passes `--step start`.
 
 2. **On failure** — surface script stderr JSON (`status`, `errors`, `workflow_doc`); never overwrite an existing worktree. Point operator to `.cursor/skills/start-task/scripts/WORKFLOW.md`.
 
@@ -58,7 +56,7 @@ python3 .cursor/skills/start-task/scripts/create-worktree.py \
 2. Report handoff JSON per success from JSON stdout.
 3. On failure, report stderr output and WORKFLOW.md recovery guidance.
 
-If no work items were provided, ask what to start (a slug or short label is enough — full description comes in describe).
+If no work items were provided, ask what to start (a slug or short label is enough — full description comes later).
 
 ## Safety rules
 

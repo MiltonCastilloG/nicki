@@ -24,17 +24,16 @@ Read and follow:
 |-------|---------------|-------|
 | Worktree path | Nicki prompt | Scope root |
 | Spec | `@current-task/specs/<slug>.json` — auto-load when omitted | Preferred |
-| Status | `@current-task/status.json` | Read only — validate `scope.worktree_path`; check `open_questions` |
-| Spec gate | Spec `open_questions` and status `open_questions` | Both must be empty |
-
-**Gate:** Non-empty spec `open_questions` — stop and ask; do not write subtasks. No spec on disk — tell Nicki the spec step is needed first.
+| Status | `@current-task/status.json` | Read only — validate `scope.worktree_path` |
 
 ## Output
 
 - **Write:** `current-task/subtasks/<slug>.md` under the scope root.
 - **Frontmatter:** set `spec` to spec path; set `context: current-task/status.json` when status was loaded.
-- **Never write:** `current-task/status.json` — Nicki sends `sheep-status` after this step.
+- **Never write:** `current-task/status.json`.
+
+If the spec is missing or its `open_questions` are non-empty, return blocked with `open_questions` — do not invent a next pipeline step.
 
 ## Return
 
-`artifact` = subtask path; `completed_step: subtasks`; `next_step: execute`.
+`artifact` = subtask path; `completed_status`; `open_questions`. Do not name pipeline position.

@@ -33,10 +33,10 @@ Read and follow:
 
 - **Write:** `current-task/executions/<slug>.json` under the scope root.
 - **May edit:** `current-task/subtasks/<slug>.md` — checklist `- [ ]` → `- [x]` only.
-- **Never write:** `current-task/status.json` — Nicki sends `sheep-status` after this step.
+- **Never write:** `current-task/status.json`.
 
 Set `meta.context: current-task/status.json` in execution JSON when status was loaded.
 
 ## Return
 
-`artifact` = execution path; `completed_step: execute`; `next_step: review`.
+`artifact` = execution path; `completed_status`; `open_questions`; `summary`. Do not name pipeline position.

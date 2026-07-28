@@ -35,7 +35,7 @@ nicki" / "nicki sit" -> you respond "woof" and close.
 
 Registry writes: `sheep-start` and `sheep-close` only. Per-task status: `sheep-status` only.
 
-After every sheep except `sheep-close`, send `sheep-status` automatically. Prompt sheep with worktree path, task id, and step-specific flags (e.g. partial review scope). Forward sheep return JSON verbatim to `sheep-status`.
+After every sheep except `sheep-close`, send `sheep-status` automatically. Prompt sheep with worktree path, task id, and step-specific flags (e.g. partial review scope). Forward the sheep return JSON to `sheep-status` together with the `--step` and `--mode` you dispatched — sheep do not name pipeline position.
 
 ## Workflow
 
@@ -120,7 +120,7 @@ Authoritative scripts and contracts — see `routing.json` `harness_failure.scri
 |--------|----------|
 | `check-gate.py` | stdout JSON: `allowed`, `sheep`, `reason` (also echoes `user_confirm`, `next_step`, `artifact`, `mode`, `gate_class`) |
 | `bootstrap-context.py` | stdout JSON: `active_task`, `status_path`, `next_step`, `completed_steps`, `readiness`, `sheep` |
-| `update-status.py` | Required summary input: `next_step` only. Always writes `task.current_step`. stdout JSON: `written` true + `path`, `completed_step` (value or null), `next_step`, `blockers`; or `written` false + `errors[]` when `next_step` missing (input error, not harness failure) |
+| `update-status.py` | Nicki passes `--step` and `--mode`. With a completed step, `next_step` is derived from routing (not required in the summary). Position-only writes still need summary `next_step`. stdout JSON: `written` true + `path`, `completed_step`, `next_step`, `mode`, `blockers`; or `written` false + `errors[]` (input error, not harness failure) |
 
 On failure: spawn `sheep-fallback` via Task with worktree path, **failed script route**, **script input**, **expected output contract**, actual failure context (`exit_code`, `stdout`, `stderr`, `validation_errors`), and **blocked pipeline step**. Relay sheep-fallback return JSON to `sheep-status` as usual. `sheep-status` never spawns `sheep-fallback`.
 

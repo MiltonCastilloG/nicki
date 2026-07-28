@@ -2,7 +2,7 @@
   "steps": {
     "start": {
       "sheep": "sheep-start",
-      "artifact_key": "status",
+      "artifact_key": null,
       "expected_artifact": "current-task/status.json",
       "default_next_step": "describe",
       "gate": "no worktree yet; user confirmed start",
@@ -45,7 +45,7 @@
     "review": {
       "sheep": "sheep-review",
       "artifact_key": "review_validation",
-      "secondary_artifact_key": "review",
+      "secondary_artifact_key": "review_input",
       "expected_artifact": "current-task/review-validations/rN-validation.json",
       "default_next_step": null,
       "gate": "execution artifact exists; partial review_scope needs user confirm first",
@@ -154,13 +154,10 @@
     }
   },
   "sheep_return_contract": {
-    "description": "Every sheep ends its final message with compact JSON for sheep-status. Nicki forwards this JSON verbatim — do not re-read the written artifact unless readiness routing requires validation JSON or spec open_questions gate check. Sheep normally still send optional_fields; update-status.py requires only next_step.\n",
-    "required_fields": [
-      "next_step"
-    ],
+    "description": "Every sheep ends its final message with compact JSON. Nicki forwards the return plus the --step and --mode she dispatched to sheep-status. Sheep do not name pipeline position — update-status.py derives completed_step from --step and next_step from routing.\n",
+    "required_fields": [],
     "optional_fields": [
       "worktree",
-      "completed_step",
       "completed_status",
       "artifact",
       "open_questions",
@@ -207,7 +204,7 @@
             "written"
           ]
         },
-        "notes": "Required summary field is next_step only. Missing next_step → written false. Missing completed_step is allowed; task.current_step is always written. Success: written true plus path, completed_step (value or null), next_step, blockers. Input error (agent omitted next_step): written false plus errors[] naming next_step — not a harness failure; retry sheep-status with corrected JSON.\n"
+        "notes": "Nicki passes --step and --mode. With a completed step, next_step is derived from routing (not required in the summary). Position-only writes (no completed step) still require summary next_step. Missing required field → written false. Success: written true plus path, completed_step (value or null), next_step, mode, blockers. Input error is not a harness failure; retry sheep-status with corrected JSON.\n"
       }
     }
   }

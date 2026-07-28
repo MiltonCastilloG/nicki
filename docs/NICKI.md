@@ -27,7 +27,7 @@ Authoritative read / gate / write surface (see [harness read/write design](super
 | ---- | ------ | ---- |
 | Read | `bootstrap-context.py` | Position, readiness, intended sheep on stdout |
 | Gate | `check-gate.py` | After user confirm: `allowed` / `sheep` / `reason` |
-| Write | `update-status.py` | `sheep-status` path — required summary field `next_step` only; always writes `task.current_step` |
+| Write | `update-status.py` | `sheep-status` path — Nicki passes `--step`/`--mode`; routing owns `next_step` on normal completion |
 
 ### Bootstrap chain
 

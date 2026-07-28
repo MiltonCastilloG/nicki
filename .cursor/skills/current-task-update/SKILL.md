@@ -31,15 +31,21 @@ Schemas:
 
 ## Nicki summary format
 
-**Required:** `next_step` only (plus worktree via CLI). Not required with `--mode adhoc`.
+**Required:** none in the summary when Nicki passes `--step` (position comes from
+routing). Position-only writes (no completed step) still need `next_step`.
 
-**Optional:** `completed_step`, `artifact`, `completed_status`, `open_questions`, `summary`.
+**Optional:** `completed_step` (overridden by `--step`), `artifact`,
+`completed_status`, `open_questions`, `summary`. Summary `next_step` is ignored
+whenever a completed step is known — routing owns it.
 
 **`completed_status` is a closed set:** `complete` or `blocked`. Any other value is an
 input error — nothing is written. Only `complete` appends to `completed_steps`.
 
 **CLI:** `--step <name>` names the dispatched step and wins over summary
 `completed_step`. `--mode normal|adhoc` selects whether the write moves the task.
+On `normal`, `next_step` is derived via `gate_utils.next_step_for()` (including the
+git tail and review readiness). Artifact pointers use routing's `artifact_key`,
+not a hardcoded map.
 
 Minimal write (valid — advances next step only):
 

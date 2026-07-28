@@ -158,13 +158,21 @@ def run(root: Path) -> None:
         if proc.returncode == 0:
             raise AssertionError("fail: unknown mode should be rejected")
 
-        # normal mode still requires next_step.
-        s = _summary(wt, "no-next.json", {"completed_step": "spec"})
+        # With a completed step, next_step comes from routing — summary may omit it.
+        s = _summary(wt, "no-next.json", {"completed_step": "spec", "artifact": "current-task/specs/x.json"})
+        proc, out = _write(update, root, wt, s)
+        if proc.returncode != 0 or out.get("next_step") != "subtasks":
+            raise AssertionError(
+                f"fail: completed step should derive next_step from routing: {out}"
+            )
+
+        # Position-only normal write (no completed step) still requires next_step.
+        s = _summary(wt, "pos-only-bad.json", {"open_questions": []})
         proc, out = _write(update, root, wt, s)
         if proc.returncode != 1 or not any(
             "next_step" in e for e in out.get("errors", [])
         ):
-            raise AssertionError("fail: normal mode must still require next_step")
+            raise AssertionError("fail: position-only write must still require next_step")
 
     print("smoke-status-vocabulary: ok")
 

@@ -18,21 +18,22 @@ Read and follow `.cursor/skills/current-task-update/SKILL.md`, `.cursor/skills/c
 
 - `.cursor/skills/current-task-update/scripts/update-status.py`
 
-Required summary field: **`next_step` only**. Optional: `completed_step`, `artifact`, `completed_status`, `open_questions`, `summary`.
+Nicki supplies `--step` (dispatched pipeline step) and `--mode` (`normal` or `adhoc`). The write script derives `completed_step` from `--step` and `next_step` from routing on normal mode; adhoc leaves position untouched.
 
-Nicki still forwards full JSON; the write script ignores missing optional fields. `task.current_step` always ends up in `status.json` (from `completed_step` when present, else preserved existing, else `"start"` on fresh init).
+Summary JSON fields the prior sheep may have returned: `artifact`, `completed_status`, `open_questions`, `summary`, optional `worktree` / `task` / `git`. Do not invent `next_step` or `completed_step`.
 
 ## Required inputs
 
 1. **Worktree path** — absolute or repo-relative (e.g. `worktrees/hero-section`).
-2. **Nicki summary JSON** — at least `next_step`; optional completed step, artifact, and other fields.
+2. **Nicki summary JSON** — artifact / status / questions from the prior sheep (or Nicki's own acceptance write).
+3. **`--step` and `--mode`** — from Nicki's dispatch; required on every invocation that advances or logs a side effect.
 
 ## Your task
 
 1. Resolve and validate the worktree path.
 2. Write the Nicki summary JSON into a temp file inside the worktree (e.g. `current-task/.tmp-sheep-status.json`).
 3. Run status update:
-   - `python3 .cursor/skills/current-task-update/scripts/update-status.py --worktree <worktree> --json-path <tmp>`
+   - `python3 .cursor/skills/current-task-update/scripts/update-status.py --worktree <worktree> --json-path <tmp> --step <step> --mode <mode>`
 4. Delete the temp file.
 5. Report the JSON printed by `update-status.py`.
 

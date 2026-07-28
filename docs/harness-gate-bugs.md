@@ -299,14 +299,12 @@ Implements [`flexibility.md`](flexibility.md) Decision 1 (routing owns
   `review-format.md`), `skip_status_update` (in `nicki.md` twice).
 - **Proven:** `tests/smoke/routing_next_step.py`, wired into `test.py` — 15
   resolver cases plus three gate-contract cases.
-- **Remainder:** `artifact_key` and `secondary_artifact_key` are still unread.
-  They are the intended source for `update-status.py`'s hardcoded `key_by_step`
-  map (`update-status.py:110-119`) — duplication today. Wire them in flexibility
-  step 7, when the write path gains `--step`/`--mode`; that pass must also settle
-  how a script outside `.cursor/skills/nicki/scripts/` reads routing.
-- **Not done here, deliberately:** `nicki.md` still documents the old four-field
-  gate contract and does not mention the echoed `next_step`/`artifact`. Agent
-  prose changes land together in flexibility step 6.
+- **Remainder:** none. `artifact_key` is now read by `update-status.py`
+  (`_artifact_key_for`); `secondary_artifact_key` was renamed to the real status
+  key `review_input` and remains unused until a sheep returns a second path.
+  `start.artifact_key` is `null` (status.json is not an artifacts pointer).
+- **Not done here, deliberately:** none — agent prose for the return contract
+  landed with flexibility steps 6–7.
 
 ### 6. Enforce consent from routing — **done 2026-07-29**
 

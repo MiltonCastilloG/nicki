@@ -20,15 +20,8 @@ Read `.cursor/skills/sync-task/SKILL.md`, `.cursor/skills/sync-task/sync-format.
 |-------|---------------|-------|
 | Worktree path | From Nicki prompt | Scope root |
 | Status | `@current-task/status.json` | Read only — branch hint |
-| Review | `@current-task/reviews/<slug>.json` | Pre-sync signal |
-| Validation | Latest `@current-task/review-validations/rN-validation.json` | **Gate** |
-
-## Gates
-
-Invoke only after user acceptance (or explicit override). Block when:
-
-- Latest validation `readiness.status` is `fix_required` or `blocked`
-- Latest review `approved: false` and user has not approved sync anyway
+| Review | `@current-task/reviews/<slug>.json` | When present |
+| Validation | Latest `@current-task/review-validations/rN-validation.json` | When present |
 
 ## Output
 
@@ -37,7 +30,9 @@ Invoke only after user acceptance (or explicit override). Block when:
 
 Set `meta.review`, `meta.validation`, `meta.context` when those inputs were loaded.
 
-Nicki expects artifact `current-task/syncs/<slug>.json`. `next_step` is `archive` after first sync; `integrate` after second sync (when `artifacts.archive` set).
+## Return
+
+`artifact` = sync handoff path; `completed_status`; `open_questions`; `summary`. Do not name pipeline position — Nicki and the write script own it.
 
 ## Scope
 
@@ -48,5 +43,4 @@ Nicki expects artifact `current-task/syncs/<slug>.json`. `next_step` is `archive
 ## Safety
 
 - Never force push, skip hooks, or commit secrets.
-- Sync only when Nicki sent you after explicit user confirmation.
 - When in doubt, ask.

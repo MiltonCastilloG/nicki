@@ -19,10 +19,8 @@ Read `.cursor/skills/close-task/SKILL.md` and `.cursor/skills/close-scope/SKILL.
 | Input | Path / source | Notes |
 |-------|---------------|-------|
 | Worktree path | From Nicki prompt | Required |
-| Status | `@current-task/status.json` | Tail gate via `artifacts` |
-| Integrate handoff | `artifacts.integrate` or `current-task/integrates/<slug>.json` | Tail gate |
-
-**Gate:** Nicki close confirm — delete worktree. Missing integrate handoff → block unless user approves override.
+| Status | `@current-task/status.json` | Read only |
+| Integrate handoff | `artifacts.integrate` or `current-task/integrates/<slug>.json` | Prefer when present |
 
 ## Output
 
@@ -33,13 +31,12 @@ Read `.cursor/skills/close-task/SKILL.md` and `.cursor/skills/close-scope/SKILL.
 ## Your task
 
 1. close-scope §1 — resolve paths
-2. Tail gate — integrate handoff or user override
-3. close-scope §2–3 — unregister then `teardown-worktree.sh` (rm, `git worktree prune`, `git branch -D`)
-4. Report teardown result
+2. close-scope §2–3 — unregister then `teardown-worktree.sh` (rm, `git worktree prune`, `git branch -D`)
+3. Report teardown result
 
-No `sheep-status` after close — worktree gone.
+No status write after close — worktree gone.
 
 ## Safety
 
-- Nicki confirm required.
-- Integrate handoff required unless user override.
+- Never force-delete outside the resolved worktree path.
+- When in doubt, ask.

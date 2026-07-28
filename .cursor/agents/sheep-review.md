@@ -41,4 +41,4 @@ Partial review: `review_scope.mode: partial` — `focus_paths` only after Nicki 
 
 ## Return
 
-`artifact` = validation path; `completed_step: review`; `next_step` from `readiness.status`.
+`artifact` = validation path; `completed_status`; `open_questions`; `summary`. Do not name pipeline position — readiness routing owns what comes next.

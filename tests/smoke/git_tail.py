@@ -51,6 +51,16 @@ def run(root: Path) -> None:
         else:
             print(f"ok: {step} → {sheep}")
 
+    # Decision 4: sheep hold no workflow knowledge — no Gate: prose, no next_step.
+    banned = ("**Gate:**", "next_step:", '"next_step"', "completed_step:")
+    for path in sorted((root / ".cursor/agents").glob("sheep-*.md")):
+        if path.name == "sheep-status.md":
+            continue  # documents the write CLI, may mention the fields by name
+        text = path.read_text(encoding="utf-8")
+        for needle in banned:
+            if needle in text:
+                failures.append(f"fail: {path.name} still contains workflow text {needle!r}")
+
     if failures:
         raise AssertionError("\n".join(failures))
 

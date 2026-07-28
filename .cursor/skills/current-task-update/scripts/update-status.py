@@ -3,25 +3,30 @@
 
 Required inputs:
   --worktree (CLI)
-  summary JSON: next_step — required in normal mode, ignored in adhoc mode
+  --step (CLI) — pipeline step Nicki dispatched; preferred over summary
+    completed_step. When absent, summary may still supply completed_step or a
+    position-only next_step.
 
 Modes (--mode):
-  normal — default; advances task.current_step / next_step / completed_steps
+  normal — default; advances task.current_step / next_step / completed_steps.
+           next_step is derived from routing (next_step_for), not the summary.
   adhoc  — step ran out of band: position fields are left untouched, the artifact
            pointer is still recorded, and one task.side_effects entry is appended
 
 Optional summary fields (defaults applied):
-  completed_step — when present, sets task.current_step, may append completed_steps,
-    and may set artifact pointer; when absent, current_step is still written
-    (preserved from existing status, or "start" on fresh init). --step overrides it.
-  artifact — skip artifact pointer when absent or when the step is unknown
+  completed_step — overridden by --step; sets current_step / completed_steps /
+    artifact pointer when present
+  artifact — skip artifact pointer when absent or when the step has no
+    routing artifact_key
   completed_status — default "complete"; must be one of COMPLETED_STATUSES
   open_questions — default []
+  next_step — ignored when a completed step is known (routing owns position);
+    still required for position-only writes with no completed step
   summary, task.* — ignored or derived
 
 Success stdout: {"written": true, "path", "completed_step", "next_step", "mode", "blockers"}
   completed_step is the JSON value or null when omitted.
-Input error stdout: {"written": false, "errors": ["missing required field: next_step"]}
+Input error stdout: {"written": false, "errors": [...]}
 Exit 0 on success, 1 on input error or write failure.
 """
 
@@ -34,13 +39,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-REQUIRED_SUMMARY_FIELDS = ("next_step",)
+_NICKI_SCRIPTS = Path(__file__).resolve().parent.parent.parent / "nicki" / "scripts"
+if str(_NICKI_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_NICKI_SCRIPTS))
+
+from gate_utils import (  # noqa: E402
+    ArtifactParseError,
+    load_routing,
+    next_step_for,
+    readiness,
+)
 
 # Closed set. "complete" is the only value that appends to task.completed_steps;
 # anything unknown used to skip the append silently and still report success.
 COMPLETED_STATUSES = ("complete", "blocked")
 
 MODES = ("normal", "adhoc")
+
+# Keys that are not status.artifacts pointers (status.json itself, etc.).
+NON_ARTIFACT_KEYS = frozenset({"status", ""})
 
 
 def _fail(errors: list[str]) -> None:
@@ -81,22 +98,19 @@ def _init_status(
     slug: str,
     summary: dict[str, Any],
     completed_step: str | None,
-    next_step: str,
+    next_step: str | None,
     completed_status: str,
 ) -> dict[str, Any]:
     task = summary.get("task") if isinstance(summary.get("task"), dict) else {}
-    original = task.get("original") if isinstance(task.get("original"), str) else slug
     completed_steps: list[str] = []
     if completed_step is not None and completed_status == "complete":
         completed_steps = [completed_step]
     return {
         "meta": {"schema": "task-status.v2"},
         "task": {
-            "id": task.get("id"),
             "slug": slug,
-            "project": task.get("project"),
+            "original": task.get("original") or slug,
             "title": task.get("title"),
-            "original": original,
             "type": task.get("type"),
             "current_step": completed_step if completed_step is not None else "start",
             "next_step": next_step,
@@ -108,41 +122,44 @@ def _init_status(
     }
 
 
+def _artifact_key_for(step: str) -> str | None:
+    """Routing's artifact_key for `step`, or None when the step writes no pointer."""
+    cfg = ((load_routing().get("steps") or {}).get(step)) or {}
+    key = cfg.get("artifact_key")
+    if not key or key in NON_ARTIFACT_KEYS:
+        return None
+    return key
+
+
 def _set_artifact_pointer(
     status: dict[str, Any], completed_step: str, artifact_path: str | None
 ) -> None:
-    if not artifact_path:
+    if not artifact_path or not completed_step:
+        return
+
+    key = _artifact_key_for(completed_step)
+    if not key:
         return
 
     artifacts = status.setdefault("artifacts", {})
     if not isinstance(artifacts, dict):
         status["artifacts"] = {}
         artifacts = status["artifacts"]
-
-    key_by_step = {
-        "describe": "story",
-        "spec": "spec",
-        "subtasks": "subtasks",
-        "execute": "execution",
-        "review": "review_validation",
-        "sync": "sync",
-        "archive": "archive",
-        "integrate": "integrate",
-    }
-    key = key_by_step.get(completed_step)
-    if key:
-        artifacts[key] = artifact_path
+    artifacts[key] = artifact_path
 
 
-def _validate_required(summary: dict[str, Any], *, mode: str) -> None:
+def _validate_required(
+    summary: dict[str, Any], *, mode: str, completed_step: str | None
+) -> None:
     errors: list[str] = []
-    if mode == "normal":
-        for field in REQUIRED_SUMMARY_FIELDS:
-            value = summary.get(field)
-            if value is None or (isinstance(value, str) and not value.strip()):
-                errors.append(f"missing required field: {field}")
-            elif not isinstance(value, str):
-                errors.append(f"required field must be a string: {field}")
+    # Position-only normal write (no completed step) still needs next_step from
+    # the summary. When a step completed, routing supplies next_step.
+    if mode == "normal" and not completed_step:
+        value = summary.get("next_step")
+        if value is None or (isinstance(value, str) and not value.strip()):
+            errors.append("missing required field: next_step")
+        elif not isinstance(value, str):
+            errors.append("required field must be a string: next_step")
     status = summary.get("completed_status", "complete")
     if status not in COMPLETED_STATUSES:
         errors.append(
@@ -176,6 +193,30 @@ def _optional_completed_step(summary: dict[str, Any]) -> str | None:
         _fail(["optional field must be a string when present: completed_step"])
     stripped = raw.strip()
     return stripped or None
+
+
+def _derive_next_step(
+    worktree: Path,
+    status: dict[str, Any],
+    completed_step: str,
+    completed_status: str,
+) -> str | None:
+    """Routing owns next_step on normal completion. Blocked stays put."""
+    task = status.get("task") or {}
+    if completed_status == "blocked":
+        existing = task.get("next_step")
+        return existing if isinstance(existing, str) and existing.strip() else completed_step
+
+    rs: str | None = None
+    try:
+        rs = readiness(status, worktree)
+    except ArtifactParseError:
+        rs = None
+    derived = next_step_for(completed_step, status, rs)
+    if derived is not None:
+        return derived
+    existing = task.get("next_step")
+    return existing if isinstance(existing, str) and existing.strip() else completed_step
 
 
 def main() -> int:
@@ -215,10 +256,10 @@ def main() -> int:
 
     source = args.json_path or args.yaml_path
     summary = _parse_summary(_read_text(source), source_path=source)
-    _validate_required(summary, mode=args.mode)
 
     completed_step = (args.step or "").strip() or _optional_completed_step(summary)
-    next_step = summary.get("next_step")
+    _validate_required(summary, mode=args.mode, completed_step=completed_step)
+
     completed_status = summary.get("completed_status", "complete")
     artifact = summary.get("artifact")
     open_questions = summary.get("open_questions", [])
@@ -228,10 +269,18 @@ def main() -> int:
     if not isinstance(open_questions, list):
         _fail(["optional field must be a list when present: open_questions"])
 
+    # Placeholder until derived or taken from a position-only summary.
+    next_step: str | None = summary.get("next_step") if isinstance(summary.get("next_step"), str) else None
+
     status = _load_json(status_path)
     if status is None:
         if args.mode == "adhoc":
             _fail(["adhoc mode needs an existing status.json"])
+        # Derive before init when we already know the completed step.
+        if completed_step is not None:
+            next_step = next_step_for(completed_step, {"task": {"slug": slug}, "artifacts": {}}, None)
+            if next_step is None:
+                next_step = "describe" if completed_step == "start" else completed_step
         status = _init_status(
             str(Path(worktree_arg)),
             slug,
@@ -254,10 +303,7 @@ def main() -> int:
         _set_artifact_pointer(status, completed_step or "", artifact if isinstance(artifact, str) else None)
         _append_side_effect(status, completed_step, artifact if isinstance(artifact, str) else None)
         next_step = task.get("next_step")
-    else:
-        task["next_step"] = next_step
-
-    if args.mode == "normal" and completed_step is not None:
+    elif completed_step is not None:
         task["current_step"] = completed_step
         completed_steps = task.get("completed_steps")
         if not isinstance(completed_steps, list):
@@ -266,11 +312,19 @@ def main() -> int:
             completed_steps.append(completed_step)
         task["completed_steps"] = completed_steps
         _set_artifact_pointer(status, completed_step, artifact if isinstance(artifact, str) else None)
-    elif args.mode == "normal":
+        next_step = _derive_next_step(
+            worktree,
+            status,
+            completed_step,
+            completed_status if isinstance(completed_status, str) else "complete",
+        )
+        task["next_step"] = next_step
+    else:
+        # Position-only: summary next_step is the authority.
+        task["next_step"] = next_step
         existing = task.get("current_step")
         if not isinstance(existing, str) or not existing.strip():
             task["current_step"] = "start"
-        # Preserve completed_steps / artifacts when completed_step omitted.
 
     scope = status.setdefault("scope", {})
     if not isinstance(scope, dict):

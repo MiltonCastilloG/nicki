@@ -28,7 +28,7 @@ Read and follow:
 | Script input | Yes | Args, stdin body, or invocation payload |
 | Expected output contract | Yes | Required stdout fields or contract description |
 | Actual failure context | Yes | `exit_code`, `stdout`, `stderr`, `validation_errors` |
-| Blocked pipeline step | Yes | Step that failed — for `completed_step` in return |
+| Blocked pipeline step | Yes | Context for the error record only |
 
 ## Output
 
@@ -39,4 +39,4 @@ Prefer `python3 .cursor/skills/errors-recording/scripts/append-error.py` when in
 
 ## Return
 
-`artifact: current-task/specs/errors.json`; `completed_step` = blocked pipeline step from Nicki; `completed_status: blocked`; `next_step` unchanged from blocked step; `open_questions: []`.
+`artifact: current-task/specs/errors.json`; `completed_status: blocked`; `open_questions: []`. Do not name pipeline position — Nicki keeps the blocked step via `--step`.

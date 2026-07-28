@@ -51,22 +51,17 @@ adhoc` writes the artifact pointer and a `task.side_effects` entry and leaves
 required in that mode. Remaining for A2: normal mode still takes `next_step` from
 the summary instead of routing (step 7).
 
-**A2 — sheep hardcode position.** `sheep-sync` says `archive`/`integrate`,
-`sheep-execute` says `review` (`sheep-execute.md:42`), `sheep-spec` says
-`subtasks` (`sheep-spec.md:35`). **Decided (B):** sheep stop returning
-`next_step`; routing supplies it on normal completion; ad-hoc skips applying it.
-**Half built 2026-07-28:** `gate_utils.next_step_for()` now resolves position
-from routing and `check-gate.py` echoes it. Remaining: the write path must call
-it (step 7) and the sheep must stop sending it (step 6).
+**A2 — sheep hardcode position. Cleared 2026-07-29.** Sheep no longer return
+`next_step` or `completed_step`. `update-status.py` takes `--step`/`--mode` from
+Nicki, derives `completed_step` from `--step`, and sets `task.next_step` from
+`next_step_for()` on normal completion (including the git tail and review
+readiness). Ad-hoc skips applying it. Artifact pointers use routing
+`artifact_key` — the hardcoded `key_by_step` map is gone.
 
-**A3 — gates live in three layers.** *Script layer settled 2026-07-29; the prose
-layers are step 6.* `check-gate.py`, prose `Gate:` lines in
-every `sheep-*.md` (`sheep-sync`, `sheep-spec`, `sheep-subtask`,
-`sheep-archive`, `sheep-integrate`, `sheep-close`), and hard-gates in
-`nicki.md`. The script can allow ad-hoc and the sheep will still refuse — mid
-`execute` there is no validation artifact for `sheep-sync` to satisfy its own
-prose with. **Decided (4):** sequence gating leaves the sheep entirely; the
-script is the only authority on whether a sheep runs.
+**A3 — gates live in three layers. Cleared 2026-07-29.** Sequence gating left
+the sheep entirely; `check-gate.py` is the only authority on whether a sheep
+runs. Sheep files keep skill, scope, safety, and a position-free return
+(`artifact`, `completed_status`, `open_questions`, `summary`).
 
 **A4 — safety vs sequence is unnamed. Cleared 2026-07-29.** Both classes are
 named in `routing.json` `gate_policy.classes` and carried in every denial as
@@ -111,12 +106,11 @@ scope via `gate_utils.ROOT_SCOPED_ARTIFACTS`. Adding an external source of truth
 means declaring its key's scope there (or extending the mechanism to absolute /
 outside-workspace paths), not rewriting resolution.
 
-**B2 — cannot register a pointer without claiming a step.**
-`_set_artifact_pointer` is keyed by `completed_step`
-(`update-status.py:110-119`). `current-task-update/SKILL.md:62` documents
-optional `git` and `artifacts` summary fields; the script never reads them
-(`task` is read only on fresh init). So adoption today requires
-`completed_step: spec`, which lies about what happened.
+**B2 — cannot register a pointer without claiming a step. Softened 2026-07-29.**
+`_set_artifact_pointer` now keys off routing `artifact_key` for the `--step`
+Nicki dispatched, so the sheep no longer has to name the step. Full external
+adoption without a dispatched step is still `--mode adopt` (Decision 5) — not
+built yet.
 
 **B3 — brainstorm output does not fit the spec slot.** `brainstorm` writes
 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` (`brainstorm/SKILL.md:106`)
@@ -168,8 +162,8 @@ a blunt override reproduces the exact failure this project just documented.
 | ~~3~~ | ~~Gate fixtures in `test.py`~~ — **done 2026-07-28**, 45 cases | bug doc follow-up 2 · guards everything after |
 | ~~4~~ | ~~Status vocabulary: enum, no-advance mode, side-effect log~~ — **done 2026-07-29**; enum closed at `complete`/`blocked`, see Decision 5 | bug doc follow-up 3 · cleared A1, A5, B5 |
 | ~~5~~ | ~~Consent from routing + name safety vs sequence gates, enforced in `check-gate.py` only~~ — **done 2026-07-29**; `--mode` and `gate_class` in the contract | A4, A6 · Decisions 2, 3 · bug doc follow-ups 6, 7 |
-| 6 | Strip workflow knowledge from every `sheep-*.md`; shrink the return contract | A3 · Decision 4 |
-| 7 | Write path takes `--step`/`--mode`; calls `next_step_for()` on normal, leaves position on ad-hoc; wire `artifact_key` to replace `key_by_step` | A1, A2 · Decisions 1, 2, 4 |
+| ~~6~~ | ~~Strip workflow knowledge from every `sheep-*.md`; shrink the return contract~~ — **done 2026-07-29** | A3 · Decision 4 |
+| ~~7~~ | ~~Write path takes `--step`/`--mode`; calls `next_step_for()` on normal, leaves position on ad-hoc; wire `artifact_key` to replace `key_by_step`~~ — **done 2026-07-29** | A1, A2 · Decisions 1, 2, 4 |
 | 8 | Ad-hoc sync end to end | Capability A complete |
 | 9 | External spec as `sheep-spec` input, with provenance | B3 cheap path, B4 |
 
@@ -179,11 +173,10 @@ a blunt override reproduces the exact failure this project just documented.
 
 Decided 2026-07-28.
 
-- Sheep return handoff only: `completed_step`, artifact, `completed_status`,
-  blockers — **not** `next_step`.
-- On normal completion, `update-status.py` (or bootstrap/gate path that owns
-  the write) sets `task.next_step` from `routing.json` `default_next_step` for
-  the completed step.
+- Sheep return handoff only: artifact, `completed_status`, blockers —
+  **not** `next_step` or `completed_step` (Decision 4 tightened this).
+- On normal completion, `update-status.py` sets `task.next_step` from
+  `routing.json` via `next_step_for()` for the completed step (`--step`).
 - Git-tail nuance (first sync → `archive`, second sync → `integrate` when
   `artifacts.archive` is set) lives in the script/routing, not sheep prose.
 - Ad-hoc: write mode does **not** apply `default_next_step`; position fields

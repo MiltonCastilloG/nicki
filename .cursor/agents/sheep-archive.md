@@ -19,19 +19,15 @@ Read `.cursor/skills/task-archive/SKILL.md` and `.cursor/skills/task-archive/arc
 | Input | Path / source | Notes |
 |-------|---------------|-------|
 | Worktree path | From Nicki prompt | Required |
-| Sync handoff | `@current-task/syncs/<slug>.json` | **Gate** — `pre_push_merge.status: merged` |
+| Sync handoff | `@current-task/syncs/<slug>.json` | Prefer when present |
 | Status | `@current-task/status.json` | Read only — artifact pointers |
-
-**Gate:** Nicki invokes after first sync and user confirmed archive.
 
 ## Output
 
 - **Write:** `docs/archive/<slug>/report.json`, `report.md`, `story.md`, `errors.json` when present (via task-archive)
 - **Delete:** `artifacts.spec`, `artifacts.subtasks` from worktree when present
 - **Never write:** `current-task/status.json`
-- **No git** — commit and push are the next sync step
-
-Nicki expects artifact `docs/archive/<slug>/report.json` and `next_step: sync`.
+- **No git** — commit and push are not this sheep's job
 
 ## Your task
 
@@ -39,7 +35,10 @@ Nicki expects artifact `docs/archive/<slug>/report.json` and `next_step: sync`.
 2. task-archive — write archive; copy story; erase spec and subtasks
 3. Report archive paths
 
+## Return
+
+`artifact` = `docs/archive/<slug>/report.json`; `completed_status`; `open_questions`. Do not name pipeline position.
+
 ## Safety
 
-- Nicki confirm required.
 - No raw diffs/logs/transcripts in archive.

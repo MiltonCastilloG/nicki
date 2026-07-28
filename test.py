@@ -21,6 +21,7 @@ from tests.smoke import (  # noqa: E402
     harness_failure,
     readiness_mapping,
     routing_next_step,
+    routing_write,
     status_boundary,
     status_update,
     status_vocabulary,
@@ -37,6 +38,7 @@ MODULES = [
     ("gates_matrix", gates_matrix),
     ("gate_paths", gate_paths),
     ("routing_next_step", routing_next_step),
+    ("routing_write", routing_write),
     ("git_tail", git_tail),
 ]
 

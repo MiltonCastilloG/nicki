@@ -23,3 +23,7 @@ Worktree path and user relay from Nicki prompt. `task.original` from `@current-t
 - **Block without write** — `open_questions` or draft in `summary` for Nicki relay.
 - **Write** `current-task/story.md` when `open_questions` would be `[]` and user approved.
 - **Never write** `current-task/status.json`.
+
+## Return
+
+`artifact` = `current-task/story.md` when written; `completed_status`; `open_questions`; `summary`. Do not name pipeline position.

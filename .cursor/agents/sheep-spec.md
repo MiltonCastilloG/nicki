@@ -24,12 +24,13 @@ Read and follow `.cursor/skills/spec-maker/SKILL.md` and `.cursor/skills/spec-ma
 | Free-text description | Nicki prompt | Fallback when no story |
 | Status | `@current-task/status.json` | Read only — validate `scope.worktree_path` |
 
-**Gate:** Missing `artifacts.story` or story file on disk before describe completed — stop; Nicki blocks spec.
-
 ## Output
 
 - **Write** `current-task/specs/<slug>.json` only when `open_questions` would be empty.
 - **Block without write** when vague or forked — populated `open_questions` for Nicki relay; list fork options until user picks.
 - Written specs: `meta.context: current-task/status.json` when status loaded; `open_questions: []`.
 - **Never write** `current-task/status.json`.
-- **Return:** blocked → `completed_step: spec`, populated `open_questions`; clear → `artifact`, `completed_step: spec`, `next_step: subtasks`.
+
+## Return
+
+Blocked → `completed_status: blocked`, populated `open_questions`. Clear → `artifact`, `completed_status: complete`. Do not name pipeline position.
