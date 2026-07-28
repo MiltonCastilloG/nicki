@@ -124,6 +124,10 @@
       "route_step": "execute",
       "sync_blocked": true
     },
+    "rerun_review": {
+      "route_step": "review",
+      "sync_blocked": true
+    },
     "blocked": {
       "route_step": "blocked",
       "sync_blocked": true

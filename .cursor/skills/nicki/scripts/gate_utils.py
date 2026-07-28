@@ -11,7 +11,7 @@ import yaml
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROUTING_PATH = SCRIPT_DIR.parent / "routing.json"
-BLOCKED_READINESS = frozenset({"fix_required", "blocked"})
+BLOCKED_READINESS = frozenset({"fix_required", "blocked", "rerun_review"})
 
 # Artifact pointers whose value is workspace-root-relative, not worktree-relative.
 # The archive report must outlive the worktree, so it is never written under it.

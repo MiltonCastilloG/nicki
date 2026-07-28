@@ -1,18 +1,25 @@
 from __future__ import annotations
 
 import json
+import tempfile
 from pathlib import Path
 
 from tests.smoke._helpers import json_line, run_py, script
 
 
 def run(root: Path) -> None:
+    with tempfile.TemporaryDirectory() as td:
+        _run(root, Path(td) / "wt")
+
+
+def _run(root: Path, worktree: Path) -> None:
     gate = script(root, ".cursor/skills/nicki/scripts/check-gate.py")
     validate = script(root, ".cursor/skills/nicki/scripts/validate-harness-stdout.py")
     append = script(root, ".cursor/skills/errors-recording/scripts/append-error.py")
     step = "acceptance"
     script_route = ".cursor/skills/nicki/scripts/check-gate.py"
-    errors_json = root / "current-task/specs/errors.json"
+    (worktree / "current-task/specs").mkdir(parents=True)
+    errors_json = worktree / "current-task/specs/errors.json"
 
     gate_proc = run_py(
         gate,
@@ -88,7 +95,7 @@ def run(root: Path) -> None:
     append_proc = run_py(
         append,
         "--worktree",
-        str(root),
+        str(worktree),
         "--script-route",
         script_route,
         "--input",

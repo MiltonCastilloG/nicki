@@ -26,6 +26,7 @@ of the real work.
 | 4 | `bootstrap-context.py` still crashes on a malformed artifact | Real, reproduced; the 07-26 fix landed on one of two entry points | Worse. External input is less controlled, and bootstrap runs every response. |
 | 5 | Sheep hand-author prose YAML with no quoting rule | Real, recurring; impact now capped at `check-gate.py` only | Sideways. New surface: user-authored markdown instead of sheep YAML. |
 | 6 | `sync` and `archive` gates allow with no user consent; the rule is prose-only | Real, reproduced | Fixed by flexibility Decision 3 — consent becomes a routing property the script enforces. |
+| 7 | `rerun_review` readiness is documented but absent from `routing.json`; the gate crashed on it and it never blocked sync | **Fixed 2026-07-28** (follow-up 2) | Found by writing the gate matrix — the coverage gap was hiding it. |
 
 ## Finding 1 — integrate gate cannot see the archive
 
@@ -140,6 +141,24 @@ Three layers hold the consent rule and none of them agree.
 The loudest rule in the system is the one the harness does not enforce. Purest
 instance of this report's thesis: prose shouts, script shrugs.
 
+## Finding 7 — a documented readiness value routing never knew about
+
+`status-format.md` lists four readiness values and states that `rerun_review`
+blocks `sync-task`. `routing.json` `readiness_routing` declared three, and
+`gate_utils.BLOCKED_READINESS` held two. Two consequences, both found by writing
+the follow-up 2 matrix rather than by hitting them in a run:
+
+- `check-gate.py` looked up the missing key and called `.get()` on `None`, so any
+  readiness step with `rerun_review` denied with
+  `gate harness error: 'NoneType' object has no attribute 'get'` — a contract-shaped
+  deny carrying a Python error instead of a reason.
+- `sync` did not block on `rerun_review`, contradicting the documented table.
+
+Fixed by defaulting the routing lookup, adding the `rerun_review` route
+(`route_step: review`, `sync_blocked: true`), and adding it to
+`BLOCKED_READINESS`. The matrix asserts both the clean deny and the sync block,
+and `readiness_mapping.py` now asserts every documented status has a route.
+
 ## Why these recur
 
 - **Gates are untested.** 12 of 13 gate functions have zero coverage. The one
@@ -190,18 +209,35 @@ Unblocked flexibility B1.
   root; integrate without consent denies; `--override` cannot buy consent.
   Reverting the resolution change turns the suite red.
 
-### 2. Real gate fixtures in `test.py`
+### 2. Real gate fixtures in `test.py` — **done 2026-07-28**
 
 Closes `docs/tasks.md` #10. Guards every later step.
 
-- **Now:** 12 of 13 gates untested. The one gate test
-  (`scripts/smoke-archive-gate.py`) is not imported by `test.py`.
-- **Target:** a fixture per finding above, pass and fail, run through
-  `check-gate.py`. Import them plus `smoke-archive-gate.py` into `test.py`.
-- **Also:** delete or rewrite the doc-substring assertions in `git_tail.py` and
-  `readiness_mapping.py`; drop the `if path.is_file()` guards so a missing
-  fixture fails instead of vanishing.
-- **Done when:** reverting follow-up 1 turns `test.py` red.
+- **Was:** 12 of 13 gates untested; the one gate test
+  (`scripts/smoke-archive-gate.py`) was not imported by `test.py`, so it ran only
+  by hand.
+- **Now:** `tests/smoke/gates_matrix.py` drives 45 cases through
+  `check-gate.py` — every one of the 13 gates with at least one allow and one
+  deny, plus unparseable artifacts at three gates, a legacy v1 status shape
+  (`task.story_artifact` + `history`), a missing `status.json`, and an unknown
+  step. Any reason containing `gate harness error` fails the case, so leaked
+  internal errors cannot pass as denies. `smoke-archive-gate.py` is deleted — its
+  three `pre_push_merge` cases are in the matrix and now actually run.
+- **Weak modules rewritten:** `readiness_mapping.py` dropped the doc greps and
+  the temp-file test that asserted its own write; it now checks that every
+  documented readiness status has a route and that the validation fixtures hold
+  the readiness they claim, unguarded. `git_tail.py` dropped the prose greps for
+  routing's git-tail sheep assignments. `errors_append.py` lost two assertions
+  that tested `shutil.copy` and a dict literal it had just built.
+- **Hygiene:** the suite no longer dirties the tree. `errors_append.py` and
+  `harness_failure.py` write to temp dirs instead of `tests/fixtures/` and the
+  workspace's own `current-task/`; the accidentally-committed fixture output and
+  the tracked `__pycache__` are untracked (`.gitignore` already covered both).
+- **Proven:** reverting follow-up 1's resolution change, or the Finding 7
+  routing default, turns the suite red. Both verified by reverting.
+- **Left open:** no CI, so the suite still runs only when someone types
+  `python3 test.py`. The `./test.sh` reference in
+  `harness-alignment-subagents.md:290` remains stale — `test.py` is the entrypoint.
 
 ### 3. Status vocabulary
 

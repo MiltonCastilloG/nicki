@@ -67,7 +67,7 @@ def evaluate(
             rs = readiness(status, worktree)
         except ArtifactParseError as exc:
             return deny(f"readiness parse error: {exc}")
-        rr = (routing.get("readiness_routing") or {}).get(rs or "")
+        rr = (routing.get("readiness_routing") or {}).get(rs or "") or {}
         if rs and rr.get("sync_blocked") and step == "sync" and rs in BLOCKED_READINESS:
             return deny(f"sync gate: readiness routing blocks sync ({rs})")
 

@@ -158,7 +158,7 @@ a blunt override reproduces the exact failure this project just documented.
 |---|---|---|
 | ~~1~~ | ~~Scope model for artifact paths~~ — **done 2026-07-28** | bug doc follow-up 1 · cleared B1 |
 | ~~2~~ | ~~Resolve `routing.json`: read `default_next_step`~~ — **done 2026-07-28**; `artifact_key`/`secondary_artifact_key` deferred to step 7 | bug doc follow-up 5 · unblocks A6 · implements Decision 1 |
-| 3 | Gate fixtures in `test.py` | bug doc follow-up 2 · guards everything after |
+| ~~3~~ | ~~Gate fixtures in `test.py`~~ — **done 2026-07-28**, 45 cases | bug doc follow-up 2 · guards everything after |
 | 4 | Status vocabulary: enum, no-advance mode, side-effect log | bug doc follow-up 3 · A1, A5, B5 |
 | 5 | Consent from routing + name safety vs sequence gates, enforced in `check-gate.py` only | A4 · Decisions 2, 3 · bug doc follow-up 6 |
 | 6 | Strip workflow knowledge from every `sheep-*.md`; shrink the return contract | A3 · Decision 4 |

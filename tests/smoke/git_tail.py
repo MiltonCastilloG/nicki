@@ -1,57 +1,55 @@
+"""Git tail structure: the sync/integrate sheep exist, the retired per-verb sheep do not."""
+
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
-from tests.smoke._helpers import assert_contains, assert_missing
+REQUIRED = (
+    ".cursor/agents/sheep-sync.md",
+    ".cursor/skills/sync-task/SKILL.md",
+    ".cursor/agents/sheep-integrate.md",
+    ".cursor/skills/integrate-task/SKILL.md",
+)
+
+RETIRED = (
+    ".cursor/agents/commit-task.md",
+    ".cursor/agents/push-task.md",
+    ".cursor/agents/merge-task.md",
+    ".cursor/agents/publish-task.md",
+)
+
+# Routing must keep a sheep for each git-tail step, since Nicki spawns from that value.
+TAIL_SHEEP = {
+    "sync": "sheep-sync",
+    "archive": "sheep-archive",
+    "integrate": "sheep-integrate",
+    "close": "sheep-close",
+}
 
 
 def run(root: Path) -> None:
     failures: list[str] = []
 
-    def check_exists(rel: str) -> None:
-        path = root / rel
-        if not path.exists():
+    for rel in REQUIRED:
+        if not (root / rel).exists():
             failures.append(f"fail: missing {rel}")
-        else:
-            print(f"ok: {rel}")
-
-    for rel in (
-        ".cursor/agents/sheep-sync.md",
-        ".cursor/skills/sync-task/SKILL.md",
-        ".cursor/agents/sheep-integrate.md",
-        ".cursor/skills/integrate-task/SKILL.md",
-    ):
-        check_exists(rel)
-
-    for rel in (
-        ".cursor/agents/commit-task.md",
-        ".cursor/agents/push-task.md",
-        ".cursor/agents/merge-task.md",
-        ".cursor/agents/publish-task.md",
-    ):
+    for rel in RETIRED:
         if (root / rel).exists():
             failures.append(f"fail: {rel} should be removed")
 
-    try:
-        assert_contains(
-            root / ".cursor/skills/current-task-update/status-format.md", "| `sync`"
+    steps = (
+        json.loads((root / ".cursor/skills/nicki/routing.json").read_text(encoding="utf-8")).get(
+            "steps"
         )
-        assert_contains(
-            root / ".cursor/skills/current-task-update/status-format.md", "| `integrate`"
-        )
-        assert_contains(root / ".cursor/skills/close-task/SKILL.md", "Tail gate")
-        assert_contains(root / ".cursor/agents/nicki.md", "sheep-integrate")
-        assert_contains(root / ".cursor/skills/nicki/routing.json", "sheep-sync")
-        assert_contains(
-            root / ".cursor/skills/start-task/scripts/start-worktrees.sh", "PROJECT"
-        )
-        assert_contains(root / "README.md", "projects/")
-        assert_contains(root / ".cursor/skills/sync-task/sync-format.md", "syncs/")
-        assert_contains(
-            root / ".cursor/skills/integrate-task/integrate-format.md", "integrates/"
-        )
-    except AssertionError as e:
-        failures.append(str(e))
+        or {}
+    )
+    for step, sheep in TAIL_SHEEP.items():
+        got = (steps.get(step) or {}).get("sheep")
+        if got != sheep:
+            failures.append(f"fail: routing {step}.sheep is {got!r}, expected {sheep!r}")
+        else:
+            print(f"ok: {step} → {sheep}")
 
     if failures:
         raise AssertionError("\n".join(failures))

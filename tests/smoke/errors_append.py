@@ -1,117 +1,88 @@
+"""append-error.py creates errors.json and appends distinct entries."""
+
 from __future__ import annotations
 
 import json
-import shutil
+import tempfile
 from pathlib import Path
 
-from tests.smoke._helpers import rm_tree, run_py, script
+from tests.smoke._helpers import run_py, script
+
+ENTRY_KEYS = ("id", "recorded_at", "script_route", "input", "expected_output", "actual")
+ACTUAL_KEYS = ("exit_code", "stdout", "stderr", "validation_errors")
 
 
-def run(root: Path) -> None:
-    append = script(root, ".cursor/skills/errors-recording/scripts/append-error.py")
-    fixture = root / "tests/fixtures/smoke-worktree"
-    errors = fixture / "current-task/specs/errors.json"
-    archive_dir = fixture / "docs/archive/sheep-fallback"
-
-    rm_tree(fixture)
-    (fixture / "current-task/specs").mkdir(parents=True)
-
+def _append(append: Path, root: Path, worktree: Path, *, route: str, stdout: str, errors: str) -> None:
     proc = run_py(
         append,
         "--worktree",
-        str(fixture),
+        str(worktree),
         "--script-route",
-        ".cursor/skills/nicki/scripts/check-gate.py",
+        route,
         "--input",
-        '{"argv":["--worktree","worktrees/nicki-sheep-fallback","--step","execute"]}',
+        '{"argv":["--worktree","worktrees/demo","--step","execute"]}',
         "--expected-output",
         '{"required_fields":["allowed","sheep","reason"]}',
         "--exit-code",
         "1",
         "--stdout",
-        '{"allowed":false}',
+        stdout,
         "--validation-errors",
-        '["missing field: reason"]',
+        errors,
         cwd=root,
     )
     if proc.returncode != 0:
-        raise AssertionError(f"fail: first append: {proc.stderr}")
+        raise AssertionError(f"fail: append-error exited {proc.returncode}: {proc.stderr}")
 
-    if not errors.is_file():
-        raise AssertionError("fail: errors.json missing after first append")
 
-    data = json.loads(errors.read_text(encoding="utf-8"))
-    if len(data["failures"]) != 1:
-        raise AssertionError("fail: expected one failure entry")
-    f = data["failures"][0]
-    for key in ("id", "recorded_at", "script_route", "input", "expected_output", "actual"):
-        if key not in f:
-            raise AssertionError(f"fail: missing key {key} in failure entry")
-    a = f["actual"]
-    for key in ("exit_code", "stdout", "stderr", "validation_errors"):
-        if key not in a:
-            raise AssertionError(f"fail: missing actual.{key}")
-    print("ok")
+def run(root: Path) -> None:
+    append = script(root, ".cursor/skills/errors-recording/scripts/append-error.py")
 
-    proc2 = run_py(
-        append,
-        "--worktree",
-        str(fixture),
-        "--script-route",
-        ".cursor/skills/current-task-update/scripts/update-status.py",
-        "--input",
-        '{"argv":["--worktree","worktrees/foo"]}',
-        "--expected-output",
-        '{"required_fields":["written"]}',
-        "--exit-code",
-        "1",
-        "--stdout",
-        "not json",
-        "--validation-errors",
-        '["stdout is not valid JSON"]',
-        cwd=root,
-    )
-    if proc2.returncode != 0:
-        raise AssertionError(f"fail: second append: {proc2.stderr}")
+    with tempfile.TemporaryDirectory() as td:
+        worktree = Path(td) / "wt"
+        (worktree / "current-task/specs").mkdir(parents=True)
+        errors = worktree / "current-task/specs/errors.json"
 
-    data = json.loads(errors.read_text(encoding="utf-8"))
-    if len(data["failures"]) != 2:
-        raise AssertionError("fail: expected two failure entries")
-    if len({f["id"] for f in data["failures"]}) != 2:
-        raise AssertionError("fail: expected unique failure ids")
+        _append(
+            append,
+            root,
+            worktree,
+            route=".cursor/skills/nicki/scripts/check-gate.py",
+            stdout='{"allowed":false}',
+            errors='["missing field: reason"]',
+        )
+        if not errors.is_file():
+            raise AssertionError("fail: errors.json missing after first append")
 
-    contract = {
-        "worktree": "sheep-fallback",
-        "completed_step": "execute",
-        "completed_status": "blocked",
-        "artifact": "current-task/specs/errors.json",
-        "next_step": "execute",
-        "open_questions": [],
-        "summary": "Recorded harness failure.",
-    }
-    required = [
-        "worktree",
-        "completed_step",
-        "completed_status",
-        "artifact",
-        "next_step",
-        "open_questions",
-        "summary",
-    ]
-    if not all(k in contract for k in required):
-        raise AssertionError("fail: sheep return contract shape")
+        data = json.loads(errors.read_text(encoding="utf-8"))
+        if data.get("meta", {}).get("schema") != "errors.v1":
+            raise AssertionError(f"fail: expected errors.v1 schema, got {data.get('meta')}")
+        if len(data["failures"]) != 1:
+            raise AssertionError(f"fail: expected one entry, got {len(data['failures'])}")
 
-    rm_tree(archive_dir)
-    archive_dir.mkdir(parents=True)
-    shutil.copy(errors, archive_dir / "errors.json")
-    archived = json.loads((archive_dir / "errors.json").read_text(encoding="utf-8"))
-    if len(archived["failures"]) != 2:
-        raise AssertionError("fail: archive copy should preserve failures")
+        entry = data["failures"][0]
+        missing = [k for k in ENTRY_KEYS if k not in entry]
+        missing += [f"actual.{k}" for k in ACTUAL_KEYS if k not in entry.get("actual", {})]
+        if missing:
+            raise AssertionError(f"fail: entry missing keys: {missing}")
+        print("ok: first append writes a complete errors.v1 entry")
 
-    no_err = root / "tests/fixtures/no-errors-worktree"
-    rm_tree(no_err)
-    (no_err / "current-task/specs").mkdir(parents=True)
-    if (no_err / "current-task/specs/errors.json").exists():
-        raise AssertionError("fail: no-errors fixture should not have errors.json")
+        _append(
+            append,
+            root,
+            worktree,
+            route=".cursor/skills/current-task-update/scripts/update-status.py",
+            stdout="not json",
+            errors='["stdout is not valid JSON"]',
+        )
+        data = json.loads(errors.read_text(encoding="utf-8"))
+        if len(data["failures"]) != 2:
+            raise AssertionError(f"fail: expected two entries, got {len(data['failures'])}")
+        if len({f["id"] for f in data["failures"]}) != 2:
+            raise AssertionError("fail: entries should have distinct ids")
+        routes = [f["script_route"] for f in data["failures"]]
+        if routes[0] == routes[1]:
+            raise AssertionError("fail: second append should record its own script route")
+        print("ok: second append preserves the first and records a distinct entry")
 
     print("smoke-errors-append: ok")

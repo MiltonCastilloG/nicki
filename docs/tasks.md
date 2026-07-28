@@ -28,7 +28,7 @@ When goals **align**, do all three — e.g. prove gate fixtures and trim duplica
 
 | # | Task | Notes |
 |---|------|-------|
-| 10 | Smoke fixtures | Fixture `status.json` (+ spec/validation when needed) exercised **through `check-gate.py`** — pass and fail cases. **No separate `smoke-status-v2` script.** Bootstrap fixtures (`happy-path`, `missing-status`) and `tests/smoke/` exist; **remaining:** dedicated matrix — v2 happy path, blocked `open_questions`, readiness routing, at least one legacy-shape fail fixture (e.g. `task.story_artifact`, verbose `history`). Optional: extend `create-worktree.py` / `smoke-status-boundary.sh` for scaffold-only asserts. |
+| ~~10~~ | ~~Smoke fixtures~~ — **done 2026-07-28** | Matrix shipped: `tests/smoke/gates_matrix.py`, 45 cases through `check-gate.py` — all 13 gates allow+deny, v2 happy paths, blocked `open_questions`, readiness routing, unparseable artifacts, legacy `task.story_artifact` + `history` fail fixture, missing `status.json`, unknown step. Plus `gate_paths.py` (artifact path scope) and `routing_next_step.py` (routing owns position). See [`harness-gate-bugs.md`](harness-gate-bugs.md) follow-up 2. Optional leftover: scaffold-only asserts in `create-worktree.py`. |
 
 **Validating status/schema changes (#10, not Nicki E2E):** Do **not** use a full Nicki pipeline run to verify schema or gate field names — too slow and easy to test the wrong branch (worktrees scaffold from `main`). Use **#10 fixtures** run against `check-gate.py` instead.
 
