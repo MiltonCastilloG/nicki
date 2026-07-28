@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from gate_utils import ROUTING_PATH, load_status, load_yaml, readiness, resolve_worktree, workspace_root
+from gate_utils import load_routing, load_status, readiness, resolve_worktree, workspace_root
 
 
 def load_global() -> dict[str, Any]:
@@ -66,7 +66,7 @@ def bootstrap(worktree_arg: str) -> dict[str, Any]:
         if isinstance(ae, dict) and resolve_worktree(ae.get("worktree_path", "")) == worktree:
             active_task = at
 
-    step_cfg = (load_yaml(ROUTING_PATH).get("steps") or {}).get(next_step) or {}
+    step_cfg = (load_routing().get("steps") or {}).get(next_step) or {}
     return {
         "active_task": active_task,
         "status_path": status_path,

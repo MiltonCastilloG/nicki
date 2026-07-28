@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate a Nicki pipeline step gate from status.json + routing.yaml.
+"""Evaluate a Nicki pipeline step gate from status.json + routing.json.
 
 Usage:
   check-gate.py --worktree worktrees/nicki-my-task --step sync [--user-confirmed] [--override]
@@ -17,11 +17,11 @@ from typing import Any
 
 from gate_utils import (
     BLOCKED_READINESS,
-    ROUTING_PATH,
+    ArtifactParseError,
     allow,
     deny,
+    load_routing,
     load_status,
-    load_yaml,
     readiness,
     resolve_worktree,
 )
@@ -35,7 +35,7 @@ def evaluate(
     user_confirmed: bool = False,
     override: bool = False,
 ) -> dict[str, Any]:
-    routing = load_yaml(ROUTING_PATH)
+    routing = load_routing()
     steps = routing.get("steps") or {}
     if step not in steps:
         return deny(f"unknown step: {step}")
@@ -54,7 +54,10 @@ def evaluate(
         return deny(str(exc))
 
     if step in READINESS_STEPS and step != "review":
-        rs = readiness(status, worktree)
+        try:
+            rs = readiness(status, worktree)
+        except ArtifactParseError as exc:
+            return deny(f"readiness parse error: {exc}")
         rr = (routing.get("readiness_routing") or {}).get(rs or "")
         if rs and rr.get("sync_blocked") and step == "sync" and rs in BLOCKED_READINESS:
             return deny(f"sync gate: readiness routing blocks sync ({rs})")
@@ -94,12 +97,15 @@ def main() -> int:
         print(json.dumps({"allowed": False}))
         return 1
 
-    result = evaluate(
-        resolve_worktree(args.worktree),
-        args.step,
-        user_confirmed=args.user_confirmed,
-        override=args.override,
-    )
+    try:
+        result = evaluate(
+            resolve_worktree(args.worktree),
+            args.step,
+            user_confirmed=args.user_confirmed,
+            override=args.override,
+        )
+    except Exception as exc:  # noqa: BLE001 — contract must always print
+        result = deny(f"gate harness error: {exc}")
     print(json.dumps(result))
     return 0 if result["allowed"] else 1
 

@@ -10,7 +10,7 @@ Cursor workflow for structured agent-driven development. Nicki orchestrates the 
 
 | Component | Location | Role |
 | --------- | -------- | ---- |
-| Orchestrator | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.yaml` | Read-only conductor; routes from disk; sends sheep via Task in isolated context |
+| Orchestrator | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.json` | Read-only conductor; routes from disk; sends sheep via Task in isolated context |
 | Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — load disk inputs, enforce gates, invoke skills (Nicki only) |
 | Skills | `.cursor/skills/<name>/` | Pure functionality — how to perform one job; artifact schemas |
 | Skill index | `.cursor/skills/README.md` | Skills vs agents rules and exceptions |
@@ -20,7 +20,7 @@ Ad-hoc work outside the pipeline: attach a skill (e.g. `spec-maker`, `execute-pl
 ### Three layers
 
 ```text
-Nicki (.cursor/agents/nicki.md + routing.yaml)
+Nicki (.cursor/agents/nicki.md + routing.json)
   └─ sends sheep (child loads .cursor/agents/sheep-*.md)
        └─ loads current-task/* from disk
        └─ follows skill (.cursor/skills/<name>/SKILL.md)
@@ -126,11 +126,11 @@ Nicki-only steps: `acceptance`, `fix`. Validation (readiness + deferred next-ste
 | ---- | ----- | --------------- | -------------- |
 | Setup | `sheep-start` | — (creates worktree + registry) | worktree + `global-status.json` entry |
 | Describe | `sheep-describe` | status, `task.original` | `current-task/story.md` (Gherkin) |
-| Spec | `sheep-spec` | status, story | `current-task/specs/<slug>.yaml` |
+| Spec | `sheep-spec` | status, story | `current-task/specs/<slug>.json` |
 | Subtasks | `sheep-subtask` | status, spec | `current-task/subtasks/<slug>.md` |
-| Execute | `sheep-execute` | status, subtasks, spec | code + `current-task/executions/<slug>.yaml` |
-| Review | `sheep-review` | spec, subtasks, execution | `current-task/reviews/<slug>.yaml` + `current-task/review-validations/rN-validation.yaml` + optional `current-task/next-steps/*.yaml` |
-| Sync / archive / integrate | `sheep-sync`, `sheep-archive`, `sheep-integrate` | status, review validation | `current-task/syncs/<slug>.yaml`, `docs/archive/<slug>/`, `current-task/integrates/<slug>.yaml` |
+| Execute | `sheep-execute` | status, subtasks, spec | code + `current-task/executions/<slug>.json` |
+| Review | `sheep-review` | spec, subtasks, execution | `current-task/reviews/<slug>.json` + `current-task/review-validations/rN-validation.json` + optional `current-task/next-steps/*.json` |
+| Sync / archive / integrate | `sheep-sync`, `sheep-archive`, `sheep-integrate` | status, review validation | `current-task/syncs/<slug>.json`, `docs/archive/<slug>/`, `current-task/integrates/<slug>.json` |
 | Close | `sheep-close` | status, integrate handoff | worktree deleted; unregister `global-status.json` |
 
 **Subtasks** map spec requirements to ordered one-line checklist items. Subtask-maker explores for existing coverage and prefers verify-before-build or refactor-to-share over default “build X” when the spec is already satisfied or logic can be reused.
@@ -146,14 +146,14 @@ global-status.json                         # workspace root; sheep-start / sheep
 worktrees/<path>/current-task/
   status.json                              # sheep-status only
   story.md
-  specs/<slug>.yaml
+  specs/<slug>.json
   subtasks/<slug>.md
-  executions/<slug>.yaml
-  reviews/<slug>.yaml
-  review-validations/rN-validation.yaml
-  next-steps/*.yaml
-  syncs/<slug>.yaml
-  integrates/<slug>.yaml
+  executions/<slug>.json
+  reviews/<slug>.json
+  review-validations/rN-validation.json
+  next-steps/*.json
+  syncs/<slug>.json
+  integrates/<slug>.json
 ```
 
 Writer schemas: `.cursor/skills/current-task-update/status-format.md`, `global-status-format.md`. Nicki and readers use slim `status-read.md` / `global-status-read.md`.

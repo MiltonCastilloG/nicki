@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Write current-task/status.json from Nicki summary YAML.
+"""Write current-task/status.json from Nicki summary JSON.
 
 Required inputs:
   --worktree (CLI)
-  summary YAML: next_step
+  summary JSON: next_step
 
 Optional summary fields (defaults applied):
   completed_step — when present, sets task.current_step, may append completed_steps,
@@ -15,10 +15,12 @@ Optional summary fields (defaults applied):
   summary, task.* — ignored or derived
 
 Success stdout: {"written": true, "path", "completed_step", "next_step", "blockers"}
-  completed_step is the YAML value or null when omitted.
+  completed_step is the JSON value or null when omitted.
 Input error stdout: {"written": false, "errors": ["missing required field: next_step"]}
 Exit 0 on success, 1 on input error or write failure.
 """
+
+from __future__ import annotations
 
 import argparse
 import json
@@ -34,21 +36,25 @@ def _fail(errors: list[str]) -> None:
     raise SystemExit(1)
 
 
-def _read_text(yaml_path: str | None) -> str:
-    if yaml_path:
-        return Path(yaml_path).read_text(encoding="utf-8")
+def _read_text(path: str | None) -> str:
+    if path:
+        return Path(path).read_text(encoding="utf-8")
     return sys.stdin.read()
 
 
-def _parse_yaml(text: str) -> dict[str, Any]:
+def _parse_summary(text: str, *, source_path: str | None) -> dict[str, Any]:
+    suffix = Path(source_path).suffix.lower() if source_path else ".json"
     try:
-        import yaml  # type: ignore
-    except Exception as e:  # pragma: no cover
-        raise RuntimeError("PyYAML is required (import yaml failed)") from e
+        if suffix in {".yaml", ".yml"}:
+            import yaml  # type: ignore
 
-    obj = yaml.safe_load(text)
+            obj = yaml.safe_load(text)
+        else:
+            obj = json.loads(text)
+    except Exception as e:  # noqa: BLE001 — surface as input error
+        _fail([f"summary parse error: {e}"])
     if not isinstance(obj, dict):
-        _fail(["summary YAML root must be a mapping/object"])
+        _fail(["summary root must be a mapping/object"])
     return obj
 
 
@@ -141,7 +147,14 @@ def _optional_completed_step(summary: dict[str, Any]) -> str | None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--worktree", required=True, help="Repo-relative or absolute worktree path")
-    parser.add_argument("--yaml-path", help="Path to Nicki summary YAML; if omitted, read stdin")
+    parser.add_argument(
+        "--json-path",
+        help="Path to Nicki summary JSON; if omitted with no --yaml-path, read stdin as JSON",
+    )
+    parser.add_argument(
+        "--yaml-path",
+        help="Deprecated: path to Nicki summary YAML (in-flight only)",
+    )
     args = parser.parse_args()
 
     if not args.worktree.strip():
@@ -156,7 +169,8 @@ def main() -> int:
     status_path = worktree / "current-task" / "status.json"
     status_path.parent.mkdir(parents=True, exist_ok=True)
 
-    summary = _parse_yaml(_read_text(args.yaml_path))
+    source = args.json_path or args.yaml_path
+    summary = _parse_summary(_read_text(source), source_path=source)
     _validate_required(summary)
 
     completed_step = _optional_completed_step(summary)

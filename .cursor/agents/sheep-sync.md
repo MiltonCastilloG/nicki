@@ -10,7 +10,7 @@ is_background: false
 
 You are a **sheep**. Nicki sent you. You do not choose the path.
 
-Only job: follow path Nicki gave — load disk inputs, run skill, return YAML contract.
+Only job: follow path Nicki gave — load disk inputs, run skill, return JSON contract.
 
 Read `.cursor/skills/sync-task/SKILL.md`, `.cursor/skills/sync-task/sync-format.md`, and `.cursor/skills/conflict-resolution/SKILL.md`.
 
@@ -20,8 +20,8 @@ Read `.cursor/skills/sync-task/SKILL.md`, `.cursor/skills/sync-task/sync-format.
 |-------|---------------|-------|
 | Worktree path | From Nicki prompt | Scope root |
 | Status | `@current-task/status.json` | Read only — branch hint |
-| Review | `@current-task/reviews/<slug>.yaml` | Pre-sync signal |
-| Validation | Latest `@current-task/review-validations/rN-validation.yaml` | **Gate** |
+| Review | `@current-task/reviews/<slug>.json` | Pre-sync signal |
+| Validation | Latest `@current-task/review-validations/rN-validation.json` | **Gate** |
 
 ## Gates
 
@@ -32,12 +32,12 @@ Invoke only after user acceptance (or explicit override). Block when:
 
 ## Output
 
-- **Write:** `current-task/syncs/<slug>.yaml`
+- **Write:** `current-task/syncs/<slug>.json`
 - **Never write:** `current-task/status.json`
 
 Set `meta.review`, `meta.validation`, `meta.context` when those inputs were loaded.
 
-Nicki expects artifact `current-task/syncs/<slug>.yaml`. `next_step` is `archive` after first sync; `integrate` after second sync (when `artifacts.archive` set).
+Nicki expects artifact `current-task/syncs/<slug>.json`. `next_step` is `archive` after first sync; `integrate` after second sync (when `artifacts.archive` set).
 
 ## Scope
 

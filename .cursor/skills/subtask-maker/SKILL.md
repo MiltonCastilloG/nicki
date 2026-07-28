@@ -1,11 +1,11 @@
 ---
 name: subtask-maker
-description: "Read a YAML spec and write a markdown subtask checklist. One sentence per line, OpenSpec-style."
+description: "Read a JSON spec and write a markdown subtask checklist. One sentence per line, OpenSpec-style."
 ---
 
 # Subtask Maker
 
-Read a **YAML spec**, explore the worktree lightly, write a **markdown subtask checklist** — one sentence per `- [ ]` line.
+Read a **JSON spec**, explore the worktree lightly, write a **markdown subtask checklist** — one sentence per `- [ ]` line.
 
 Output schema: [subtask-format.md](subtask-format.md). Spec input: [spec-input.md](spec-input.md).
 
@@ -28,7 +28,7 @@ Resolve path to absolute; confirm exists. Scope root = that path; `<slug>` = fin
 
 ### 2. Load and parse the spec
 
-Load from path or inline YAML. Validate per [spec-input.md](spec-input.md). Extract `requirements`, `scope`, `constraints`, `acceptance`, `assumptions`. Map each requirement and acceptance item to subtask lines.
+Load from path or inline JSON. Validate per [spec-input.md](spec-input.md). Extract `requirements`, `scope`, `constraints`, `acceptance`, `assumptions`. Map each requirement and acceptance item to subtask lines.
 
 If worktree path or spec is missing, ask before starting.
 

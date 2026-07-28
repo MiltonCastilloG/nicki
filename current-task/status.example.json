@@ -14,7 +14,7 @@
     "worktree_path": "."
   },
   "artifacts": {
-    "spec": "00-spec.yaml",
+    "spec": "00-spec.json",
     "subtasks": "00-subtasks.md"
   },
   "open_questions": []

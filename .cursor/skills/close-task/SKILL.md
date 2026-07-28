@@ -25,7 +25,7 @@ Missing path → ask.
 
 ## Tail gate
 
-- `current-task/integrates/<slug>.yaml` exists (or `artifacts.integrate` resolves)
+- `current-task/integrates/<slug>.json` exists (or `artifacts.integrate` resolves)
 
 Missing integrate handoff → **block** unless user approves override. Then unregister → teardown.
 

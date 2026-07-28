@@ -1,6 +1,6 @@
 ---
 name: sync-task
-description: "Local commit, merge main into feature branch, push feature branch; write sync handoff YAML."
+description: "Local commit, merge main into feature branch, push feature branch; write sync handoff JSON."
 ---
 
 # Sync Task
@@ -16,7 +16,7 @@ Schema: [sync-format.md](sync-format.md).
 | Worktree path | Yes | Absolute or repo-relative — task worktree |
 | Base branch | No | Defaults to `main`; merged into feature before push |
 | Commit instruction | Optional | Message preference or explicit include/exclude paths |
-| Handoff output path | No | Default `current-task/syncs/<slug>.yaml` |
+| Handoff output path | No | Default `current-task/syncs/<slug>.json` |
 
 If worktree path is missing, ask before starting.
 
@@ -31,7 +31,7 @@ Task Progress:
 - [ ] Merge base branch into feature branch
 - [ ] Resolve conflicts with user input if needed
 - [ ] Push feature branch (HTTPS then SSH, or vice versa)
-- [ ] Write sync handoff YAML
+- [ ] Write sync handoff JSON
 - [ ] Report summary
 ```
 
@@ -40,13 +40,13 @@ Task Progress:
 1. Resolve the worktree path to an absolute path.
 2. Confirm the directory exists and is a git worktree.
 3. Set the scope root to that absolute path. Derive `<slug>` from the final folder name.
-4. Default handoff path: `current-task/syncs/<slug>.yaml`.
+4. Default handoff path: `current-task/syncs/<slug>.json`.
 
 **Scope rules:**
 
 - Read only inside the scope root.
 - Write only:
-  - the sync handoff YAML
+  - the sync handoff JSON
   - files changed by the pre-push merge under the worktree
   - conflicted files under the worktree (user-approved resolutions)
 - Run shell commands with `working_directory` set to the scope root.

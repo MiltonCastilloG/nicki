@@ -6,7 +6,7 @@ Path: `current-task/status.json` relative to task worktree root.
 
 **Write boundary:** only `current-task-update`. Readers use [status-read.md](status-read.md).
 
-Handoff YAML/Markdown bodies stay separate; status holds pointers and step position only.
+Handoff JSON/Markdown bodies stay separate; status holds pointers and step position only.
 
 ## Top-level fields
 
@@ -51,15 +51,15 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
 | Field | Required | Description |
 |-------|----------|-------------|
 | `story` | No | `current-task/story.md` |
-| `spec` | No | Spec YAML path |
+| `spec` | No | Spec JSON path |
 | `subtasks` | No | Subtask markdown path |
-| `execution` | No | Execution YAML path |
-| `review_validation` | No | Latest validation YAML — sole review gate pointer |
-| `review_input` | No | Latest review guidance YAML |
+| `execution` | No | Execution JSON path |
+| `review_validation` | No | Latest validation JSON — sole review gate pointer |
+| `review_input` | No | Latest review guidance JSON |
 | `next_steps` | No | Array of follow-up spec paths |
-| `sync` | No | Sync handoff path (`current-task/syncs/<slug>.yaml`) |
-| `integrate` | No | Integrate handoff path (`current-task/integrates/<slug>.yaml`) |
-| `archive` | No | `docs/archive/<slug>/report.yaml` (dir also holds `report.md`, `story.md`) |
+| `sync` | No | Sync handoff path (`current-task/syncs/<slug>.json`) |
+| `integrate` | No | Integrate handoff path (`current-task/integrates/<slug>.json`) |
+| `archive` | No | `docs/archive/<slug>/report.json` (dir also holds `report.md`, `story.md`) |
 
 ## `open_questions`
 
@@ -83,7 +83,7 @@ Blocked example:
 
 ## Readiness routing
 
-After review, status-update sets `artifacts.review_validation` to latest validation YAML. Nicki + hooks read `readiness` from that file — **not** review markdown, **not** status history.
+After review, status-update sets `artifacts.review_validation` to latest validation JSON. Nicki + hooks read `readiness` from that file — **not** review markdown, **not** status history.
 
 | `readiness.status` | `task.next_step` typical | `sync-task` |
 |--------------------|--------------------------|-------------|
@@ -94,7 +94,7 @@ After review, status-update sets `artifacts.review_validation` to latest validat
 
 ### Validation pointer
 
-`artifacts.review_validation` → `current-task/review-validations/rN-validation.yaml`. Refresh on every review complete.
+`artifacts.review_validation` → `current-task/review-validations/rN-validation.json`. Refresh on every review complete.
 
 ### Acceptance
 
@@ -124,7 +124,7 @@ Spec-to-subtasks gate reads `open_questions` from the spec artifact file — not
   },
   "artifacts": {
     "story": "current-task/story.md",
-    "spec": "current-task/specs/hero-section.yaml"
+    "spec": "current-task/specs/hero-section.json"
   },
   "open_questions": []
 }

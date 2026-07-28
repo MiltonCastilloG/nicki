@@ -27,7 +27,7 @@ Schemas:
 | Input | Required | Notes |
 |-------|----------|-------|
 | Worktree path | Yes | Absolute or repo-relative |
-| Nicki summary | Yes | Compact YAML summary of step result |
+| Nicki summary | Yes | Compact JSON summary of step result |
 
 ## Nicki summary format
 
@@ -37,20 +37,24 @@ Schemas:
 
 Minimal write (valid — advances next step only):
 
-```yaml
-next_step: describe
+```json
+{
+  "next_step": "describe"
+}
 ```
 
 Full write (when a step completed):
 
-```yaml
-worktree: projects/foo/worktrees/hero-section
-completed_step: spec
-completed_status: complete
-artifact: current-task/specs/hero-section.yaml
-next_step: subtasks
-open_questions: []
-summary: Spec captured requirements and acceptance.
+```json
+{
+  "worktree": "projects/foo/worktrees/hero-section",
+  "completed_step": "spec",
+  "completed_status": "complete",
+  "artifact": "current-task/specs/hero-section.json",
+  "next_step": "subtasks",
+  "open_questions": [],
+  "summary": "Spec captured requirements and acceptance."
+}
 ```
 
 **`completed_step` semantics:** when present, updates `task.current_step`, may append `completed_steps`, and may set artifact pointer; when absent, only advances `next_step` but **always writes `task.current_step`** (preserve existing, or `"start"` on fresh init).

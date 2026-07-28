@@ -11,8 +11,6 @@ import json
 import tempfile
 from pathlib import Path
 
-import yaml
-
 from gates import gate_archive
 
 
@@ -38,7 +36,7 @@ def _write_sync(worktree: Path, rel: str, *, ppm_status: str) -> None:
     path = worktree / rel
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        yaml.safe_dump({"pre_push_merge": {"status": ppm_status}}, sort_keys=False),
+        json.dumps({"pre_push_merge": {"status": ppm_status}}, indent=2) + "\n",
         encoding="utf-8",
     )
 
@@ -48,7 +46,7 @@ def main() -> int:
         worktree = Path(td) / "wt"
         worktree.mkdir(parents=True, exist_ok=True)
 
-        sync_rel = "current-task/syncs/wt.yaml"
+        sync_rel = "current-task/syncs/wt.json"
         _write_status(worktree, sync_rel=sync_rel)
 
         _write_sync(worktree, sync_rel, ppm_status="merged")
@@ -66,4 +64,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

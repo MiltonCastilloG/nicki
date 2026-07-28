@@ -1,8 +1,8 @@
 # Execution format
 
-**YAML only** — compact evidence after executing, partially executing, or blocking on a subtask list.
+**JSON only** — compact evidence after executing, partially executing, or blocking on a subtask list.
 
-Default path: `current-task/executions/<slug>.yaml` under the worktree scope root.
+Default path: `current-task/executions/<slug>.json` under the worktree scope root.
 
 The execution file maps what was done; reviewers still read the diff and rerun verification independently.
 
@@ -93,59 +93,84 @@ Include one entry per command run during execution.
 | `focus_paths` | No | Paths to prioritize |
 | `skip_subtasks` | No | Subtask indices that are not reviewable yet |
 
-## YAML example
+## JSON example
 
-```yaml
-meta:
-  worktree: hero-section
-  generated_by: execute-plan
-  subtasks: current-task/subtasks/hero-section.md
-  spec: current-task/specs/hero-section.yaml
-  status: complete
-  constraints: [no-commit, no-new-deps]
-
-paths:
-  created: [src/components/Hero/Hero.tsx]
-  modified: [app/page.tsx]
-  deleted: []
-  unplanned: []
-
-subtasks:
-  - index: 1
-    text: Implement a Hero component with headline, subcopy, and a primary CTA using semantic Tailwind tokens only.
-    status: done
-    checked: true
-    paths: [src/components/Hero/Hero.tsx]
-    note: Hero with headline, subcopy, CTA, and semantic tokens.
-  - index: 2
-    text: Replace the home page hero with the new Hero component above the fold.
-    status: done
-    checked: true
-    paths: [app/page.tsx]
-    note: Replaced landing banner with Hero.
-  - index: 6
-    text: Run npm test for Hero and home page test suites.
-    status: done
-    checked: true
-    note: All test commands passed.
-
-verify:
-  - command: npm run lint
-    exit: 0
-    passed: true
-  - command: npm test -- Hero
-    exit: 0
-    passed: true
-
-deviations: []
-open_questions: []
-
-hotspots:
-  - path: src/components/Hero/Hero.tsx
-    reason: semantic-tokens
-
-review_scope:
-  mode: full
+```json
+{
+  "meta": {
+    "worktree": "hero-section",
+    "generated_by": "execute-plan",
+    "subtasks": "current-task/subtasks/hero-section.md",
+    "spec": "current-task/specs/hero-section.json",
+    "status": "complete",
+    "constraints": [
+      "no-commit",
+      "no-new-deps"
+    ]
+  },
+  "paths": {
+    "created": [
+      "src/components/Hero/Hero.tsx"
+    ],
+    "modified": [
+      "app/page.tsx"
+    ],
+    "deleted": [],
+    "unplanned": []
+  },
+  "subtasks": [
+    {
+      "index": 1,
+      "text": "Implement a Hero component with headline, subcopy, and a primary CTA using semantic Tailwind tokens only.",
+      "status": "done",
+      "checked": true,
+      "paths": [
+        "src/components/Hero/Hero.tsx"
+      ],
+      "note": "Hero with headline, subcopy, CTA, and semantic tokens."
+    },
+    {
+      "index": 2,
+      "text": "Replace the home page hero with the new Hero component above the fold.",
+      "status": "done",
+      "checked": true,
+      "paths": [
+        "app/page.tsx"
+      ],
+      "note": "Replaced landing banner with Hero."
+    },
+    {
+      "index": 6,
+      "text": "Run npm test for Hero and home page test suites.",
+      "status": "done",
+      "checked": true,
+      "note": "All test commands passed."
+    }
+  ],
+  "verify": [
+    {
+      "command": "npm run lint",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "command": "npm test -- Hero",
+      "exit": 0,
+      "passed": true
+    }
+  ],
+  "deviations": [],
+  "open_questions": [],
+  "hotspots": [
+    {
+      "path": "src/components/Hero/Hero.tsx",
+      "reason": "semantic-tokens"
+    }
+  ],
+  "review_scope": {
+    "mode": "full"
+  }
+}
 ```
 
 ## Writing good execution files

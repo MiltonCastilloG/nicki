@@ -1,8 +1,8 @@
 # Integrate format
 
-**YAML only** — one compact artifact after merge into target branch + push target branch (or blocked/partial).
+**JSON only** — one compact artifact after merge into target branch + push target branch (or blocked/partial).
 
-Default path: `current-task/integrates/<slug>.yaml` in the **task worktree** (not the target checkout).
+Default path: `current-task/integrates/<slug>.json` in the **task worktree** (not the target checkout).
 
 ## Top-level fields
 
@@ -44,43 +44,50 @@ Default path: `current-task/integrates/<slug>.yaml` in the **task worktree** (no
 | `branch` | If published | Target branch pushed |
 | `sha` | No | HEAD SHA on target after push |
 
-## YAML example
+## JSON example
 
-```yaml
-meta:
-  worktree: hero-section
-  generated_by: integrate-task
-  sync_handoff: current-task/syncs/hero-section.yaml
-
-status: integrated
-
-merge:
-  status: conflicts_resolved
-  source: feature/hero-section
-  target_branch: main
-  merge_commit: true
-
-publish:
-  status: published
-  remote: origin
-  branch: main
-  sha: fed9876
-
-conflicts:
-  - path: src/components/Hero/Hero.tsx
-    status: resolved
-    resolution_summary: Kept feature hero body and main import order.
-
-user_resolutions:
-  - path: src/components/Hero/Hero.tsx
-    prompt: "Resolve conflict in Hero.tsx?"
-    answer: "Keep feature hero body and main import order."
-
-checks:
-  - command: git status -sb
-    passed: true
-
-blockers: []
+```json
+{
+  "meta": {
+    "worktree": "hero-section",
+    "generated_by": "integrate-task",
+    "sync_handoff": "current-task/syncs/hero-section.json"
+  },
+  "status": "integrated",
+  "merge": {
+    "status": "conflicts_resolved",
+    "source": "feature/hero-section",
+    "target_branch": "main",
+    "merge_commit": true
+  },
+  "publish": {
+    "status": "published",
+    "remote": "origin",
+    "branch": "main",
+    "sha": "fed9876"
+  },
+  "conflicts": [
+    {
+      "path": "src/components/Hero/Hero.tsx",
+      "status": "resolved",
+      "resolution_summary": "Kept feature hero body and main import order."
+    }
+  ],
+  "user_resolutions": [
+    {
+      "path": "src/components/Hero/Hero.tsx",
+      "prompt": "Resolve conflict in Hero.tsx?",
+      "answer": "Keep feature hero body and main import order."
+    }
+  ],
+  "checks": [
+    {
+      "command": "git status -sb",
+      "passed": true
+    }
+  ],
+  "blockers": []
+}
 ```
 
 ## Rules

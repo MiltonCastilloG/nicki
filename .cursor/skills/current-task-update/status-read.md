@@ -30,8 +30,8 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
   },
   "artifacts": {
     "story": "current-task/story.md",
-    "spec": "current-task/specs/hero-section.yaml",
-    "review_validation": "current-task/review-validations/r1-validation.yaml"
+    "spec": "current-task/specs/hero-section.json",
+    "review_validation": "current-task/review-validations/r1-validation.json"
   },
   "open_questions": []
 }

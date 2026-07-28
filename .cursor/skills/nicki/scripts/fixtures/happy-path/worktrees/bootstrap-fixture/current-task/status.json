@@ -9,7 +9,7 @@
   "scope": { "worktree_path": "worktrees/bootstrap-fixture" },
   "artifacts": {
     "story": "current-task/story.md",
-    "spec": "current-task/specs/bootstrap-fixture.yaml",
+    "spec": "current-task/specs/bootstrap-fixture.json",
     "subtasks": "current-task/subtasks/bootstrap-fixture.md"
   },
   "open_questions": []

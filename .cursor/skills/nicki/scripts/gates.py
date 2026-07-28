@@ -7,11 +7,12 @@ from typing import Any, Callable
 
 from gate_utils import (
     BLOCKED_READINESS,
+    ArtifactParseError,
     artifact_path,
     completed,
     deny,
     file_ok,
-    load_yaml,
+    load_artifact,
     readiness,
 )
 
@@ -48,7 +49,10 @@ def gate_subtasks(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, 
     spec_path = artifact_path(worktree, status, "spec")
     if not spec_path or not spec_path.is_file():
         return deny("subtasks gate: spec artifact missing")
-    oq = load_yaml(spec_path).get("open_questions")
+    try:
+        oq = load_artifact(spec_path).get("open_questions")
+    except ArtifactParseError as exc:
+        return deny(f"subtasks gate: spec parse error: {exc}")
     if oq:
         return deny("subtasks gate: spec open_questions non-empty")
     return None
@@ -65,7 +69,10 @@ def gate_review(status: dict, worktree: Path, user_confirmed: bool, _: bool) -> 
     exe = artifact_path(worktree, status, "execution")
     if not file_ok(exe):
         return deny("review gate: execution artifact missing")
-    scope = load_yaml(exe).get("review_scope") or {}
+    try:
+        scope = load_artifact(exe).get("review_scope") or {}
+    except ArtifactParseError as exc:
+        return deny(f"review gate: execution parse error: {exc}")
     if scope.get("mode") == "partial" and not user_confirmed:
         return deny("review gate: partial review_scope needs user confirm")
     return None
@@ -98,7 +105,10 @@ def gate_archive(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, A
     sync_path = artifact_path(worktree, status, "sync")
     if not file_ok(sync_path):
         return deny("archive gate: sync artifact missing")
-    ppm = (load_yaml(sync_path).get("pre_push_merge") or {}).get("status")
+    try:
+        ppm = (load_artifact(sync_path).get("pre_push_merge") or {}).get("status")
+    except ArtifactParseError as exc:
+        return deny(f"archive gate: sync parse error: {exc}")
     # Back-compat: early sync handoffs used "not_needed" when the base branch
     # was already up to date in the feature branch. Treat that as satisfying the
     # archive gate, since the intent is "base incorporated before archiving".

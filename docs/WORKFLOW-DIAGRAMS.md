@@ -1,6 +1,6 @@
 # Nicki workflow diagrams
 
-Visual maps of the current-task pipeline as defined in `.cursor/agents/`, `.cursor/skills/nicki/routing.yaml`, and `.cursor/skills/`.
+Visual maps of the current-task pipeline as defined in `.cursor/agents/`, `.cursor/skills/nicki/routing.json`, and `.cursor/skills/`.
 
 For orchestrator rules and artifact schemas, see [`NICKI.md`](NICKI.md).
 
@@ -105,7 +105,7 @@ flowchart TB
 
     subgraph NickiLayer["Nicki (readonly orchestrator)"]
         Nicki{{Nicki}}
-        Routing["routing.yaml"]
+        Routing["routing.json"]
         Hook["hook-contract"]
         StatusFmt["status-format.md<br/>global-status-format.md"]
     end
@@ -142,13 +142,13 @@ flowchart TB
         GS["global-status.json"]
         ST["current-task/status.json"]
         Story["current-task/story.md"]
-        SpecA["current-task/specs/slug.yaml"]
+        SpecA["current-task/specs/slug.json"]
         SubA["current-task/subtasks/slug.md"]
-        ExecA["current-task/executions/slug.yaml"]
-        RevA["current-task/reviews/slug.yaml"]
-        ValA["current-task/review-validations/rN-validation.yaml"]
-        SyncA["current-task/syncs/slug.yaml"]
-        IntA["current-task/integrates/slug.yaml"]
+        ExecA["current-task/executions/slug.json"]
+        RevA["current-task/reviews/slug.json"]
+        ValA["current-task/review-validations/rN-validation.json"]
+        SyncA["current-task/syncs/slug.json"]
+        IntA["current-task/integrates/slug.json"]
         Arch["docs/archive/slug/"]
     end
 
@@ -219,15 +219,15 @@ flowchart TB
 
 | Agent | Skills used | Primary writes |
 | ----- | ----------- | -------------- |
-| **Nicki** | `hook-contract` (reads); `routing.yaml`; status format docs | nothing (readonly) |
+| **Nicki** | `hook-contract` (reads); `routing.json`; status format docs | nothing (readonly) |
 | **sheep-start** | `start-task` | worktree + `global-status.json` registry |
-| **sheep-spec** | `spec-maker` | `current-task/specs/<slug>.yaml` |
+| **sheep-spec** | `spec-maker` | `current-task/specs/<slug>.json` |
 | **sheep-subtask** | `subtask-maker` | `current-task/subtasks/<slug>.md` |
-| **sheep-execute** | `execute-plan` | `current-task/executions/<slug>.yaml` + checklist ticks |
+| **sheep-execute** | `execute-plan` | `current-task/executions/<slug>.json` + checklist ticks |
 | **sheep-review** | `review-execution`, `validation` | review + validation YAML, optional next-steps |
-| **sheep-sync** | `sync-task`, `conflict-resolution` | `current-task/syncs/<slug>.yaml` |
+| **sheep-sync** | `sync-task`, `conflict-resolution` | `current-task/syncs/<slug>.json` |
 | **sheep-archive** | `task-archive` | `docs/archive/<slug>/` |
-| **sheep-integrate** | `integrate-task`, `conflict-resolution` | `current-task/integrates/<slug>.yaml` |
+| **sheep-integrate** | `integrate-task`, `conflict-resolution` | `current-task/integrates/<slug>.json` |
 | **sheep-close** | `close-task` → `close-scope` | unregister; delete worktree |
 | **sheep-status** | `current-task-update` | `current-task/status.json` only |
 
@@ -244,6 +244,6 @@ flowchart TB
 | ----- | ---- |
 | **Skill** | How to do one job (users can attach for ad-hoc work) |
 | **Sheep** | Bind skills to disk paths, gates, and Nicki handoff YAML |
-| **Nicki** | Pipeline, confirmations, forwarding sheep return YAML to `sheep-status` |
+| **Nicki** | Pipeline, confirmations, forwarding sheep return JSON to `sheep-status` |
 
 **Write boundaries:** only `sheep-start` and `sheep-close` may write `global-status.json`. Only `sheep-status` writes per-task `status.json`. Nicki never writes files or runs shell.

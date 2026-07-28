@@ -1,6 +1,6 @@
 # Spec input (read-only)
 
-YAML spec at `current-task/specs/<slug>.yaml`. Subtask-maker **reads** specs; full writer schema: [spec-format.md](../spec-maker/spec-format.md).
+JSON spec at `current-task/specs/<slug>.json`. Subtask-maker **reads** specs; full writer schema: [spec-format.md](../spec-maker/spec-format.md).
 
 ## Gate
 
@@ -24,19 +24,29 @@ Each `requirements` entry has `id` and `description`. Map every requirement and 
 
 ## Minimal shape
 
-```yaml
-meta:
-  worktree: hero-section
-title: Hero section redesign
-requirements:
-  - id: hero-cta
-    description: Include a primary CTA using existing link/button patterns.
-scope:
-  out:
-    - Header, footer, and other pages
-constraints:
-  - no-commit
-acceptance:
-  - npm run lint passes
-open_questions: []
+```json
+{
+  "meta": {
+    "worktree": "hero-section"
+  },
+  "title": "Hero section redesign",
+  "requirements": [
+    {
+      "id": "hero-cta",
+      "description": "Include a primary CTA using existing link/button patterns."
+    }
+  ],
+  "scope": {
+    "out": [
+      "Header, footer, and other pages"
+    ]
+  },
+  "constraints": [
+    "no-commit"
+  ],
+  "acceptance": [
+    "npm run lint passes"
+  ],
+  "open_questions": []
+}
 ```

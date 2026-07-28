@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
-
-import yaml
 
 from tests.smoke._helpers import rm_tree, run_py, script
 
@@ -11,7 +10,7 @@ from tests.smoke._helpers import rm_tree, run_py, script
 def run(root: Path) -> None:
     append = script(root, ".cursor/skills/errors-recording/scripts/append-error.py")
     fixture = root / "tests/fixtures/smoke-worktree"
-    errors = fixture / "current-task/specs/errors.yaml"
+    errors = fixture / "current-task/specs/errors.json"
     archive_dir = fixture / "docs/archive/sheep-fallback"
 
     rm_tree(fixture)
@@ -39,9 +38,9 @@ def run(root: Path) -> None:
         raise AssertionError(f"fail: first append: {proc.stderr}")
 
     if not errors.is_file():
-        raise AssertionError("fail: errors.yaml missing after first append")
+        raise AssertionError("fail: errors.json missing after first append")
 
-    data = yaml.safe_load(errors.read_text(encoding="utf-8"))
+    data = json.loads(errors.read_text(encoding="utf-8"))
     if len(data["failures"]) != 1:
         raise AssertionError("fail: expected one failure entry")
     f = data["failures"][0]
@@ -75,7 +74,7 @@ def run(root: Path) -> None:
     if proc2.returncode != 0:
         raise AssertionError(f"fail: second append: {proc2.stderr}")
 
-    data = yaml.safe_load(errors.read_text(encoding="utf-8"))
+    data = json.loads(errors.read_text(encoding="utf-8"))
     if len(data["failures"]) != 2:
         raise AssertionError("fail: expected two failure entries")
     if len({f["id"] for f in data["failures"]}) != 2:
@@ -85,7 +84,7 @@ def run(root: Path) -> None:
         "worktree": "sheep-fallback",
         "completed_step": "execute",
         "completed_status": "blocked",
-        "artifact": "current-task/specs/errors.yaml",
+        "artifact": "current-task/specs/errors.json",
         "next_step": "execute",
         "open_questions": [],
         "summary": "Recorded harness failure.",
@@ -104,15 +103,15 @@ def run(root: Path) -> None:
 
     rm_tree(archive_dir)
     archive_dir.mkdir(parents=True)
-    shutil.copy(errors, archive_dir / "errors.yaml")
-    archived = yaml.safe_load((archive_dir / "errors.yaml").read_text(encoding="utf-8"))
+    shutil.copy(errors, archive_dir / "errors.json")
+    archived = json.loads((archive_dir / "errors.json").read_text(encoding="utf-8"))
     if len(archived["failures"]) != 2:
         raise AssertionError("fail: archive copy should preserve failures")
 
     no_err = root / "tests/fixtures/no-errors-worktree"
     rm_tree(no_err)
     (no_err / "current-task/specs").mkdir(parents=True)
-    if (no_err / "current-task/specs/errors.yaml").exists():
-        raise AssertionError("fail: no-errors fixture should not have errors.yaml")
+    if (no_err / "current-task/specs/errors.json").exists():
+        raise AssertionError("fail: no-errors fixture should not have errors.json")
 
     print("smoke-errors-append: ok")

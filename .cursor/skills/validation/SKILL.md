@@ -1,6 +1,6 @@
 ---
 name: validation
-description: "Parse review into validation YAML with readiness and optional out-of-scope next-steps."
+description: "Parse review into validation JSON with readiness and optional out-of-scope next-steps."
 disable-model-invocation: true
 ---
 

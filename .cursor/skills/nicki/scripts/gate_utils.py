@@ -10,8 +10,12 @@ from typing import Any
 import yaml
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-ROUTING_PATH = SCRIPT_DIR.parent / "routing.yaml"
+ROUTING_PATH = SCRIPT_DIR.parent / "routing.json"
 BLOCKED_READINESS = frozenset({"fix_required", "blocked"})
+
+
+class ArtifactParseError(ValueError):
+    """Structured artifact could not be parsed as an object."""
 
 
 def workspace_root() -> Path:
@@ -32,8 +36,44 @@ def workspace_root() -> Path:
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
+    """Load a YAML mapping. Prefer load_artifact for task artifacts."""
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     return data if isinstance(data, dict) else {}
+
+
+def load_json(path: Path) -> dict[str, Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return data if isinstance(data, dict) else {}
+
+
+def load_artifact(path: Path) -> dict[str, Any]:
+    """Load a task artifact by suffix (.json or .yaml/.yml).
+
+    Raises ArtifactParseError on malformed content so gates can deny cleanly.
+    In-flight .yaml files still load; new writers emit .json only.
+    """
+    text = path.read_text(encoding="utf-8")
+    suffix = path.suffix.lower()
+    try:
+        if suffix == ".json":
+            data = json.loads(text)
+        elif suffix in {".yaml", ".yml"}:
+            data = yaml.safe_load(text)
+        else:
+            raise ArtifactParseError(f"unsupported artifact suffix: {suffix or '(none)'}")
+    except (json.JSONDecodeError, yaml.YAMLError) as exc:
+        raise ArtifactParseError(f"{path.name}: {exc}") from exc
+    if data is None:
+        return {}
+    if not isinstance(data, dict):
+        raise ArtifactParseError(f"{path.name}: root must be an object")
+    return data
+
+
+def load_routing() -> dict[str, Any]:
+    if not ROUTING_PATH.is_file():
+        raise FileNotFoundError(f"routing missing: {ROUTING_PATH}")
+    return load_json(ROUTING_PATH)
 
 
 def resolve_worktree(path: str) -> Path:
@@ -63,7 +103,7 @@ def readiness(status: dict[str, Any], worktree: Path) -> str | None:
     path = worktree / rel
     if not path.is_file():
         return None
-    return (load_yaml(path).get("readiness") or {}).get("status")
+    return (load_artifact(path).get("readiness") or {}).get("status")
 
 
 def deny(reason: str) -> dict[str, Any]:

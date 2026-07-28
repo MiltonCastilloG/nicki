@@ -1,8 +1,8 @@
 # Spec format
 
-**YAML only** — spec-maker writes this schema. Subtask-maker reads via [spec-input.md](../subtask-maker/spec-input.md).
+**JSON only** — spec-maker writes this schema. Subtask-maker reads via [spec-input.md](../subtask-maker/spec-input.md).
 
-Default path: `current-task/specs/<slug>.yaml` under the worktree scope root.
+Default path: `current-task/specs/<slug>.json` under the worktree scope root.
 
 Specs define **what** to build (requirements, scope, acceptance). They do **not** name implementation subtasks or file paths.
 
@@ -43,56 +43,64 @@ Each item in `requirements`:
 | `id` | Yes | Stable label (`hero-cta`, `fix-link-href`) |
 | `description` | Yes | Specific, testable requirement — not aspirational |
 
-## YAML example
+## JSON example
 
-```yaml
-meta:
-  worktree: hero-section
-  generated_by: spec-maker
-  task: "redesign hero section with headline, subcopy, and CTA"
-  branch: feature/hero-section
-
-title: Hero section redesign
-type: feature
-
-summary: >
-  Replace the current home page hero with a new section featuring a prominent
-  headline, supporting subcopy, and a primary call-to-action button.
-
-requirements:
-  - id: hero-headline
-    description: Display a prominent headline in the hero area above the fold.
-  - id: hero-subcopy
-    description: Display supporting subcopy below the headline.
-  - id: hero-cta
-    description: Include a primary CTA button using existing link/button patterns.
-  - id: hero-tokens
-    description: Style using semantic Tailwind tokens only — no raw palette classes.
-
-scope:
-  in:
-    - Home page hero area
-    - New or refactored Hero component
-  out:
-    - Header, footer, and other pages
-    - New npm dependencies
-    - i18n changes unless required by the hero copy
-
-constraints:
-  - no-commit
-  - no-new-deps
-
-acceptance:
-  - Home page hero shows headline, subcopy, and CTA
-  - Styling uses semantic Tailwind tokens (bg-primary, text-primary, etc.)
-  - npm run lint passes
-  - npm test passes for affected components
-
-assumptions:
-  - Reuse layout patterns from the existing LandingBanner component
-  - Hero copy is static English for this task
-
-open_questions: []
+```json
+{
+  "meta": {
+    "worktree": "hero-section",
+    "generated_by": "spec-maker",
+    "task": "redesign hero section with headline, subcopy, and CTA",
+    "branch": "feature/hero-section"
+  },
+  "title": "Hero section redesign",
+  "type": "feature",
+  "summary": "Replace the current home page hero with a new section featuring a prominent headline, supporting subcopy, and a primary call-to-action button.\n",
+  "requirements": [
+    {
+      "id": "hero-headline",
+      "description": "Display a prominent headline in the hero area above the fold."
+    },
+    {
+      "id": "hero-subcopy",
+      "description": "Display supporting subcopy below the headline."
+    },
+    {
+      "id": "hero-cta",
+      "description": "Include a primary CTA button using existing link/button patterns."
+    },
+    {
+      "id": "hero-tokens",
+      "description": "Style using semantic Tailwind tokens only — no raw palette classes."
+    }
+  ],
+  "scope": {
+    "in": [
+      "Home page hero area",
+      "New or refactored Hero component"
+    ],
+    "out": [
+      "Header, footer, and other pages",
+      "New npm dependencies",
+      "i18n changes unless required by the hero copy"
+    ]
+  },
+  "constraints": [
+    "no-commit",
+    "no-new-deps"
+  ],
+  "acceptance": [
+    "Home page hero shows headline, subcopy, and CTA",
+    "Styling uses semantic Tailwind tokens (bg-primary, text-primary, etc.)",
+    "npm run lint passes",
+    "npm test passes for affected components"
+  ],
+  "assumptions": [
+    "Reuse layout patterns from the existing LandingBanner component",
+    "Hero copy is static English for this task"
+  ],
+  "open_questions": []
+}
 ```
 
 ## Writing good specs

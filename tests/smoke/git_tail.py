@@ -41,7 +41,7 @@ def run(root: Path) -> None:
         )
         assert_contains(root / ".cursor/skills/close-task/SKILL.md", "Tail gate")
         assert_contains(root / ".cursor/agents/nicki.md", "sheep-integrate")
-        assert_contains(root / ".cursor/skills/nicki/routing.yaml", "sheep-sync")
+        assert_contains(root / ".cursor/skills/nicki/routing.json", "sheep-sync")
         assert_contains(
             root / ".cursor/skills/start-task/scripts/start-worktrees.sh", "PROJECT"
         )

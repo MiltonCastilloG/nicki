@@ -1,8 +1,8 @@
 # Sync format
 
-**YAML only** — one compact artifact after commit + pre-push merge + feature-branch push (or blocked/partial).
+**JSON only** — one compact artifact after commit + pre-push merge + feature-branch push (or blocked/partial).
 
-Default path: `current-task/syncs/<slug>.yaml` under the task worktree scope root.
+Default path: `current-task/syncs/<slug>.json` under the task worktree scope root.
 
 ## Top-level fields
 
@@ -39,43 +39,45 @@ Default path: `current-task/syncs/<slug>.yaml` under the task worktree scope roo
 | `included_paths` | No | Paths staged |
 | `excluded_paths` | No | Paths left unstaged |
 
-## YAML example
+## JSON example
 
-```yaml
-meta:
-  worktree: hero-section
-  generated_by: sync-task
-  review: current-task/reviews/hero-section.yaml
-  validation: current-task/review-validations/r1-validation.yaml
-
-status: synced
-
-commit:
-  status: committed
-  sha: abc1234
-  branch: feature/hero-section
-  message: add hero section
-  included_paths:
-    - src/components/Hero/Hero.tsx
-  excluded_paths: []
-
-pre_push_merge:
-  base: origin/main
-  status: merged
-  merge_commit: def5678
-
-remote:
-  name: origin
-  branch: feature/hero-section
-
-push:
-  sha: abc1234
-  upstream: origin/feature/hero-section
-  transport: ssh
-
-conflicts: []
-user_resolutions: []
-blockers: []
+```json
+{
+  "meta": {
+    "worktree": "hero-section",
+    "generated_by": "sync-task",
+    "review": "current-task/reviews/hero-section.json",
+    "validation": "current-task/review-validations/r1-validation.json"
+  },
+  "status": "synced",
+  "commit": {
+    "status": "committed",
+    "sha": "abc1234",
+    "branch": "feature/hero-section",
+    "message": "add hero section",
+    "included_paths": [
+      "src/components/Hero/Hero.tsx"
+    ],
+    "excluded_paths": []
+  },
+  "pre_push_merge": {
+    "base": "origin/main",
+    "status": "merged",
+    "merge_commit": "def5678"
+  },
+  "remote": {
+    "name": "origin",
+    "branch": "feature/hero-section"
+  },
+  "push": {
+    "sha": "abc1234",
+    "upstream": "origin/feature/hero-section",
+    "transport": "ssh"
+  },
+  "conflicts": [],
+  "user_resolutions": [],
+  "blockers": []
+}
 ```
 
 ## Rules

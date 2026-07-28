@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Append one errors.v1 failure entry to current-task/specs/errors.yaml."""
+"""Append one errors.v1 failure entry to current-task/specs/errors.json."""
 
 from __future__ import annotations
 
@@ -8,8 +8,6 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-
-import yaml
 
 
 def _slug(worktree: Path) -> str:
@@ -33,6 +31,28 @@ def _unique_id(existing: list[dict], base: str) -> str:
     return f"{base}-{n}"
 
 
+def _load_errors(path: Path) -> dict:
+    if not path.is_file():
+        return {}
+    text = path.read_text(encoding="utf-8")
+    # Prefer JSON; accept legacy YAML during transition of in-flight tasks.
+    try:
+        loaded = json.loads(text)
+        if isinstance(loaded, dict):
+            return loaded
+    except json.JSONDecodeError:
+        pass
+    try:
+        import yaml  # type: ignore
+
+        loaded = yaml.safe_load(text)
+        if isinstance(loaded, dict):
+            return loaded
+    except Exception:  # noqa: BLE001
+        pass
+    return {}
+
+
 def append_failure(
     worktree: Path,
     *,
@@ -44,13 +64,11 @@ def append_failure(
     stderr: str | None,
     validation_errors: list[str] | None,
 ) -> Path:
-    path = worktree / "current-task/specs/errors.yaml"
+    path = worktree / "current-task/specs/errors.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    data: dict = {}
-    if path.is_file():
-        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
-        if isinstance(loaded, dict):
-            data = loaded
+    # Migrate in-place if only legacy errors.yaml exists on this worktree.
+    legacy = worktree / "current-task/specs/errors.json"
+    data = _load_errors(path if path.is_file() else legacy)
     meta = data.get("meta") if isinstance(data.get("meta"), dict) else {}
     meta.setdefault("schema", "errors.v1")
     meta["worktree"] = _slug(worktree)
@@ -72,7 +90,7 @@ def append_failure(
         }
     )
     path.write_text(
-        yaml.safe_dump({"meta": meta, "failures": failures}, sort_keys=False),
+        json.dumps({"meta": meta, "failures": failures}, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
     return path

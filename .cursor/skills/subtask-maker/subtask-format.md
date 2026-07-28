@@ -35,7 +35,7 @@ One **terse sentence** per line — no filler (just, basically, really); keep te
 ---
 worktree: hero-section
 generated_by: subtask-maker
-spec: current-task/specs/hero-section.yaml
+spec: current-task/specs/hero-section.json
 title: Hero section redesign
 constraints:
   - no-commit

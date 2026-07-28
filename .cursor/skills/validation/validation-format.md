@@ -1,15 +1,15 @@
 # Validation format
 
-After review: emit `current-task/review-validations/rN-validation.yaml`, optional `current-task/next-steps/*.yaml`, optional `## Fix` on subtasks. Trust review prefixes — no source re-read.
+After review: emit `current-task/review-validations/rN-validation.json`, optional `current-task/next-steps/*.json`, optional `## Fix` on subtasks. Trust review prefixes — no source re-read.
 
 ## Procedure
 
 1. Parse review `content` bullets by prefix.
 2. Blocking → `valid_findings`: `[req-`, `[subtask:`, `[verify]`, `[convention]`. `[scope]` → `deferred_findings`.
 3. Set `readiness` (table below). `blockers` = blocking text when `fix_required`.
-4. Important deferred findings → write next-step YAML (shape below); record in `next_steps`.
+4. Important deferred findings → write next-step JSON (shape below); record in `next_steps`.
 5. `fix_required` → `fix_subtasks` + append `## Fix` on subtask list (keep prior `- [x]`).
-6. Write validation YAML. `discarded_findings: []`, `review_inputs: []`.
+6. Write validation JSON. `discarded_findings: []`, `review_inputs: []`.
 
 ## Readiness
 
@@ -34,7 +34,7 @@ After review: emit `current-task/review-validations/rN-validation.yaml`, optiona
 | `readiness` | Yes | `status`, `recommended_next_step`, `blockers`, optional `deferred_scope`, `fix_subtasks` |
 | `summary` | Yes | One short paragraph |
 
-## Next-step YAML (`current-task/next-steps/<name>.yaml`)
+## Next-step JSON (`current-task/next-steps/<name>.json`)
 
 Compact follow-up spec — no file paths, no subtasks.
 
@@ -47,31 +47,42 @@ Plus: `title`, `type`, `summary`, `requirements[]`, `scope`, `constraints`, `acc
 ```markdown
 
 ## Fix
-<!-- ref: current-task/review-validations/rN-validation.yaml -->
+<!-- ref: current-task/review-validations/rN-validation.json -->
 - [ ] <one-line fix>
 ```
 
 ## Example
 
-```yaml
-meta:
-  worktree: hero-section
-  generated_by: validation
-  review: current-task/reviews/hero-section.yaml
-decision: partially_valid
-valid_findings:
-  - id: f1
-    source: "[verify] lint failed"
-    prefix: verify
-    reason: Blocking from review.
-deferred_findings: []
-discarded_findings: []
-next_steps: []
-review_inputs: []
-readiness:
-  status: fix_required
-  recommended_next_step: execute
-  blockers: ["lint failed"]
-  fix_subtasks: ["Fix lint errors"]
-summary: One blocking verify finding.
+```json
+{
+  "meta": {
+    "worktree": "hero-section",
+    "generated_by": "validation",
+    "review": "current-task/reviews/hero-section.json"
+  },
+  "decision": "partially_valid",
+  "valid_findings": [
+    {
+      "id": "f1",
+      "source": "[verify] lint failed",
+      "prefix": "verify",
+      "reason": "Blocking from review."
+    }
+  ],
+  "deferred_findings": [],
+  "discarded_findings": [],
+  "next_steps": [],
+  "review_inputs": [],
+  "readiness": {
+    "status": "fix_required",
+    "recommended_next_step": "execute",
+    "blockers": [
+      "lint failed"
+    ],
+    "fix_subtasks": [
+      "Fix lint errors"
+    ]
+  },
+  "summary": "One blocking verify finding."
+}
 ```

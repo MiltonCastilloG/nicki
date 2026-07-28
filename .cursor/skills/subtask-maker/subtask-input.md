@@ -29,7 +29,7 @@ Markdown checklist at `current-task/subtasks/<slug>.md`. Execute-plan **reads** 
 ```markdown
 ---
 worktree: hero-section
-spec: current-task/specs/hero-section.yaml
+spec: current-task/specs/hero-section.json
 constraints:
   - no-commit
 ---

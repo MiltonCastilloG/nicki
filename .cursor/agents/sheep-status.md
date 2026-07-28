@@ -20,23 +20,23 @@ Read and follow `.cursor/skills/current-task-update/SKILL.md`, `.cursor/skills/c
 
 Required summary field: **`next_step` only**. Optional: `completed_step`, `artifact`, `completed_status`, `open_questions`, `summary`.
 
-Nicki still forwards full YAML; the write script ignores missing optional fields. `task.current_step` always ends up in `status.json` (from `completed_step` when present, else preserved existing, else `"start"` on fresh init).
+Nicki still forwards full JSON; the write script ignores missing optional fields. `task.current_step` always ends up in `status.json` (from `completed_step` when present, else preserved existing, else `"start"` on fresh init).
 
 ## Required inputs
 
 1. **Worktree path** — absolute or repo-relative (e.g. `worktrees/hero-section`).
-2. **Nicki summary YAML** — at least `next_step`; optional completed step, artifact, and other fields.
+2. **Nicki summary JSON** — at least `next_step`; optional completed step, artifact, and other fields.
 
 ## Your task
 
 1. Resolve and validate the worktree path.
-2. Write the Nicki summary YAML into a temp file inside the worktree (e.g. `current-task/.tmp-sheep-status.yaml`).
+2. Write the Nicki summary JSON into a temp file inside the worktree (e.g. `current-task/.tmp-sheep-status.json`).
 3. Run status update:
-   - `python3 .cursor/skills/current-task-update/scripts/update-status.py --worktree <worktree> --yaml-path <tmp>`
+   - `python3 .cursor/skills/current-task-update/scripts/update-status.py --worktree <worktree> --json-path <tmp>`
 4. Delete the temp file.
 5. Report the JSON printed by `update-status.py`.
 
-If stdout has `"written": false`, report the `errors` list to Nicki — this is an **input error** (missing required field), not a harness crash. Nicki should re-emit corrected summary YAML and retry.
+If stdout has `"written": false`, report the `errors` list to Nicki — this is an **input error** (missing required field), not a harness crash. Nicki should re-emit corrected summary JSON and retry.
 
 ## Safety rules
 

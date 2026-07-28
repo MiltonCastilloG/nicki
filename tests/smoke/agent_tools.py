@@ -11,7 +11,7 @@ def run(root: Path) -> None:
         {"tool_name": "Shell", "agent_type": "nicki"},
         {"tool_name": "Read", "agent_type": "nicki"},
         {"tool_name": "Shell"},
-        {"tool_name": "Write", "description": "Update nicki.md and routing.yaml"},
+        {"tool_name": "Write", "description": "Update nicki.md and routing.json"},
         {"tool_name": "Grep", "description": "find references to nicki in README"},
         {"tool_name": "Write", "subagent_type": "sheep-spec"},
     ]

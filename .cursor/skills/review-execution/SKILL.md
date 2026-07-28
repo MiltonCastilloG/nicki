@@ -1,11 +1,11 @@
 ---
 name: review-execution
-description: "Review worktree changes against spec, subtasks, and execution evidence; write a YAML review with approved and content."
+description: "Review worktree changes against spec, subtasks, and execution evidence; write a JSON review with approved and content."
 ---
 
 # Review Execution
 
-Review implementation in a worktree. Compare changes against the spec, subtask list, execution handoff, optional review guidance, and actual git diff; run verification checks; produce YAML with exactly `approved` and `content`.
+Review implementation in a worktree. Compare changes against the spec, subtask list, execution handoff, optional review guidance, and actual git diff; run verification checks; produce JSON with exactly `approved` and `content`.
 
 - Review output: [review-format.md](review-format.md)
 - Guidance input: [review-guidance-format.md](review-guidance-format.md)
@@ -16,17 +16,17 @@ Review implementation in a worktree. Compare changes against the spec, subtask l
 | Input | Required | Notes |
 |-------|----------|-------|
 | Worktree path | Yes | Absolute or repo-relative |
-| Spec | Preferred | Path or inline YAML |
+| Spec | Preferred | Path or inline JSON |
 | Subtask list | Preferred | Path or inline markdown |
-| Execution | Preferred | Path or inline YAML when present |
-| Review guidance | Optional | Path or inline YAML with `important-considerations` |
-| Review output path | No | Default `current-task/reviews/<slug>.yaml` under scope root |
+| Execution | Preferred | Path or inline JSON when present |
+| Review guidance | Optional | Path or inline JSON with `important-considerations` |
+| Review output path | No | Default `current-task/reviews/<slug>.json` under scope root |
 
 If worktree path is missing, ask before starting.
 
 If spec or subtask list is missing, ask whether to proceed with partial review or stop.
 
-Missing execution YAML is not a blocker when spec, subtasks, and diff are enough to review.
+Missing execution JSON is not a blocker when spec, subtasks, and diff are enough to review.
 
 ## Procedure
 
@@ -40,7 +40,7 @@ Task Progress:
 - [ ] Run acceptance / verify commands
 - [ ] Spot-check CONTRIBUTING conventions
 - [ ] Decide approved true/false
-- [ ] Write review YAML
+- [ ] Write review JSON
 - [ ] Validation per validation-format.md
 - [ ] Append ## Fix when fix_required
 - [ ] Report summary and echo both paths
@@ -51,12 +51,12 @@ Task Progress:
 1. Resolve the worktree path to an **absolute** path.
 2. Confirm the directory exists.
 3. Set the **scope root** to that absolute path. Derive `<slug>` from the final folder name.
-4. Default review output: `current-task/reviews/<slug>.yaml`.
+4. Default review output: `current-task/reviews/<slug>.json`.
 
 **Scope rules (non-negotiable):**
 
 - **Read** anywhere under the scope root and CONTRIBUTING.md.
-- **Write** review path, `current-task/review-validations/rN-validation.yaml`, and `current-task/next-steps/*.yaml` when deferred scope findings warrant follow-up.
+- **Write** review path, `current-task/review-validations/rN-validation.json`, and `current-task/next-steps/*.json` when deferred scope findings warrant follow-up.
 - **Append** `## Fix` on subtask list only when `fix_required`.
 - Never edit `src/`, `app/`, config, tests, specs, subtasks, or any application files.
 - Never modify files outside the scope root.
@@ -64,9 +64,9 @@ Task Progress:
 
 ### Step 2: Load inputs
 
-1. Load spec from path or inline YAML.
+1. Load spec from path or inline JSON.
 2. Load subtask list from path or inline markdown.
-3. Load execution handoff from path or inline YAML when present.
+3. Load execution handoff from path or inline JSON when present.
 4. Load optional review guidance when provided.
 5. If spec or subtask list is missing, ask before continuing with partial review.
 6. Extract: `requirements`, `scope`, `acceptance`, `constraints` from spec; checklist lines and completion state from subtasks; touched paths, subtask statuses, verification evidence, deviations, and hotspots from execution.
@@ -80,7 +80,7 @@ When review guidance is present:
 - Keep each `important-considerations` item in scope while reviewing.
 - Do not repeat findings that the guidance says were out of scope or wrong unless current source evidence proves they are real in-scope blockers.
 - Still report build, lint, test, safety, correctness, requirement, subtask, and convention issues when supported by evidence.
-- Do not copy `important-considerations` into the output YAML. The review output still has exactly `approved` and `content`.
+- Do not copy `important-considerations` into the output JSON. The review output still has exactly `approved` and `content`.
 
 ### Step 3: Discover changes
 
@@ -141,11 +141,11 @@ Record blocking violations as `[convention]` bullets.
 - Any blocking issue (`[req-`, `[subtask:`, `[verify]`, `[convention]`) → `approved: false`.
 - Do not include non-blocking nits unless the user requested strict review.
 
-### Step 9: Write review YAML
+### Step 9: Write review JSON
 
 1. Create the review output directory if it does not exist.
-2. Write the complete YAML per [review-format.md](review-format.md).
-3. Echo the same YAML in the report.
+2. Write the complete JSON per [review-format.md](review-format.md).
+3. Echo the same JSON in the report.
 
 ### Step 10: Validation
 
@@ -157,7 +157,7 @@ Summarize: scope root, inputs used, files reviewed, commands run, review path, v
 
 ## Safety rules
 
-- Never edit application code — only review YAML files
+- Never edit application code — only review JSON files
 - Never modify specs or subtask lists during review
 - Never modify files outside the scope root
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval

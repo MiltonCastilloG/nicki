@@ -20,7 +20,7 @@ Pipeline leaf skills: `story-maker`, `spec-maker`, `subtask-maker`, `execute-pla
 ## Rules
 
 1. Leaf skills do **not** reference `status.json`, `global-status.json`, pipeline step names, or “send sheep next”.
-2. Leaf skills accept **inputs from the sheep prompt** (paths, inline YAML, story text) — no implicit disk discovery.
+2. Leaf skills accept **inputs from the sheep prompt** (paths, inline JSON, story text) — no implicit disk discovery.
 3. Format files document **one artifact type** each — no multi-agent directory maps.
 4. Sheep load skills and pass concrete inputs; sheep own auto-load paths and Nicki summary expectations.
 
@@ -37,4 +37,4 @@ These skills intentionally own task/workflow state or lifecycle:
 
 - `caveman/` — markdown voice (not workflow)
 - `conflict-resolution/` — merge conflict protocol for sync and integrate
-- `validation/` — review → validation YAML, readiness, and next-steps
+- `validation/` — review → validation JSON, readiness, and next-steps

@@ -15,7 +15,7 @@ Use this document as a rebuild guide: what Nicki is, what it controls, how the p
 | Ask for confirmation before each transition | Improvise workflow transitions |
 | Pass worktree path, context, and prior artifacts to sheep | Spawn nested sheep from workers |
 | Send `sheep-status` automatically after each sheep (except close) | Sync, integrate, or delete without explicit user confirmation |
-| Track orchestration progress with todos | Re-derive gates/sheep map from prose (scripts + `routing.yaml` own that) |
+| Track orchestration progress with todos | Re-derive gates/sheep map from prose (scripts + `routing.json` own that) |
 
 Nicki = `.cursor/agents/nicki.md` subagent (`readonly: true`; shell only for those two scripts; `read`, `task`, `ask_question`, `todo_write`). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
 
@@ -39,7 +39,7 @@ Authoritative read / gate / write surface (see [harness read/write design](super
 
 | Layer | Path | Role |
 | ----- | ---- | ---- |
-| Nicki | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.yaml` | Pipeline, gates, transitions, status-update summaries |
+| Nicki | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.json` | Pipeline, gates, transitions, status-update summaries |
 | Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — disk inputs, gates, handoffs; loaded in **child** Task context only (Nicki sends) |
 | Skill | `.cursor/skills/<name>/` | Pure functionality — procedures and artifact schemas; no pipeline knowledge |
 
@@ -47,7 +47,7 @@ See `.cursor/skills/README.md` for rules and workflow exceptions.
 
 **Frontmatter parsing:** Cursor uses a simplified YAML parser. Use single-line quoted `description: "..."` strings — do not use block scalars (`>-`, `>`, `|`) or the description may truncate to the first line only.
 
-**Sheep** never spawn other sheep. Nicki is the only orchestrator; she sends one sheep at a time via `routing.yaml` → Task `subagent_type`. Nicki does **not** read sheep agent files — each child loads `current-task/*` per its disk inputs, then follows the skill. Nicki relays the sheep return YAML to `sheep-status`.
+**Sheep** never spawn other sheep. Nicki is the only orchestrator; she sends one sheep at a time via `routing.json` → Task `subagent_type`. Nicki does **not** read sheep agent files — each child loads `current-task/*` per its disk inputs, then follows the skill. Nicki relays the sheep return JSON to `sheep-status`.
 
 **State writer** is `sheep-status`: sole writer for per-task `current-task/status.json`. **Registry writer** is `sheep-start` / `sheep-close` only for `global-status.json`. Nicki never writes either directly.
 
@@ -57,7 +57,7 @@ See `.cursor/skills/README.md` for rules and workflow exceptions.
 
 ## Canonical workflow
 
-Step order and automatic `sheep-status` after each sheep (except close) are in the diagram below. Post-review readiness routing and step→sheep mapping live in `routing.yaml` + `bootstrap-context.py` / `check-gate.py` — not duplicated here. Sync and integrate still require explicit user confirmation in chat.
+Step order and automatic `sheep-status` after each sheep (except close) are in the diagram below. Post-review readiness routing and step→sheep mapping live in `routing.json` + `bootstrap-context.py` / `check-gate.py` — not duplicated here. Sync and integrate still require explicit user confirmation in chat.
 
 ```mermaid
 flowchart LR
@@ -97,13 +97,13 @@ Each sheep produces YAML handoff under `worktrees/<project>-<slug>/current-task/
 | Setup | `sheep-start` | No | `worktrees/<project>-<slug>/` |
 | State | `sheep-status` | No (status JSON only) | `current-task/status.json` |
 | Describe | Nicki only | No | `artifacts.story` → `current-task/story.md` (Gherkin user story) |
-| Spec | `sheep-spec` | No | `current-task/specs/<slug>.yaml` |
+| Spec | `sheep-spec` | No | `current-task/specs/<slug>.json` |
 | Subtasks | `sheep-subtask` | No | `current-task/subtasks/<slug>.md` |
-| Execute | `sheep-execute` | Yes | Code changes + updated subtasks + `current-task/executions/<slug>.yaml` |
-| Review | `sheep-review` | No | `reviews/<slug>.yaml` + `review-validations/rN-validation.yaml` + optional `next-steps/*.yaml` |
-| Sync | `sheep-sync` | Yes (commit + pre-push merge + push feature) | `current-task/syncs/<slug>.yaml` |
-| Archive | `sheep-archive` | No (writes `docs/archive/`) | `docs/archive/<slug>/report.yaml` |
-| Integrate | `sheep-integrate` | Yes (merge into `main` + push `main`) | `current-task/integrates/<slug>.yaml` |
+| Execute | `sheep-execute` | Yes | Code changes + updated subtasks + `current-task/executions/<slug>.json` |
+| Review | `sheep-review` | No | `reviews/<slug>.json` + `review-validations/rN-validation.json` + optional `next-steps/*.json` |
+| Sync | `sheep-sync` | Yes (commit + pre-push merge + push feature) | `current-task/syncs/<slug>.json` |
+| Archive | `sheep-archive` | No (writes `docs/archive/`) | `docs/archive/<slug>/report.json` |
+| Integrate | `sheep-integrate` | Yes (merge into `main` + push `main`) | `current-task/integrates/<slug>.json` |
 | Close | `sheep-close` | Delete worktree | unregister + teardown; needs integrate |
 
 ### Artifact handoff chain
@@ -138,7 +138,7 @@ docs/archive/<slug>/
 
 **Per-task status:** `current-task/status.json` inside the worktree — `task-status.v2`: step pointers, `task.completed_steps`, artifact paths, `open_questions`. **Only sheep-status writes this file.**
 
-Nicki and sheep read both; sheep must not edit either. Legacy `current-task/current-task-context.yaml` is deprecated.
+Nicki and sheep read both; sheep must not edit either. Legacy `current-task/current-task-context.json` is deprecated.
 
 ### What it stores
 
@@ -168,7 +168,7 @@ After each sheep, Nicki sends `sheep-status` with a compact summary (no separate
 worktree: projects/castlemill-landing/worktrees/hero-section
 completed_step: spec
 completed_status: complete
-artifact: current-task/specs/hero-section.yaml
+artifact: current-task/specs/hero-section.json
 next_step: subtasks
 open_questions: []
 summary: Spec captured requirements and acceptance criteria.
@@ -247,7 +247,7 @@ close-task checks integrate handoff, unregisters `global-status.json`, deletes w
 
 ### 12. Review emits readiness; scripts route
 
-`validation` skill runs after review in same spawn: readiness, `next-steps/*.yaml` for deferred `[scope]`, `## Fix` when needed. Bootstrap/check-gate read validation YAML; Nicki does not re-map readiness tables from prose.
+`validation` skill runs after review in same spawn: readiness, `next-steps/*.json` for deferred `[scope]`, `## Fix` when needed. Bootstrap/check-gate read validation YAML; Nicki does not re-map readiness tables from prose.
 
 ### 13. Acceptance before sync
 

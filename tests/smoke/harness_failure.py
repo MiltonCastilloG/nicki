@@ -3,8 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import yaml
-
 from tests.smoke._helpers import json_line, run_py, script
 
 
@@ -14,7 +12,7 @@ def run(root: Path) -> None:
     append = script(root, ".cursor/skills/errors-recording/scripts/append-error.py")
     step = "acceptance"
     script_route = ".cursor/skills/nicki/scripts/check-gate.py"
-    errors_yaml = root / "current-task/specs/errors.yaml"
+    errors_json = root / "current-task/specs/errors.json"
 
     gate_proc = run_py(
         gate,
@@ -108,15 +106,15 @@ def run(root: Path) -> None:
     if append_proc.returncode != 0:
         raise AssertionError(f"fail: append-error failed: {append_proc.stderr}")
 
-    if not errors_yaml.is_file():
-        raise AssertionError("fail: errors.yaml not created")
+    if not errors_json.is_file():
+        raise AssertionError("fail: errors.json not created")
 
-    data = yaml.safe_load(errors_yaml.read_text(encoding="utf-8"))
+    data = json.loads(errors_json.read_text(encoding="utf-8"))
     assert data["meta"]["schema"] == "errors.v1"
     assert len(data["failures"]) >= 1
     last = data["failures"][-1]
     assert last["script_route"] == script_route
     assert last["actual"]["exit_code"] == 1
     assert "missing field" in " ".join(last["actual"]["validation_errors"] or [])
-    print("errors.yaml harness entry: ok")
+    print("errors.json harness entry: ok")
     print("smoke-harness-failure: ok")

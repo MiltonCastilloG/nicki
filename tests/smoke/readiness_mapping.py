@@ -19,9 +19,9 @@ def run(root: Path) -> None:
     assert_missing(root / ".cursor/agents/out-of-scope.md", "out-of-scope agent")
     if (root / ".cursor/skills/readiness-from-review").exists():
         raise AssertionError("fail: readiness-from-review dir should be removed")
-    assert_contains(root / ".cursor/skills/nicki/routing.yaml", "review_validation")
-    routing = (root / ".cursor/skills/nicki/routing.yaml").read_text(encoding="utf-8")
-    if "out_of_scope:" in routing:
+    assert_contains(root / ".cursor/skills/nicki/routing.json", "review_validation")
+    routing = (root / ".cursor/skills/nicki/routing.json").read_text(encoding="utf-8")
+    if '"out_of_scope"' in routing or "out_of_scope:" in routing:
         raise AssertionError("fail: out_of_scope step should be removed")
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
@@ -31,7 +31,7 @@ def run(root: Path) -> None:
         before_x = path.read_text(encoding="utf-8").count("- [x]")
         path.write_text(
             path.read_text(encoding="utf-8")
-            + "\n## Fix\n<!-- ref: current-task/review-validations/r1-validation.yaml -->\n- [ ] Fix lint from review.\n",
+            + "\n## Fix\n<!-- ref: current-task/review-validations/r1-validation.json -->\n- [ ] Fix lint from review.\n",
             encoding="utf-8",
         )
         after_x = path.read_text(encoding="utf-8").count("- [x]")
@@ -42,13 +42,13 @@ def run(root: Path) -> None:
             )
     print("ok: fix append keeps prior [x]")
 
-    scope_only = fixture_dir / "scope-only-validation.yaml"
+    scope_only = fixture_dir / "scope-only-validation.json"
     if scope_only.is_file():
         assert_contains(scope_only, "ready_for_acceptance")
-        assert_contains(scope_only, "deferred_scope: true")
+        assert_contains(scope_only, '"deferred_scope": true')
         print("ok: scope-only fixture present")
 
-    verify_fail = fixture_dir / "verify-fail-validation.yaml"
+    verify_fail = fixture_dir / "verify-fail-validation.json"
     if verify_fail.is_file():
         assert_contains(verify_fail, "fix_required")
         print("ok: verify-fail fixture present")

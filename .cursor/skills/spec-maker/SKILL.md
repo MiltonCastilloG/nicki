@@ -1,11 +1,11 @@
 ---
 name: spec-maker
-description: "Analyze a task and write a YAML spec. Defines what to build — not how."
+description: "Analyze a task and write a JSON spec. Defines what to build — not how."
 ---
 
 # Spec Maker
 
-Analyze a task and produce a **YAML spec**. The spec defines **what** to build — not **how**. No file paths, no create/modify steps.
+Analyze a task and produce a **JSON spec**. The spec defines **what** to build — not **how**. No file paths, no create/modify steps.
 
 Spec schema: [spec-format.md](spec-format.md) (single source of truth).
 
@@ -15,7 +15,7 @@ Spec schema: [spec-format.md](spec-format.md) (single source of truth).
 |-------|----------|-------|
 | Worktree path | Yes | Absolute or repo-relative (e.g. `worktrees/hero-section`) |
 | Task description | Yes* | Gherkin story, free text, or `task.original` — passed in the prompt |
-| Output path | No | Default `current-task/specs/<slug>.yaml` under scope root; agent may override |
+| Output path | No | Default `current-task/specs/<slug>.json` under scope root; agent may override |
 | `meta.context` | No | Optional traceability path; set only when the agent passes one |
 
 \*Ask when the description is missing or too vague to list testable requirements.
@@ -27,7 +27,7 @@ Task Progress:
 - [ ] Resolve and validate worktree scope
 - [ ] Parse task description (ask if vague)
 - [ ] Light context read (CONTRIBUTING if exists, project layout)
-- [ ] Draft YAML spec
+- [ ] Draft JSON spec
 - [ ] Write spec file
 - [ ] Report summary
 ```
@@ -37,7 +37,7 @@ Task Progress:
 1. Resolve the worktree path to an **absolute** path.
 2. Confirm the directory exists.
 3. Set the **scope root** to that absolute path. Derive `<slug>` from the final folder name (e.g. `worktrees/hero-section` → slug `hero-section`).
-4. Default output: `current-task/specs/<slug>.yaml` relative to the scope root.
+4. Default output: `current-task/specs/<slug>.json` relative to the scope root.
 5. Infer `branch` from git when possible (e.g. `feature/hero-section`); omit if unknown.
 
 **Scope rules (non-negotiable):**
@@ -68,9 +68,9 @@ Use read, grep, glob, or semantic_search **lightly** to bound scope realisticall
 - Skim top-level layout (`app/`, `src/components/`, `src/features/`) to know what areas exist
 - Do **not** explore file-by-file or draft implementation subtasks
 
-### Step 4: Draft the YAML spec
+### Step 4: Draft the JSON spec
 
-Follow the schema in [spec-format.md](spec-format.md). Output **YAML only**.
+Follow the schema in [spec-format.md](spec-format.md). Output **JSON only**.
 
 Include:
 
@@ -97,7 +97,7 @@ Include:
 Written file **must** include `open_questions: []` (Step 2 gate).
 
 1. Create the output directory under the scope root if it does not exist.
-2. Write the complete YAML to the output path.
+2. Write the complete JSON to the output path.
 3. Do not write any other files.
 
 ### Step 6: Report
@@ -113,7 +113,7 @@ Summarize:
 
 ## Safety rules
 
-- Never edit application code — only the spec YAML file
+- Never edit application code — only the spec JSON file
 - Never write subtask files
 - Never modify files outside the scope root
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval

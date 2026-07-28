@@ -14,22 +14,23 @@ def run(root: Path) -> None:
     with tempfile.TemporaryDirectory() as tmp:
         fixture = Path(tmp)
 
-        yaml_ok = fixture / "summary-ok.yaml"
-        yaml_ok.write_text(
-            "\n".join(
-                [
-                    "completed_step: spec",
-                    "next_step: subtasks",
-                    "artifact: current-task/specs/foo.yaml",
-                    "open_questions: []",
-                ]
+        json_ok = fixture / "summary-ok.json"
+        json_ok.write_text(
+            json.dumps(
+                {
+                    "completed_step": "spec",
+                    "next_step": "subtasks",
+                    "artifact": "current-task/specs/foo.json",
+                    "open_questions": [],
+                },
+                indent=2,
             )
             + "\n",
             encoding="utf-8",
         )
 
         proc = run_py(
-            update, "--worktree", str(fixture), "--yaml-path", str(yaml_ok), cwd=root
+            update, "--worktree", str(fixture), "--json-path", str(json_ok), cwd=root
         )
         if proc.returncode != 0:
             raise AssertionError(f"fail: valid summary: {proc.stderr}")
@@ -56,13 +57,14 @@ def run(root: Path) -> None:
         if not status_path.is_file():
             raise AssertionError("fail: status.json not written")
 
-        yaml_acc = fixture / "summary-acc.yaml"
-        yaml_acc.write_text(
-            "\n".join(["completed_step: acceptance", "next_step: sync"]) + "\n",
+        json_acc = fixture / "summary-acc.json"
+        json_acc.write_text(
+            json.dumps({"completed_step": "acceptance", "next_step": "sync"}, indent=2)
+            + "\n",
             encoding="utf-8",
         )
         proc_acc = run_py(
-            update, "--worktree", str(fixture), "--yaml-path", str(yaml_acc), cwd=root
+            update, "--worktree", str(fixture), "--json-path", str(json_acc), cwd=root
         )
         if proc_acc.returncode != 0:
             raise AssertionError(f"fail: acceptance without artifact: {proc_acc.stderr}")
@@ -72,10 +74,12 @@ def run(root: Path) -> None:
         # next_step-only on a fresh worktree: always write current_step ("start")
         fresh = fixture / "fresh-next-only"
         fresh.mkdir()
-        yaml_next = fresh / "summary-next-only.yaml"
-        yaml_next.write_text("next_step: describe\n", encoding="utf-8")
+        json_next = fresh / "summary-next-only.json"
+        json_next.write_text(
+            json.dumps({"next_step": "describe"}, indent=2) + "\n", encoding="utf-8"
+        )
         proc_next = run_py(
-            update, "--worktree", str(fresh), "--yaml-path", str(yaml_next), cwd=root
+            update, "--worktree", str(fresh), "--json-path", str(json_next), cwd=root
         )
         if proc_next.returncode != 0:
             raise AssertionError(f"fail: next_step only: {proc_next.stderr}")
@@ -99,11 +103,13 @@ def run(root: Path) -> None:
 
         status_before = status_path.read_text(encoding="utf-8")
 
-        yaml_bad = fixture / "summary-bad.yaml"
+        json_bad = fixture / "summary-bad.json"
         # Missing required next_step (optional fields alone must not write)
-        yaml_bad.write_text("open_questions: []\n", encoding="utf-8")
+        json_bad.write_text(
+            json.dumps({"open_questions": []}, indent=2) + "\n", encoding="utf-8"
+        )
         proc_bad = run_py(
-            update, "--worktree", str(fixture), "--yaml-path", str(yaml_bad), cwd=root
+            update, "--worktree", str(fixture), "--json-path", str(json_bad), cwd=root
         )
         if proc_bad.returncode != 1:
             raise AssertionError("fail: expected exit 1 for missing next_step")

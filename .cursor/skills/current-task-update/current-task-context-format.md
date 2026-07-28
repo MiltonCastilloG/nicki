@@ -2,22 +2,22 @@
 
 > **Deprecated.** Use [status-format.md](status-format.md) (`current-task/status.json`) and [global-status-format.md](global-status-format.md) (`global-status.json`). Do not write this file for new tasks.
 
-`current-task/current-task-context.yaml` was the legacy task-local workflow context. It stores task identity, worktree scope, artifact paths, the current workflow step, blockers, and history so Nicki can orchestrate sheep without relying on chat memory.
+`current-task/current-task-context.json` was the legacy task-local workflow context. It stores task identity, worktree scope, artifact paths, the current workflow step, blockers, and history so Nicki can orchestrate sheep without relying on chat memory.
 
 The file lives inside the worktree:
 
 ```
 current-task/
   status.json
-  specs/<slug>.yaml
+  specs/<slug>.json
   subtasks/<slug>.md
-  executions/<slug>.yaml
-  reviews/<slug>.yaml
-  review-validations/rN-validation.yaml
-  review-inputs/rN-review.yaml
-  next-steps/*.yaml
-  syncs/<slug>.yaml
-  integrates/<slug>.yaml
+  executions/<slug>.json
+  reviews/<slug>.json
+  review-validations/rN-validation.json
+  review-inputs/rN-review.json
+  next-steps/*.json
+  syncs/<slug>.json
+  integrates/<slug>.json
 ```
 
 `current-task-update` is the only writer for this file. Artifacts should reference it with `meta.context` when their schema allows metadata.
@@ -62,20 +62,10 @@ Do not add a broad task-level `state` enum. `current_step`, `next_step`, `last_c
 
 Set during the `describe` step, after the worktree and context file exist. Use a multi-line string with this shape:
 
-```yaml
-story: |
-  Feature: Hero section redesign
-
-  As a site visitor
-  I want to see a clear headline, subcopy, and call-to-action on the home page
-  So that I understand the product and know what to do next
-
-  Scenario: Home page hero displays key content
-    Given I am viewing the home page
-    When the page loads above the fold
-    Then I see a prominent headline
-    And I see supporting subcopy beneath the headline
-    And I see a primary call-to-action button
+```json
+{
+  "story": "Feature: Hero section redesign\n\nAs a site visitor\nI want to see a clear headline, subcopy, and call-to-action on the home page\nSo that I understand the product and know what to do next\n\nScenario: Home page hero displays key content\n  Given I am viewing the home page\n  When the page loads above the fold\n  Then I see a prominent headline\n  And I see supporting subcopy beneath the headline\n  And I see a primary call-to-action button\n"
+}
 ```
 
 Rules:
@@ -117,32 +107,39 @@ Use paths relative to the worktree root.
 | Field | Required | Description |
 |-------|----------|-------------|
 | `context` | Yes | `current-task/status.json` |
-| `spec` | No | `current-task/specs/<slug>.yaml` |
+| `spec` | No | `current-task/specs/<slug>.json` |
 | `subtasks` | No | `current-task/subtasks/<slug>.md` |
-| `execution` | No | `current-task/executions/<slug>.yaml` |
-| `review` | No | `current-task/reviews/<slug>.yaml` |
-| `review_validation` | No | Latest `current-task/review-validations/rN-validation.yaml` |
-| `review_input` | No | Latest `current-task/review-inputs/rN-review.yaml` |
+| `execution` | No | `current-task/executions/<slug>.json` |
+| `review` | No | `current-task/reviews/<slug>.json` |
+| `review_validation` | No | Latest `current-task/review-validations/rN-validation.json` |
+| `review_input` | No | Latest `current-task/review-inputs/rN-review.json` |
 | `next_steps` | No | List of follow-up specs under `current-task/next-steps/` |
-| `sync` | No | `current-task/syncs/<slug>.yaml` |
-| `integrate` | No | `current-task/integrates/<slug>.yaml` |
-| `archive` | No | Root archive path, e.g. `docs/archive/<slug>/report.yaml` |
+| `sync` | No | `current-task/syncs/<slug>.json` |
+| `integrate` | No | `current-task/integrates/<slug>.json` |
+| `archive` | No | Root archive path, e.g. `docs/archive/<slug>/report.json` |
 
 ## `open_questions`
 
 Use an empty list when Nicki can continue safely.
 
-```yaml
-open_questions: []
+```json
+{
+  "open_questions": []
+}
 ```
 
 When blocked, keep entries compact and actionable:
 
-```yaml
-open_questions:
-  - step: subtasks
-    question: "Should the CTA link to /contact or /demo?"
-    blocks_next_step: true
+```json
+{
+  "open_questions": [
+    {
+      "step": "subtasks",
+      "question": "Should the CTA link to /contact or /demo?",
+      "blocks_next_step": true
+    }
+  ]
+}
 ```
 
 ## `history`
@@ -156,66 +153,60 @@ Append one event per workflow result.
 | `artifact` | No | Primary artifact produced |
 | `summary` | Yes | One-line result summary |
 
-## YAML example
+## JSON example
 
-```yaml
-meta:
-  schema: current-task-context.v1
-  generated_by: current-task-update
-  updated_by: current-task-update
-
-task:
-  slug: hero-section
-  title: Hero section redesign
-  original: "redesign hero section"
-  story: |
-    Feature: Hero section redesign
-
-    As a site visitor
-    I want to see a clear headline, subcopy, and call-to-action on the home page
-    So that I understand the product and know what to do next
-
-    Scenario: Home page hero displays key content
-      Given I am viewing the home page
-      When the page loads above the fold
-      Then I see a prominent headline
-      And I see supporting subcopy beneath the headline
-      And I see a primary call-to-action button
-  type: feature
-  current_step: subtasks
-  next_step: execute
-  last_completed_step: spec
-
-git:
-  branch: feature/hero-section
-  base: main
-
-scope:
-  worktree: hero-section
-  worktree_path: worktrees/hero-section
-
-artifacts:
-  context: current-task/status.json
-  spec: current-task/specs/hero-section.yaml
-  subtasks: current-task/subtasks/hero-section.md
-  execution: current-task/executions/hero-section.yaml
-  review: current-task/reviews/hero-section.yaml
-  review_validation: current-task/review-validations/r1-validation.yaml
-  sync: current-task/syncs/hero-section.yaml
-  integrate: current-task/integrates/hero-section.yaml
-
-constraints:
-  - no-commit
-  - no-new-deps
-
-open_questions: []
-
-history:
-  - step: start
-    status: complete
-    artifact: current-task/status.json
-    summary: Worktree was created and task context initialized.
-  - step: describe
-    status: complete
-    summary: Gherkin user story captured and approved.
+```json
+{
+  "meta": {
+    "schema": "current-task-context.v1",
+    "generated_by": "current-task-update",
+    "updated_by": "current-task-update"
+  },
+  "task": {
+    "slug": "hero-section",
+    "title": "Hero section redesign",
+    "original": "redesign hero section",
+    "story": "Feature: Hero section redesign\n\nAs a site visitor\nI want to see a clear headline, subcopy, and call-to-action on the home page\nSo that I understand the product and know what to do next\n\nScenario: Home page hero displays key content\n  Given I am viewing the home page\n  When the page loads above the fold\n  Then I see a prominent headline\n  And I see supporting subcopy beneath the headline\n  And I see a primary call-to-action button\n",
+    "type": "feature",
+    "current_step": "subtasks",
+    "next_step": "execute",
+    "last_completed_step": "spec"
+  },
+  "git": {
+    "branch": "feature/hero-section",
+    "base": "main"
+  },
+  "scope": {
+    "worktree": "hero-section",
+    "worktree_path": "worktrees/hero-section"
+  },
+  "artifacts": {
+    "context": "current-task/status.json",
+    "spec": "current-task/specs/hero-section.json",
+    "subtasks": "current-task/subtasks/hero-section.md",
+    "execution": "current-task/executions/hero-section.json",
+    "review": "current-task/reviews/hero-section.json",
+    "review_validation": "current-task/review-validations/r1-validation.json",
+    "sync": "current-task/syncs/hero-section.json",
+    "integrate": "current-task/integrates/hero-section.json"
+  },
+  "constraints": [
+    "no-commit",
+    "no-new-deps"
+  ],
+  "open_questions": [],
+  "history": [
+    {
+      "step": "start",
+      "status": "complete",
+      "artifact": "current-task/status.json",
+      "summary": "Worktree was created and task context initialized."
+    },
+    {
+      "step": "describe",
+      "status": "complete",
+      "summary": "Gherkin user story captured and approved."
+    }
+  ]
+}
 ```

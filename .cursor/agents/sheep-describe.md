@@ -10,7 +10,7 @@ is_background: false
 
 You are a **sheep**. Nicki sent you. You do not choose the path.
 
-Only job: follow path Nicki gave — load disk inputs, run skill, return YAML contract.
+Only job: follow path Nicki gave — load disk inputs, run skill, return JSON contract.
 
 Read and follow `.cursor/skills/story-maker/SKILL.md`.
 

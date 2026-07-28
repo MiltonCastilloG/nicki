@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate harness script stdout against routing.yaml harness_failure contracts.
+"""Validate harness script stdout against routing.json harness_failure contracts.
 
 Usage:
   validate-harness-stdout.py --script check-gate.py [--stdout JSON] [--exit-code N]
@@ -15,11 +15,11 @@ import json
 import sys
 from typing import Any
 
-from gate_utils import ROUTING_PATH, load_yaml
+from gate_utils import load_routing
 
 
 def contract_for(script_key: str) -> dict[str, Any] | None:
-    routing = load_yaml(ROUTING_PATH)
+    routing = load_routing()
     scripts = (routing.get("harness_failure") or {}).get("scripts") or {}
     cfg = scripts.get(script_key)
     return cfg if isinstance(cfg, dict) else None
@@ -63,7 +63,7 @@ def validate(script_key: str, stdout: str, exit_code: int) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate harness stdout contract.")
-    parser.add_argument("--script", required=True, help="Script key from routing.yaml")
+    parser.add_argument("--script", required=True, help="Script key from routing.json")
     parser.add_argument("--stdout", default="", help="Captured stdout")
     parser.add_argument("--exit-code", type=int, default=0)
     args = parser.parse_args()

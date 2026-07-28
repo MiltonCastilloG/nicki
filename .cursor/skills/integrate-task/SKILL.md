@@ -1,6 +1,6 @@
 ---
 name: integrate-task
-description: "Merge feature into target branch and push target branch; write integrate handoff YAML in task worktree."
+description: "Merge feature into target branch and push target branch; write integrate handoff JSON in task worktree."
 ---
 
 # Integrate Task
@@ -17,7 +17,7 @@ Schema: [integrate-format.md](integrate-format.md).
 | Sync handoff | Yes | Confirms feature branch pushed |
 | Target branch worktree | Yes | Checkout where merge runs — agent resolves |
 | Target branch | No | Defaults to `main` |
-| Handoff output path | No | Default `<task_worktree>/current-task/integrates/<slug>.yaml` |
+| Handoff output path | No | Default `<task_worktree>/current-task/integrates/<slug>.json` |
 
 If task worktree path is missing, ask before starting.
 
@@ -43,7 +43,7 @@ Task Progress:
 1. Resolve task worktree to absolute path; derive `<slug>`.
 2. Load sync handoff; feature branch from `remote.branch` or `commit.branch`.
 3. Establish target branch worktree for git commands.
-4. Handoff path: `current-task/integrates/<slug>.yaml` under **task worktree**.
+4. Handoff path: `current-task/integrates/<slug>.json` under **task worktree**.
 
 **Scope rules:**
 
@@ -51,7 +51,7 @@ Task Progress:
 - Write only:
   - files changed by git merge under target branch worktree
   - conflicted files under target branch worktree (user-approved resolutions)
-  - integrate handoff YAML under task worktree
+  - integrate handoff JSON under task worktree
 - Never modify files outside task worktree or target branch worktree.
 
 ### Step 2: Inspect target git state

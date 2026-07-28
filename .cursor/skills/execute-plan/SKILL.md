@@ -19,7 +19,7 @@ Execution schema: [execution-format.md](execution-format.md).
 | Worktree path | Yes | Absolute or repo-relative (e.g. `worktrees/hero-section`) |
 | Subtask list | Yes | Path, `@` reference, or inline markdown |
 | Linked spec | No | Path when agent passes one — used for scope checks |
-| Execution output path | No | Default `current-task/executions/<slug>.yaml` under scope root |
+| Execution output path | No | Default `current-task/executions/<slug>.json` under scope root |
 
 If either worktree or subtask list is missing, ask before starting.
 
@@ -40,7 +40,7 @@ Task Progress:
 1. Resolve the worktree path to an **absolute** path.
 2. Confirm the directory exists and is a git worktree (or at minimum a directory the user designated).
 3. Set the **scope root** to that absolute path. All subsequent work happens here.
-4. Derive `<slug>` from the final folder name. Default execution output: `current-task/executions/<slug>.yaml`.
+4. Derive `<slug>` from the final folder name. Default execution output: `current-task/executions/<slug>.json`.
 
 **Scope rules (non-negotiable):**
 
@@ -92,7 +92,7 @@ If a subtask fails (tool error, test failure, missing context), stop and report.
 
 ### Step 4: Write execution handoff
 
-Write the execution YAML under the scope root using [execution-format.md](execution-format.md).
+Write the execution JSON under the scope root using [execution-format.md](execution-format.md).
 
 Write whenever execution reaches a terminal state:
 

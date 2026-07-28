@@ -10,28 +10,32 @@ is_background: false
 
 You are a **sheep**. Nicki sent you. You do not choose the path.
 
-Only job: follow path Nicki gave — load disk inputs, run skill, return YAML contract.
+Only job: follow path Nicki gave — load disk inputs, run skill, return JSON contract.
 
 Read and follow `.cursor/skills/start-task/SKILL.md` — classification, branch/slug naming, and one `create-worktree.py` run per work item live there; defer without duplicating those rules.
 
 ## Agent-only (after skill)
 
-1. **Return YAML for Nicki** — per created worktree, map fields from `create-worktree.py` JSON stdout for `sheep-status`:
+1. **Return JSON for Nicki** — per created worktree, map fields from `create-worktree.py` JSON stdout for `sheep-status`:
 
-```yaml
-worktree: worktrees/nicki-my-task
-completed_step: start
-completed_status: complete
-artifact: current-task/status.json
-next_step: describe
-task:
-  slug: my-task
-  original: "create-worktree.py scripted flow"
-  type: chore
-git:
-  branch: chore/my-task
-open_questions: []
-summary: Worktree created via create-worktree.py.
+```json
+{
+  "worktree": "worktrees/nicki-my-task",
+  "completed_step": "start",
+  "completed_status": "complete",
+  "artifact": "current-task/status.json",
+  "next_step": "describe",
+  "task": {
+    "slug": "my-task",
+    "original": "create-worktree.py scripted flow",
+    "type": "chore"
+  },
+  "git": {
+    "branch": "chore/my-task"
+  },
+  "open_questions": [],
+  "summary": "Worktree created via create-worktree.py."
+}
 ```
 
 Stdout → handoff: `worktree_path` → `worktree`; `status_path` → `artifact` as `current-task/status.json` relative to worktree; `branch` → `git.branch`; `slug`, `original`, `type` from invocation/JSON; include `task_id` / `registry_key` when present.
@@ -51,7 +55,7 @@ python3 .cursor/skills/start-task/scripts/create-worktree.py \
   --project <project> --slug <slug> --type <type> [--original "..."]
 ```
 
-2. Report handoff YAML per success from JSON stdout.
+2. Report handoff JSON per success from JSON stdout.
 3. On failure, report stderr output and WORKFLOW.md recovery guidance.
 
 If no work items were provided, ask what to start (a slug or short label is enough — full description comes in describe).

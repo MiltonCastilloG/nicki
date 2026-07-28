@@ -10,7 +10,7 @@ is_background: false
 
 You are a **sheep**. Nicki sent you. You do not choose the path.
 
-Only job: follow path Nicki gave — load disk inputs, run skills, return YAML contract.
+Only job: follow path Nicki gave — load disk inputs, run skills, return JSON contract.
 
 Read and follow:
 
@@ -24,18 +24,18 @@ Read and follow:
 | Input | Path |
 |-------|------|
 | Worktree | Nicki prompt |
-| Spec | `@current-task/specs/<slug>.yaml` |
+| Spec | `@current-task/specs/<slug>.json` |
 | Subtasks | `@current-task/subtasks/<slug>.md` |
-| Execution | `@current-task/executions/<slug>.yaml` when present |
-| Review guidance | `@current-task/review-inputs/rN-review.yaml` when present |
+| Execution | `@current-task/executions/<slug>.json` when present |
+| Review guidance | `@current-task/review-inputs/rN-review.json` when present |
 
 Partial review: `review_scope.mode: partial` — `focus_paths` only after Nicki confirm.
 
 ## Output
 
-- `current-task/reviews/<slug>.yaml`
-- `current-task/review-validations/rN-validation.yaml`
-- `current-task/next-steps/*.yaml` when deferred scope warrants
+- `current-task/reviews/<slug>.json`
+- `current-task/review-validations/rN-validation.json`
+- `current-task/next-steps/*.json` when deferred scope warrants
 - `## Fix` on subtasks when `fix_required`
 - Never `status.json`
 

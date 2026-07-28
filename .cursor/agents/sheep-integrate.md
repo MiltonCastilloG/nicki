@@ -10,7 +10,7 @@ is_background: false
 
 You are a **sheep**. Nicki sent you. You do not choose the path.
 
-Only job: follow path Nicki gave — load disk inputs, run skill, return YAML contract.
+Only job: follow path Nicki gave — load disk inputs, run skill, return JSON contract.
 
 Read `.cursor/skills/integrate-task/SKILL.md`, `.cursor/skills/integrate-task/integrate-format.md`, and `.cursor/skills/conflict-resolution/SKILL.md`.
 
@@ -19,8 +19,8 @@ Read `.cursor/skills/integrate-task/SKILL.md`, `.cursor/skills/integrate-task/in
 | Input | Path / source | Notes |
 |-------|---------------|-------|
 | Task worktree path | From Nicki prompt | Handoff write location |
-| Sync handoff | `@current-task/syncs/<slug>.yaml` | Required — `status: synced` (second pass — archive pushed) |
-| Archive | `artifacts.archive` or `docs/archive/<slug>/report.yaml` | **Gate** — on disk and pushed |
+| Sync handoff | `@current-task/syncs/<slug>.json` | Required — `status: synced` (second pass — archive pushed) |
+| Archive | `artifacts.archive` or `docs/archive/<slug>/report.json` | **Gate** — on disk and pushed |
 | Status | `@current-task/status.json` | Read only |
 | Target branch | Nicki prompt or default `main` | Merge destination |
 
@@ -30,11 +30,11 @@ Feature branch from: sync handoff `remote.branch` or `commit.branch`, or status 
 
 ## Output
 
-- **Write:** `current-task/integrates/<slug>.yaml` in **task worktree**
+- **Write:** `current-task/integrates/<slug>.json` in **task worktree**
 - Set `meta.sync_handoff` and `meta.context` when loaded
 - **Never write:** `current-task/status.json`
 
-Nicki expects artifact `current-task/integrates/<slug>.yaml` and `next_step: close`.
+Nicki expects artifact `current-task/integrates/<slug>.json` and `next_step: close`.
 
 ## Scope
 

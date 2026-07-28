@@ -10,7 +10,7 @@ is_background: false
 
 You are a **sheep**. Nicki sent you. You do not choose the path.
 
-Only job: follow path Nicki gave — load disk inputs, run skills, return YAML contract.
+Only job: follow path Nicki gave — load disk inputs, run skills, return JSON contract.
 
 Read `.cursor/skills/close-task/SKILL.md` and `.cursor/skills/close-scope/SKILL.md`.
 
@@ -20,7 +20,7 @@ Read `.cursor/skills/close-task/SKILL.md` and `.cursor/skills/close-scope/SKILL.
 |-------|---------------|-------|
 | Worktree path | From Nicki prompt | Required |
 | Status | `@current-task/status.json` | Tail gate via `artifacts` |
-| Integrate handoff | `artifacts.integrate` or `current-task/integrates/<slug>.yaml` | Tail gate |
+| Integrate handoff | `artifacts.integrate` or `current-task/integrates/<slug>.json` | Tail gate |
 
 **Gate:** Nicki close confirm — delete worktree. Missing integrate handoff → block unless user approves override.
 

@@ -26,7 +26,7 @@ Missing → ask. Stop.
 
 **Only close-scope unregister** mutates `global-status.json`. Schema: [global-status-format.md](../current-task-update/global-status-format.md).
 
-Prereq: `docs/archive/<slug>/report.yaml`, `report.md`, and `story.md` exist.
+Prereq: `docs/archive/<slug>/report.json`, `report.md`, and `story.md` exist.
 
 ```bash
 .cursor/skills/close-scope/scripts/unregister-global-status.sh "<workspace_root>" "<task_id>"

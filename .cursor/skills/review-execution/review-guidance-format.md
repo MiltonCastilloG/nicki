@@ -2,7 +2,7 @@
 
 Input for a later review run when prior guidance exists on disk.
 
-Default path: `current-task/review-inputs/rN-review.yaml`.
+Default path: `current-task/review-inputs/rN-review.json`.
 
 ## Fields
 
@@ -16,12 +16,13 @@ Output reviews still have only `approved` and `content`.
 
 ## Example
 
-```yaml
-approved: false
-content: |
-  Prior review mixed scope notes with blockers. Rerun with spec and subtasks.
-
-important-considerations:
-  - Do not block on footer redesign; footer is outside scope.in.
-  - Still report verify and convention failures.
+```json
+{
+  "approved": false,
+  "content": "Prior review mixed scope notes with blockers. Rerun with spec and subtasks.\n",
+  "important-considerations": [
+    "Do not block on footer redesign; footer is outside scope.in.",
+    "Still report verify and convention failures."
+  ]
+}
 ```
