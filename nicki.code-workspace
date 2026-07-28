@@ -3,6 +3,10 @@
     {
       "name": "Shared",
       "path": "."
+    },
+    {
+      "name": "project-jung-clinical-profile",
+      "path": "worktrees/project-jung-clinical-profile"
     }
   ],
   "settings": {

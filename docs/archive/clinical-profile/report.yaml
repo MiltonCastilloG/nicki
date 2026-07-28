@@ -1,0 +1,91 @@
+meta:
+  schema: task-archive.v1
+  generated_by: task-archive
+  source_context: current-task/status.json
+  tail_override: null
+
+task:
+  slug: clinical-profile
+  title: Clinical profile per patient
+  original: "As a therapist, I want to be able to produce and update a clinical profile per patient based on the sessions history. Design already brainstormed and approved, committed at projects/project-jung/docs/superpowers/specs/2026-07-18-clinical-profile-design.md (commit f3b5ebc on project-jung main). Downstream describe/spec steps should use that design doc as the base."
+  type: feature
+  branch: feature/clinical-profile
+
+story: PatientDetail Generate control · completed-session-only synthesis · persisted profile + timestamp · full regeneration · no-completed-sessions error · dedicated profile page
+
+outcome:
+  status: pending_integrate
+  target: main
+  feature_branch: feature/clinical-profile
+  sync_handoff: current-task/syncs/clinical-profile.yaml
+  archive_errors: docs/archive/clinical-profile/errors.yaml
+
+process:
+  - step: describe
+    summary: Gherkin story for generating/updating a per-patient clinical profile from completed sessions' stored analysis only.
+  - step: spec
+    summary: Spec captured the profile control, completed-session-only synthesis scope, full-replace persistence, immediate display, and fetch/generate endpoints with not-found and no-completed-sessions handling.
+  - step: subtasks
+    summary: Fourteen subtasks for schema, data access, synthesis, endpoints, frontend control/display/tests, plus a review-driven Fix item for the profile title/page.
+  - step: execute
+    summary: complete — 14/14 subtasks plus the Fix item; backend db.ts/agent.ts/agent-prompts.ts/patients-route.ts and frontend PatientDetail.tsx/ClinicalProfile.tsx(new)/App.tsx, with lint/typecheck/backend(16/16)/ui(16/16) all clean.
+  - step: review
+    summary: ready_for_acceptance — r3 focused re-review confirmed the r2 blocker resolved (title styling + new dedicated profile page); one deferred, non-blocking scope note about an in-progress merge.
+  - step: sync
+    summary: Synced feature/clinical-profile (0301b91); pre_push_merge concluded an already-in-progress merge (635b43f); pushed origin/feature/clinical-profile.
+
+decisions:
+  - topic: Profile entry point
+    decision: >-
+      The patient name + "Profile" title renders as red, non-clickable text
+      when no profile exists yet, and as an underlined clickable button
+      linking to a new minimal ClinicalProfile page once a profile exists;
+      the Generate button sits to the right and is always visible, only
+      disabling and relabeling to "Generating…" while pending.
+  - topic: Synthesis scope
+    decision: >-
+      Synthesis draws only from stored per-session analysis JSON
+      (results_json) of sessions with status "complete", with no cap on
+      session count and no use of raw transcripts.
+  - topic: Regeneration semantics
+    decision: >-
+      Regenerating fully replaces the prior profile text and timestamp in a
+      single overwrite — no incremental merge with the previous profile.
+  - topic: Failure handling
+    decision: >-
+      A synthesis failure (LLM or network error) shows a generic inline
+      error and leaves any previously persisted profile completely
+      unchanged; a distinct inline error covers the zero-completed-sessions
+      case.
+
+open_questions: []
+
+suggestions:
+  - area: spec
+    suggestion: >-
+      Quote or rephrase spec acceptance bullets that follow a "Label:
+      sentence" pattern so a bare colon doesn't get parsed as an implicit
+      YAML block-mapping key.
+    evidence: >-
+      docs/archive/clinical-profile/errors.yaml — gate_subtasks
+      ScannerError on unquoted colons in the spec's acceptance list
+      (lines 100-113).
+  - area: sync
+    suggestion: >-
+      Finish and commit any in-progress git merge before invoking sync,
+      rather than letting sync conclude an unrelated pending merge as part
+      of its own commit.
+    evidence: >-
+      r2/r3 review deferred finding f1 — worktree arrived mid-merge ("All
+      conflicts fixed but you are still merging") with unrelated
+      feature/therapy-type-selection changes staged; sync-task's note
+      describes concluding that pending merge itself.
+  - area: review
+    suggestion: >-
+      When relaying user UI feedback into a fix subtask, capture the
+      concrete element/styling/navigation design up front rather than a
+      paraphrase, to avoid an extra fix-then-clarify review round trip.
+    evidence: >-
+      r1-validation blocker f1 — reported "[name] Profile" title styling
+      did not correspond to any existing code path; r2 asked to clarify
+      with the user before implementing.

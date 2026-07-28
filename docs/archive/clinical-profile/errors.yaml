@@ -1,0 +1,36 @@
+meta:
+  schema: errors.v1
+  worktree: jung-clinical-profile
+failures:
+- id: '2026-07-18T15:38:27Z'
+  recorded_at: '2026-07-18T15:38:27Z'
+  script_route: .cursor/skills/nicki/scripts/check-gate.py
+  input:
+    argv:
+    - --worktree
+    - worktrees/project-jung-clinical-profile
+    - --step
+    - subtasks
+  expected_output:
+    required_fields:
+    - allowed
+    - sheep
+    - reason
+  actual:
+    exit_code: 1
+    stdout: ''
+    stderr: 'yaml.scanner.ScannerError in gate_utils.load_yaml called from gates.py
+      gate_subtasks line 51 (oq = load_yaml(spec_path).get("open_questions")): while
+      scanning a simple key in current-task/specs/clinical-profile.yaml, line 102,
+      column 5: "persists a new narrative profile ..."; could not find expected ":"
+      at line 103, column 5: "without reload."'
+    validation_errors:
+    - 'current-task/specs/clinical-profile.yaml line 100-103: acceptance list item
+      "- Patient with at least one completed session: pressing the control persists
+      a new narrative profile and timestamp, both shown on the page without reload."
+      contains an unquoted colon after the leading clause, which YAML parses as an
+      implicit block-mapping key; the continuation lines (102-103) then fail simple-key
+      scanning. Same pattern repeats unquoted at lines 104-105, 106-108, 109-111,
+      and 112-113 (each acceptance item is a "Label: sentence" phrase) and will fail
+      in turn once line 100-103 is fixed. Fix: quote each acceptance bullet as a single
+      scalar (e.g. wrap in double quotes) or rephrase without a bare colon.'
