@@ -195,7 +195,8 @@
             "readiness",
             "sheep"
           ]
-        }
+        },
+        "notes": "Exit 0 whenever contract JSON is printed. Malformed review_validation sets readiness null and readiness_error (string) — not a harness failure. Missing registry / status.json still exit 1 with empty stdout.\n"
       },
       "update-status.py": {
         "route": ".cursor/skills/current-task-update/scripts/update-status.py",

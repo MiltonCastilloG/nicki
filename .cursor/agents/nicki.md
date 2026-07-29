@@ -114,12 +114,14 @@ When an authoritative harness script crashes, exits without parseable contract s
 
 **Not harness failure:** `update-status.py` returning `{"written": false, "errors": [...]}` — agent omitted a required field; show errors and retry `sheep-status` with corrected summary JSON. Do not spawn `sheep-fallback`.
 
+**Not harness failure:** `bootstrap-context.py` returning valid contract JSON with a `readiness_error` string — validation (or other readiness artifact) failed to parse; show `readiness_error`, keep using `next_step` / `sheep` from the same stdout, and do not spawn `sheep-fallback`. Re-invoke the sheep that owns the broken artifact when the user is ready.
+
 Authoritative scripts and contracts — see `routing.json` `harness_failure.scripts`:
 
 | Script | Contract |
 |--------|----------|
 | `check-gate.py` | stdout JSON: `allowed`, `sheep`, `reason` (also echoes `user_confirm`, `next_step`, `artifact`, `mode`, `gate_class`) |
-| `bootstrap-context.py` | stdout JSON: `active_task`, `status_path`, `next_step`, `completed_steps`, `readiness`, `sheep` |
+| `bootstrap-context.py` | stdout JSON: `active_task`, `status_path`, `next_step`, `completed_steps`, `readiness`, `sheep` (optional `readiness_error` on soft-fail; still exit 0) |
 | `update-status.py` | Nicki passes `--step` and `--mode`. With a completed step, `next_step` is derived from routing (not required in the summary). Position-only writes still need summary `next_step`. stdout JSON: `written` true + `path`, `completed_step`, `next_step`, `mode`, `blockers`; or `written` false + `errors[]` (input error, not harness failure) |
 
 On failure: spawn `sheep-fallback` via Task with worktree path, **failed script route**, **script input**, **expected output contract**, actual failure context (`exit_code`, `stdout`, `stderr`, `validation_errors`), and **blocked pipeline step**. Relay sheep-fallback return JSON to `sheep-status` as usual. `sheep-status` never spawns `sheep-fallback`.

@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
 
 from tests.smoke import (  # noqa: E402
     agent_tools,
+    bootstrap_contract,
     errors_append,
     gate_paths,
     gates_matrix,
@@ -31,6 +32,7 @@ MODULES = [
     ("agent_tools", agent_tools),
     ("harness_failure", harness_failure),
     ("errors_append", errors_append),
+    ("bootstrap_contract", bootstrap_contract),
     ("status_update", status_update),
     ("status_vocabulary", status_vocabulary),
     ("status_boundary", status_boundary),
