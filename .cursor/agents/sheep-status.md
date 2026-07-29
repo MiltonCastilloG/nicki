@@ -18,7 +18,7 @@ Read and follow `.cursor/skills/current-task-update/SKILL.md`, `.cursor/skills/c
 
 - `.cursor/skills/current-task-update/scripts/update-status.py`
 
-Nicki supplies `--step` (dispatched pipeline step) and `--mode` (`normal` or `adhoc`). The write script derives `completed_step` from `--step` and `next_step` from routing on normal mode; adhoc leaves position untouched.
+Nicki supplies `--step` (dispatched pipeline step) and `--mode` (`normal`, `adhoc`, or `jump`). The write script derives `completed_step` from `--step` and `next_step` from routing on normal mode; adhoc leaves position untouched; jump adopts a prerequisite artifact and points `next_step` at the target.
 
 Summary JSON fields the prior sheep may have returned: `artifact`, `completed_status`, `open_questions`, `summary`, optional `worktree` / `task` / `git`. Do not invent `next_step` or `completed_step`.
 

@@ -21,6 +21,7 @@ from tests.smoke import (  # noqa: E402
     gates_matrix,
     git_tail,
     harness_failure,
+    jump_mode,
     readiness_mapping,
     routing_next_step,
     routing_write,
@@ -44,6 +45,7 @@ MODULES = [
     ("routing_write", routing_write),
     ("git_tail", git_tail),
     ("archive_side_effects", archive_side_effects),
+    ("jump_mode", jump_mode),
 ]
 
 

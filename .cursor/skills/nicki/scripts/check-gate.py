@@ -3,12 +3,12 @@
 
 Usage:
   check-gate.py --worktree worktrees/nicki-my-task --step sync
-                [--user-confirmed] [--override] [--mode normal|adhoc]
+                [--user-confirmed] [--override] [--mode normal|adhoc|jump]
 
 Stdout JSON: allowed, sheep, reason, user_confirm, next_step, artifact, mode,
 gate_class. `gate_class` names why a denial happened — `safety` denials never
-waive, `sequence` denials waive on `--override` or on an ad-hoc run of a step
-routing marks `adhoc_allowed`. See routing.json `gate_policy`.
+waive, `sequence` denials waive on `--override`, `--mode adhoc`, or `--mode jump`.
+See routing.json `gate_policy`.
 """
 
 from __future__ import annotations
@@ -40,6 +40,8 @@ def _policy_denial(step: str, cfg: dict[str, Any], mode: str, user_confirmed: bo
     """Routing-declared checks, run before any per-step gate."""
     adhoc_allowed = bool(cfg.get("adhoc_allowed"))
 
+    if mode == "jump" and step in {"start", "close", "done"}:
+        return deny(f"{step} cannot be a jump target")
     if mode == "adhoc" and not adhoc_allowed:
         return deny(f"{step} cannot run out of band (routing: adhoc_allowed is not set)")
     if cfg.get("user_confirm_required") and not user_confirmed:
@@ -112,12 +114,12 @@ def _evaluate(
         fail = gate_fn(status, worktree, user_confirmed, override)
         if fail:
             waivable = fail.get("gate_class") == SEQUENCE and (
-                override or mode == "adhoc"
+                override or mode in {"adhoc", "jump"}
             )
             if not waivable:
                 fail["user_confirm"] = user_confirm
                 return fail
-            by = "--override" if override else "ad-hoc run"
+            by = "--override" if override else ("jump" if mode == "jump" else "ad-hoc run")
             waived = f"sequence check waived by {by}: {fail['reason']}"
 
     return allow(
@@ -147,7 +149,7 @@ def main() -> int:
         "--mode",
         default="normal",
         choices=MODES,
-        help="adhoc runs the step out of band; allowed only where routing says so",
+        help="adhoc = out of band; jump = skip ahead to this step; both waive sequence",
     )
     parser.add_argument(
         "--smoke-contract-fail",

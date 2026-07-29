@@ -22,7 +22,7 @@ ROOT_SCOPED_ARTIFACTS = frozenset({"archive"})
 SAFETY = "safety"
 SEQUENCE = "sequence"
 
-MODES = ("normal", "adhoc")
+MODES = ("normal", "adhoc", "jump")
 
 
 class ArtifactParseError(ValueError):

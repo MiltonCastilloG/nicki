@@ -11,6 +11,10 @@ Modes (--mode):
   normal — default; advances task.current_step / next_step from routing.
   adhoc  — step ran out of band: position fields are left untouched, the artifact
            pointer is still recorded, and one task.side_effects entry is appended
+  jump   — skip ahead to --step: register summary artifact as the prerequisite
+           pointer for that target, set current_step to the predecessor and
+           next_step to the target, log side_effects; Nicki then gates and runs
+           that step's sheep
 
 Optional summary fields (defaults applied):
   completed_step — overridden by --step; sets current_step / artifact pointer
@@ -43,6 +47,7 @@ if str(_NICKI_SCRIPTS) not in sys.path:
 
 from gate_utils import (  # noqa: E402
     ArtifactParseError,
+    MODES,
     load_routing,
     next_step_for,
     readiness,
@@ -50,8 +55,6 @@ from gate_utils import (  # noqa: E402
 
 # Closed set. Sheep outcome only — does not drive a history list.
 COMPLETED_STATUSES = ("complete", "blocked")
-
-MODES = ("normal", "adhoc")
 
 # Keys that are not status.artifacts pointers (status.json itself, etc.).
 NON_ARTIFACT_KEYS = frozenset({"status", ""})
@@ -154,6 +157,10 @@ def _validate_required(
             errors.append("missing required field: next_step")
         elif not isinstance(value, str):
             errors.append("required field must be a string: next_step")
+    if mode == "jump" and not completed_step:
+        errors.append("jump mode needs --step (target sheep step)")
+    if mode == "jump" and completed_step in {"start", "close", "done"}:
+        errors.append(f"jump mode cannot target {completed_step}")
     status = summary.get("completed_status", "complete")
     if status not in COMPLETED_STATUSES:
         errors.append(
@@ -163,7 +170,13 @@ def _validate_required(
         _fail(errors)
 
 
-def _append_side_effect(status: dict[str, Any], step: str | None, artifact: str | None) -> None:
+def _append_side_effect(
+    status: dict[str, Any],
+    step: str | None,
+    artifact: str | None,
+    *,
+    mode: str,
+) -> None:
     task = status.setdefault("task", {})
     effects = task.get("side_effects")
     if not isinstance(effects, list):
@@ -171,12 +184,36 @@ def _append_side_effect(status: dict[str, Any], step: str | None, artifact: str 
     effects.append(
         {
             "step": step,
-            "mode": "adhoc",
+            "mode": mode,
             "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "artifact": artifact,
         }
     )
     task["side_effects"] = effects
+
+
+def _predecessor_for(target: str) -> tuple[str | None, str | None]:
+    """Happy-path predecessor step and its artifact_key for a jump target."""
+    steps = load_routing().get("steps") or {}
+    matches = [
+        (name, cfg.get("artifact_key"))
+        for name, cfg in steps.items()
+        if isinstance(cfg, dict) and cfg.get("default_next_step") == target
+    ]
+    with_key = [(n, k) for n, k in matches if k and k not in NON_ARTIFACT_KEYS]
+    if with_key:
+        return with_key[0][0], with_key[0][1]
+    if matches:
+        return matches[0][0], None
+    return None, None
+
+
+def _set_artifact_key(status: dict[str, Any], key: str, artifact_path: str) -> None:
+    artifacts = status.setdefault("artifacts", {})
+    if not isinstance(artifacts, dict):
+        status["artifacts"] = {}
+        artifacts = status["artifacts"]
+    artifacts[key] = artifact_path
 
 
 def _optional_completed_step(summary: dict[str, Any]) -> str | None:
@@ -232,7 +269,7 @@ def main() -> int:
         "--mode",
         default="normal",
         choices=MODES,
-        help="normal advances position; adhoc leaves position untouched",
+        help="normal advances; adhoc leaves position; jump skips ahead to --step",
     )
     args = parser.parse_args()
 
@@ -268,8 +305,8 @@ def main() -> int:
 
     status = _load_json(status_path)
     if status is None:
-        if args.mode == "adhoc":
-            _fail(["adhoc mode needs an existing status.json"])
+        if args.mode in {"adhoc", "jump"}:
+            _fail([f"{args.mode} mode needs an existing status.json"])
         # Derive before init when we already know the completed step.
         if completed_step is not None:
             if completed_status == "blocked":
@@ -297,14 +334,35 @@ def main() -> int:
         status["task"] = task
     task["slug"] = task.get("slug") or slug
 
+    art = artifact if isinstance(artifact, str) else None
+
     if args.mode == "adhoc":
         # Out-of-band run: record what happened, leave pipeline position alone.
-        _set_artifact_pointer(status, completed_step or "", artifact if isinstance(artifact, str) else None)
-        _append_side_effect(status, completed_step, artifact if isinstance(artifact, str) else None)
+        _set_artifact_pointer(status, completed_step or "", art)
+        _append_side_effect(status, completed_step, art, mode="adhoc")
         next_step = task.get("next_step")
+    elif args.mode == "jump":
+        # Skip ahead to target: adopt prerequisite artifact, point next_step at
+        # the target so Nicki can gate and run that sheep next.
+        assert completed_step is not None  # validated above
+        pred_step, pred_key = _predecessor_for(completed_step)
+        if art and pred_key:
+            _set_artifact_key(status, pred_key, art)
+        elif art and not pred_key:
+            _fail(
+                [
+                    f"jump to {completed_step}: no prerequisite artifact_key "
+                    "in routing for the provided artifact"
+                ]
+            )
+        if pred_step:
+            task["current_step"] = pred_step
+        task["next_step"] = completed_step
+        next_step = completed_step
+        _append_side_effect(status, completed_step, art, mode="jump")
     elif completed_step is not None:
         task["current_step"] = completed_step
-        _set_artifact_pointer(status, completed_step, artifact if isinstance(artifact, str) else None)
+        _set_artifact_pointer(status, completed_step, art)
         next_step = _derive_next_step(
             worktree,
             status,

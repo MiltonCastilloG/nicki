@@ -171,8 +171,7 @@ a blunt override reproduces the exact failure this project just documented.
 | ~~6~~ | ~~Strip workflow knowledge from every `sheep-*.md`; shrink the return contract~~ — **done 2026-07-29** | A3 · Decision 4 |
 | ~~7~~ | ~~Write path takes `--step`/`--mode`; calls `next_step_for()` on normal, leaves position on ad-hoc; wire `artifact_key` to replace `key_by_step`~~ — **done 2026-07-29** | A1, A2 · Decisions 1, 2, 4 |
 | ~~8~~ | ~~Ad-hoc sync end to end~~ — **done 2026-07-29**; archive reads `side_effects`; ad-hoc widened to all steps except `start`/`close`/`done`; Nicki gates with requested `--step` | Capability A complete |
-| 9 | External spec as `sheep-spec` input, with provenance | B3 cheap path, B4 |
-| 10 | **Jump ahead / skip steps** — e.g. start then supply own spec and jump to subtasks; or implement yourself and jump to review. Distinct from ad-hoc (which leaves position put). Needs position rewrite + input adoption (`--mode adopt` / Decision 5), not only sequence waiver. | Capability B full path · user 2026-07-29 |
+| ~~9~~ | ~~Jump ahead (`--mode jump`)~~ — **done 2026-07-29**; merge of former external-input + skip-ahead intent. Adopt prerequisite artifact, move `next_step` to target, Nicki runs that sheep. No separate cheap brainstorm path required. | Capability B simplified · Decisions 2, 5 |
 
 ## Decisions
 
@@ -200,8 +199,8 @@ Decided 2026-07-28.
   than in Nicki's memory.
 - Nicki forwards the mode to `sheep-status`; `update-status.py` accepts it and
   applies routing's `default_next_step` only when mode is `normal`.
-- One axis, extensible: capability B adds `adopt` on the same flag instead of a
-  third boolean. Do not add `--adhoc`/`--adopt` booleans alongside `--override`.
+- One axis, extensible: jump ahead uses `--mode jump` on the same flag instead of a
+  third boolean. Do not add `--adhoc`/`--jump` booleans alongside `--override`.
 - Step names stay as they are; no `adhoc-sync` duplicates in `routing.json`.
 - Gate contract gains a field, so bug-doc follow-up 2 fixtures must assert the
   echoed mode.
@@ -283,8 +282,9 @@ pulled in opposite directions.
 
 `completed_status` reports **what the sheep did** — `complete` or `blocked`.
 `--mode` reports **what the write should do to position** — `normal`, `adhoc`,
-later `adopt`. They are orthogonal: an ad-hoc sync is `complete` (it did its job)
-*and* must not advance. Putting "ran, did not advance" in the enum would encode
-position in a field the sheep owns, which is the coupling Decisions 1 and 4
-remove. So B5 and follow-up 3's "vocabulary must grow" resolve as: the enum
-closes at two, and adoption becomes `--mode adopt`.
+`jump`. They are orthogonal: an ad-hoc sync is `complete` (it did its job)
+*and* must not advance; a jump adopts a prerequisite artifact *and* points
+`next_step` at the target sheep. Putting "ran, did not advance" or "skipped
+ahead" in the enum would encode position in a field the sheep owns, which is
+the coupling Decisions 1 and 4 remove. So B5 and follow-up 3's "vocabulary must
+grow" resolve as: the enum closes at two, and skip-ahead becomes `--mode jump`.

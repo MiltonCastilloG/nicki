@@ -82,15 +82,26 @@ Ask yes/no to user unless explicite told otherwise. NEVER IGNORE hard-gate. Decl
 
 After confirm when required, **before** any sheep Task except `sheep-status`, run `python3 .cursor/skills/nicki/scripts/check-gate.py --worktree <scope.worktree_path> --step <step>` from workspace root — `<step>` is `task.next_step` on the normal path, or the **requested** step on an ad-hoc run (see Ad-hoc steps). Parse stdout JSON — when stdout matches the gate contract (`allowed`, `sheep`, `reason` present), on deny show `reason` and stop; on allow spawn `sheep` from output (skip Task when `sheep` is null). When stdout fails the contract or the process errors without parseable contract output, treat as **Harness failure** below — not a normal gate deny. Script owns spawn veto after confirm; bootstrap still owns position and cards.
 
-**Flags.** Pass `--user-confirmed` whenever the user has just confirmed this step — the gate denies without it on every step `routing.json` marks `user_confirm_required` (`start`, `sync`, `archive`, `integrate`, `close`, and partial `review`), quoting routing's own sentence as the reason. Pass `--override` only when the user asked to skip an ordering requirement; it waives nothing else. Pass `--mode adhoc` for an out-of-band run (see Ad-hoc steps).
+**Flags.** Pass `--user-confirmed` whenever the user has just confirmed this step — the gate denies without it on every step `routing.json` marks `user_confirm_required` (`start`, `sync`, `archive`, `integrate`, `close`, and partial `review`), quoting routing's own sentence as the reason. Pass `--override` only when the user asked to skip an ordering requirement; it waives nothing else. Pass `--mode adhoc` for an out-of-band run (see Ad-hoc steps). Pass `--mode jump` to skip ahead to a target sheep (see Jump).
 
-**Reading a deny.** `gate_class: safety` means no flag will help — fix the cause or stop. `gate_class: sequence` means ordering only, so `--override` or an ad-hoc run can waive it if the user asks. On allow, `reason` is empty unless a waiver applied, in which case it names what was waived: relay that line.
+**Reading a deny.** `gate_class: safety` means no flag will help — fix the cause or stop. `gate_class: sequence` means ordering only, so `--override`, ad-hoc, or jump can waive it if the user asks. On allow, `reason` is empty unless a waiver applied, in which case it names what was waived: relay that line.
 
 ## Ad-hoc steps
 
 The user can ask for a step out of band — most often "sync now" mid-`execute`. Gate and write with `--step <requested step>` (e.g. `sync`), **not** `task.next_step`, plus `--mode adhoc`. Forward the same step and mode to `sheep-status` so the write records the artifact without moving the task. Position (`current_step`, `next_step`) stays exactly where it was; the run is logged under `task.side_effects`.
 
 Consent is still required every time — ad-hoc buys no exemption, and "sync now" is itself the confirm. Only steps routing marks `adhoc_allowed` may run this way; `start` and `close` never do.
+
+## Jump
+
+The user can skip ahead in the pipeline — e.g. "here's my spec, jump to subtasks" or "I already implemented this; review it" (jump to `review` with an execution handoff / diff path).
+
+1. If anything about the input is unclear, **ask** before writing.
+2. Write with `--mode jump --step <target>` and summary `artifact` set to the path (or content path) they provided. The write registers that path as the **prerequisite** artifact for the target (e.g. jump → `subtasks` sets `artifacts.spec`; jump → `review` sets `artifacts.execution`), sets `current_step` to the predecessor and `next_step` to the target, and logs `task.side_effects`.
+3. Gate the **target** with `--step <target>` (normal is enough after the jump write; `--mode jump` also waives sequence if needed). On deny, show `reason` and stop.
+4. Spawn that step's sheep with the usual inputs. After it returns, `sheep-status` with `--mode normal --step <target>` as usual.
+
+`start`, `close`, and `done` are not jump targets. Jump is not ad-hoc: it **moves** position so the target sheep actually runs.
 
 Make sure sheeps adhere to YAGNI principle, prefer them to make as minimal changes as possible.
 

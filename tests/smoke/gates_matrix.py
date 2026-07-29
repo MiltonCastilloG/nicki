@@ -554,6 +554,37 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         "waived by --override",
         None,
     ),
+    # Jump: sequence waived; bookends refused; safety still holds.
+    (
+        "jump waives sync acceptance sequence",
+        "sync",
+        CONFIRMED + ("--mode", "jump"),
+        MID_EXECUTE,
+        {},
+        True,
+        "waived by jump",
+        None,
+    ),
+    (
+        "jump cannot target close",
+        "close",
+        CONFIRMED + ("--mode", "jump"),
+        _status(artifacts={"integrate": INTEGRATE}),
+        {INTEGRATE: {"merged": True}},
+        False,
+        "cannot be a jump target",
+        "safety",
+    ),
+    (
+        "jump cannot skip missing integrate before close",
+        "close",
+        CONFIRMED + ("--mode", "jump"),
+        _status(),
+        {},
+        False,
+        "cannot be a jump target",
+        "safety",
+    ),
 ]
 
 
@@ -632,7 +663,10 @@ def run(root: Path) -> None:
                 continue
             result = json_line(proc.stdout)
             reason = result.get("reason") or ""
-            expect_mode = "adhoc" if "adhoc" in args else "normal"
+            expect_mode = "normal"
+            if "--mode" in args:
+                i = args.index("--mode")
+                expect_mode = args[i + 1] if i + 1 < len(args) else "normal"
             if result.get("allowed") is not want_allow:
                 failures.append(f"fail: {label}: expected allowed={want_allow}, got {result}")
             elif needle and needle not in reason:

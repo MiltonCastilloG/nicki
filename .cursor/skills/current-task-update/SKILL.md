@@ -42,9 +42,11 @@ whenever a completed step is known — routing owns it.
 input error — nothing is written. `blocked` leaves `next_step` where it was.
 
 **CLI:** `--step <name>` names the dispatched step and wins over summary
-`completed_step`. `--mode normal|adhoc` selects whether the write moves the task.
+`completed_step`. `--mode normal|adhoc|jump` selects whether the write moves the task.
 On `normal`, `next_step` is derived via `gate_utils.next_step_for()` (including the
-git tail and review readiness). Artifact pointers use routing's `artifact_key`,
+git tail and review readiness). On `jump`, `--step` is the **target** sheep step:
+the summary `artifact` is registered as that step's prerequisite pointer and
+`next_step` becomes the target. Artifact pointers use routing's `artifact_key`,
 not a hardcoded map.
 
 Minimal write (valid — advances next step only):
