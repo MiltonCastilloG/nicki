@@ -1,5 +1,9 @@
 # status-json-yagni — simplify per-task status.json
 
+> **Historical archive.** Captures the design at task time. `task.completed_steps`
+> was later **removed** (2026-07-29); position is `current_step` + `next_step` +
+> artifacts only — see [`flexibility.md`](../flexibility.md).
+
 ## Feature: Minimal status.json for routing and gates
 
 As a Nicki operator

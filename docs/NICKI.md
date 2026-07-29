@@ -25,7 +25,7 @@ Authoritative read / gate / write surface (see [harness read/write design](super
 
 | Type | Script | Role |
 | ---- | ------ | ---- |
-| Read | `bootstrap-context.py` | Position, readiness, intended sheep on stdout |
+| Read | `bootstrap-context.py` | Position (`current_step`, `next_step`), readiness, intended sheep on stdout; malformed readiness artifact → `readiness_error` on stdout, exit 0 (soft-fail — not harness failure) |
 | Gate | `check-gate.py` | After user confirm: `allowed` / `sheep` / `reason` |
 | Write | `update-status.py` | `sheep-status` path — Nicki passes `--step`/`--mode`; routing owns `next_step` on normal completion |
 
@@ -145,14 +145,14 @@ Nicki and sheep read both; sheep must not edit either. Legacy `current-task/curr
 | Section | Purpose |
 | ------- | ------- |
 | `meta` | Schema identifier only (`task-status.v2`) |
-| `task` | Identity + step pointers: `current_step`, `next_step`, short `original` |
+| `task` | Identity + step pointers: `current_step`, `next_step`, optional `side_effects`, short `original` |
 | `scope` | `worktree_path` — hard scope boundary |
 | `artifacts` | Paths to handoff files (`story`, `spec`, `review_validation`, etc.) |
 | `open_questions` | Blockers; empty list means Nicki can continue |
 
 ### What it deliberately omits
 
-No verbose `history[]`, no `last_completed_step`, no duplicate pointers (`story_artifact`, `artifacts.status`, `scope.worktree`), no ceremony meta (`generated_by`, `updated_by`, `version`). There is **no broad task-level `state` enum** — step pointers and `open_questions` are the source of truth.
+No verbose `history[]`, no `completed_steps`, no `last_completed_step`, no duplicate pointers (`story_artifact`, `artifacts.status`, `scope.worktree`), no ceremony meta (`generated_by`, `updated_by`, `version`). There is **no broad task-level `state` enum** — step pointers, artifact pointers, and `open_questions` are the source of truth. Out-of-band runs are logged in `task.side_effects`, not by moving position.
 
 ### Step values
 
@@ -162,17 +162,17 @@ Schemas: `.cursor/skills/current-task-update/status-format.md`, `.cursor/skills/
 
 ### Nicki summary → context update
 
-After each sheep, Nicki sends `sheep-status` with a compact summary (no separate user confirmation needed):
+After each sheep, Nicki sends `sheep-status` with a compact summary plus the `--step` and `--mode` she dispatched (no separate user confirmation needed). On normal completion, routing owns `next_step` — the summary does not need it.
 
 ```yaml
 worktree: projects/castlemill-landing/worktrees/hero-section
-completed_step: spec
 completed_status: complete
 artifact: current-task/specs/hero-section.json
-next_step: subtasks
 open_questions: []
 summary: Spec captured requirements and acceptance criteria.
 ```
+
+Nicki passes `--step spec --mode normal` (or `adhoc` / `jump` for flexibility runs — see [`flexibility.md`](flexibility.md)).
 
 Exception: **do not send `sheep-status` after sheep-close** — close deletes `current-task/`.
 
@@ -342,6 +342,7 @@ Cursor compacts chats — disk wins via harness: `bootstrap-context.py` stdout, 
 ## Further reading
 
 - Full contributor workflow: [`CONTRIBUTING.md`](../CONTRIBUTING.md) — agent workflow pipeline section
+- Flexibility (adhoc + jump): [`flexibility.md`](flexibility.md)
 - Nicki agent definition: [`.cursor/agents/nicki.md`](../.cursor/agents/nicki.md)
 - Harness read/write types: [`docs/superpowers/specs/2026-07-17-harness-read-write-types-design.md`](superpowers/specs/2026-07-17-harness-read-write-types-design.md)
 - Status schemas: [`.cursor/skills/current-task-update/status-format.md`](../.cursor/skills/current-task-update/status-format.md), [`.cursor/skills/current-task-update/global-status-format.md`](../.cursor/skills/current-task-update/global-status-format.md)

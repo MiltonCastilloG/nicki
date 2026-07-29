@@ -1,5 +1,15 @@
 # Harness alignment — four subagent briefs
 
+> **Superseded (2026-07-29).** Historical Task briefs from the harness write-contract
+> alignment. Do **not** follow these steps as current instructions.
+>
+> Current truth:
+> - Position: `current_step` + `next_step` + artifacts — **`completed_steps` removed**
+> - Modes: `--mode normal|adhoc|jump` — see [`flexibility.md`](flexibility.md)
+> - Write / bootstrap contracts: [`status-format.md`](../.cursor/skills/current-task-update/status-format.md), `nicki.md`, `routing.json`
+> - Gate bugs: [`harness-gate-bugs.md`](harness-gate-bugs.md)
+> - Next optional work: [`flexibility_next_steps.md`](flexibility_next_steps.md)
+
 Run **in order** (1 → 2 → 3 → 4). Each step is one fresh Task (`subagent_type: generalPurpose`). Do not commit unless the user asks.
 
 **ADR:** [`superpowers/specs/2026-07-17-harness-read-write-types-design.md`](superpowers/specs/2026-07-17-harness-read-write-types-design.md)

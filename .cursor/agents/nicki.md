@@ -96,8 +96,8 @@ Consent is still required every time — ad-hoc buys no exemption, and "sync now
 
 The user can skip ahead in the pipeline — e.g. "here's my spec, jump to subtasks" or "I already implemented this; review it" (jump to `review` with an execution handoff / diff path).
 
-1. If anything about the input is unclear, **ask** before writing.
-2. Write with `--mode jump --step <target>` and summary `artifact` set to the path (or content path) they provided. The write registers that path as the **prerequisite** artifact for the target (e.g. jump → `subtasks` sets `artifacts.spec`; jump → `review` sets `artifacts.execution`), sets `current_step` to the predecessor and `next_step` to the target, and logs `task.side_effects`.
+1. If anything about the input is unclear, **ask** before writing. The prerequisite must already be in the format that step’s slot uses (e.g. jump → `subtasks` needs a **JSON** spec; jump → `review` needs a **JSON** execution handoff). Do **not** convert brainstorm markdown in the harness — ask for a schema-shaped file, or run the normal `spec` sheep first.
+2. Write with `--mode jump --step <target>` and summary `artifact` set to that path. The write copies into `current-task/` at the predecessor slot when needed (suffix must match routing), registers the worktree-relative pointer, sets `current_step` to the predecessor and `next_step` to the target, and logs `task.side_effects`. Paths already under `current-task/` with the right suffix are kept.
 3. Gate the **target** with `--step <target>` (normal is enough after the jump write; `--mode jump` also waives sequence if needed). On deny, show `reason` and stop.
 4. Spawn that step's sheep with the usual inputs. After it returns, `sheep-status` with `--mode normal --step <target>` as usual.
 

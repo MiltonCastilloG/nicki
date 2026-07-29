@@ -45,9 +45,10 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
 An ad-hoc step (`update-status.py --mode adhoc`) runs without moving the task:
 `current_step` and `next_step` are left exactly as they were.
 The artifact pointer is still recorded, and one entry is appended here so the run
-is not invisible. A jump (`--mode jump`) also appends here, but **does** move
-`next_step` to the target. Position fields stay the source of truth for *where
-the task is*; this log is the source of truth for *what else happened*.
+is not invisible. A jump (`--mode jump`) also appends here and **does** move
+position: `current_step` to the predecessor, `next_step` to the target. Position
+fields stay the source of truth for *where the task is*; this log is the source
+of truth for *what else happened*.
 
 ```json
 "side_effects": [

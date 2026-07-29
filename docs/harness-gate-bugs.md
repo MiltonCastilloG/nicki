@@ -22,9 +22,9 @@ of the real work.
 |---|---------|-------|--------------------|
 | 1 | `gate_integrate` resolves the archive path against the worktree; archive is workspace-root-relative | **Fixed 2026-07-28** (follow-up 1) | Foundation. External sources of truth need the same scope model. |
 | 2 | `completed_status` must be the literal `"complete"` or `completed_steps` silently skips the append | **Fixed 2026-07-29** (follow-up 3) | Closed enum plus a `--mode` axis; ad-hoc writes no longer move position. |
-| 3 | `routing.json` per-step fields are unread by any script | Real; caused a wrong root cause and a wasted investigation cycle | Direct block. Ad-hoc needs per-step metadata; adding unread fields deepens the trap. |
-| 4 | `bootstrap-context.py` still crashes on a malformed artifact | Real, reproduced; the 07-26 fix landed on one of two entry points | Worse. External input is less controlled, and bootstrap runs every response. |
-| 5 | Sheep hand-author prose YAML with no quoting rule | Real, recurring; impact now capped at `check-gate.py` only | Sideways. New surface: user-authored markdown instead of sheep YAML. |
+| 3 | `routing.json` per-step fields are unread by any script | **Mostly fixed / mitigated 2026-07-29** (follow-up 5) | Was a direct block; core fields (`default_next_step`, `artifact_key`, `adhoc_allowed`, `user_confirm_required`, `gate_class`, …) are now read. Residual drift risk is suite-guarded, not prose-only. |
+| 4 | `bootstrap-context.py` still crashes on a malformed artifact | **Fixed 2026-07-29** (follow-up 4 — bootstrap soft-fail) | Was worse on every response; malformed readiness now yields contract JSON + `readiness_error`, exit 0 — not a harness failure. |
+| 5 | Sheep hand-author prose YAML with no quoting rule | Open — optional polish; impact capped at `check-gate.py` | Sideways. `check-gate.py` denies cleanly; bootstrap no longer amplifies the same parse error (Finding 4 fixed). Sheep quoting rules remain optional hardening. |
 | 6 | `sync` and `archive` gates allow with no user consent; the rule is prose-only | **Fixed 2026-07-29** (follow-up 6) | Consent is routing data enforced once; ad-hoc gets no exemption. |
 | 7 | `rerun_review` readiness is documented but absent from `routing.json`; the gate crashed on it and it never blocked sync | **Fixed 2026-07-28** (follow-up 2) | Found by writing the gate matrix — the coverage gap was hiding it. |
 
@@ -78,6 +78,12 @@ on.
 
 ## Finding 3 — `routing.json` looks like config, is mostly prose
 
+**State (2026-07-29):** Mostly mitigated in follow-up 5. Scripts now read
+`default_next_step`, `expected_artifact`, `artifact_key`, `adhoc_allowed`,
+`user_confirm_required`, `gate_class`, and related policy fields; the gate
+contract echoes `next_step` and `artifact`. The narrative below is the
+pre-fix drift that caused a wasted investigation — kept for history.
+
 Grep every `.py` in the repo for `expected_artifact`, `artifact_key`,
 `default_next_step`, `nicki_only`, `secondary_artifact_key`, `also_writes`,
 `skip_status_update` — zero hits. Only `sheep` and `user_confirm` are read
@@ -92,6 +98,10 @@ post-migration; the finding is that the file's authority is fictional, not that
 one string was stale.
 
 ## Finding 4 — bootstrap still fails open on a bad artifact
+
+**State (2026-07-29):** Fixed in follow-up 4. Bootstrap soft-fails: contract
+JSON on stdout with `readiness` null and optional `readiness_error`, exit 0 —
+not a harness failure. Nicki keeps routing from the same stdout.
 
 The 07-26 defensive-parse fix landed on `check-gate.py` only.
 `bootstrap-context.py` calls the same `readiness()`; `ArtifactParseError`
@@ -114,10 +124,11 @@ turns every turn into a fallback dispatch.
 Unchanged from `fallback_bug_investigation.md`: `spec-maker` and `execute-plan`
 hand-author YAML with no quoting rule, so a `Label: sentence` scalar parses as a
 nested mapping. Two real incidents, two sheep, two gates, 8 days apart.
-`check-gate.py` now denies cleanly on it, so blast radius is capped there — but
-Finding 4 means the same content still hard-blocks bootstrap. The JSON migration
-(`8fa5569`) reduces exposure; it does not remove it, since sheep still
-hand-author artifacts against a schema.
+`check-gate.py` now denies cleanly on it, so blast radius is capped there.
+Bootstrap no longer hard-blocks on the same readiness parse error (Finding 4
+fixed). Optional polish remains: a quoting rule for sheep-authored YAML would
+reduce incidents at the gate. The JSON migration (`8fa5569`) reduces exposure;
+sheep still hand-author artifacts against a schema.
 
 ## Finding 6 — consent is declared everywhere, enforced almost nowhere
 
@@ -266,17 +277,22 @@ Cleared flexibility A1, A5, B5.
   members, five rejected values, no-advance semantics, side-effect append across
   two runs, unknown `--mode`, and normal mode still requiring `next_step`.
 
-### 4. Contract-safe bootstrap failure
+### 4. Contract-safe bootstrap failure — **done 2026-07-29**
 
-- **Now:** `bootstrap-context.py` returns exit 1 with stderr and empty stdout on
-  a malformed artifact, which `nicki.md` classifies as a harness failure — on a
-  script that runs every response.
-- **Target:** always print contract JSON, carry the parse error in a field, same
-  as `check-gate.py` already does.
-- **Done when:** a truncated validation artifact yields contract stdout, not a
+- **Was:** `bootstrap-context.py` returned exit 1 with stderr and empty stdout
+  on a malformed readiness artifact, which `nicki.md` classified as a harness
+  failure — on a script that runs every response.
+- **Now:** soft-fail on readiness parse only — always print contract JSON
+  (`active_task`, `status_path`, `current_step`, `next_step`, `readiness`,
+  `sheep`); set `readiness` null and optional `readiness_error` with the parse
+  message; exit 0. Registry / status failures still exit 1 with empty stdout.
+  Nicki shows `readiness_error` and continues from the same stdout — no
   `sheep-fallback` dispatch.
+- **Proven:** `tests/smoke/bootstrap_contract.py`, wired into `test.py` —
+  truncated validation artifact yields contract stdout, `readiness_error` set,
+  exit 0; clean readiness omits `readiness_error`.
 
-### 5. Resolve the `routing.json` fiction — **mostly done 2026-07-28**
+### 5. Resolve the `routing.json` fiction — **mostly done 2026-07-29**
 
 Implements [`flexibility.md`](flexibility.md) Decision 1 (routing owns
 `next_step`). Unblocks A6.

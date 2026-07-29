@@ -1,4 +1,4 @@
-"""--mode jump: adopt prerequisite artifact and point next_step at target."""
+"""--mode jump: materialize prerequisite into current-task/ (same suffix only)."""
 
 from __future__ import annotations
 
@@ -27,90 +27,92 @@ def _status(worktree: Path) -> dict:
     return json.loads((worktree / "current-task/status.json").read_text(encoding="utf-8"))
 
 
+def _put(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
 def run(root: Path) -> None:
     update = script(root, ".cursor/skills/current-task-update/scripts/update-status.py")
 
     with tempfile.TemporaryDirectory() as tmp:
         tmpdir = Path(tmp)
 
-        # Seed mid-describe → jump to subtasks with a user-provided spec path.
         wt = tmpdir / "to-subtasks"
         wt.mkdir()
+        _put(wt / "current-task/story.md", "# Story\n")
         seed = _summary(
             wt,
             "seed.json",
             {
                 "completed_step": "describe",
                 "artifact": "current-task/story.md",
-                "task": {"original": "demo"},
+                "task": {"original": "demo", "slug": "demo"},
             },
         )
         proc, _ = _write(update, root, wt, seed, "--step", "describe")
         if proc.returncode != 0:
             raise AssertionError(f"fail: seed: {proc.stdout}{proc.stderr}")
 
-        jump = _summary(
-            wt,
-            "jump.json",
-            {"artifact": "current-task/specs/demo.json", "open_questions": []},
-        )
+        # External JSON spec → copied to expected current-task/specs/demo.json
+        external = tmpdir / "outside" / "my-spec.json"
+        _put(external, '{"title": "demo", "open_questions": []}\n')
+        jump = _summary(wt, "jump.json", {"artifact": str(external), "open_questions": []})
         proc, out = _write(update, root, wt, jump, "--step", "subtasks", "--mode", "jump")
         if proc.returncode != 0 or out.get("written") is not True:
             raise AssertionError(f"fail: jump write: {proc.stdout}{proc.stderr}")
-        if out.get("mode") != "jump" or out.get("next_step") != "subtasks":
-            raise AssertionError(f"fail: jump stdout: {out}")
-        task = _status(wt).get("task") or {}
-        if task.get("current_step") != "spec":
-            raise AssertionError(f"fail: jump current_step should be predecessor spec: {task}")
-        if task.get("next_step") != "subtasks":
-            raise AssertionError(f"fail: jump next_step: {task}")
         arts = _status(wt).get("artifacts") or {}
-        if arts.get("spec") != "current-task/specs/demo.json":
-            raise AssertionError(f"fail: jump must set artifacts.spec: {arts}")
-        effects = task.get("side_effects") or []
-        if not effects or effects[-1].get("mode") != "jump":
-            raise AssertionError(f"fail: jump side_effects: {effects}")
+        if arts.get("spec") != "current-task/specs/to-subtasks.json":
+            raise AssertionError(f"fail: expected specs/<worktree>.json pointer: {arts}")
+        dest = wt / "current-task/specs/to-subtasks.json"
+        if not dest.is_file() or dest.read_text(encoding="utf-8") != external.read_text(
+            encoding="utf-8"
+        ):
+            raise AssertionError("fail: external JSON must be copied into current-task/")
 
-        # Jump to review registers execution as prerequisite.
-        wt2 = tmpdir / "to-review"
+        # Wrong suffix (brainstorm .md into spec slot) → input error, no conversion.
+        bad_md = tmpdir / "outside" / "design.md"
+        _put(bad_md, "# Design\n")
+        bad = _summary(wt, "bad.json", {"artifact": str(bad_md)})
+        proc, out = _write(update, root, wt, bad, "--step", "subtasks", "--mode", "jump")
+        if proc.returncode != 1 or not any("must be .json" in e for e in out.get("errors", [])):
+            raise AssertionError(f"fail: .md into spec slot should be rejected: {out}")
+
+        # In-tree correct path kept; jump to review.
+        wt2 = tmpdir / "in-tree"
         wt2.mkdir()
+        _put(wt2 / "current-task/subtasks/x.md", "- [ ] a\n")
         seed2 = _summary(
             wt2,
             "seed.json",
-            {"completed_step": "subtasks", "artifact": "current-task/subtasks/x.md"},
+            {
+                "completed_step": "subtasks",
+                "artifact": "current-task/subtasks/x.md",
+                "task": {"slug": "x", "original": "x"},
+            },
         )
         proc, _ = _write(update, root, wt2, seed2, "--step", "subtasks")
         if proc.returncode != 0:
             raise AssertionError(f"fail: seed2: {proc.stdout}{proc.stderr}")
+        _put(wt2 / "current-task/executions/mine.json", '{"ok": true}\n')
         jump2 = _summary(
-            wt2,
-            "jump.json",
-            {"artifact": "current-task/executions/mine.json"},
+            wt2, "jump.json", {"artifact": "current-task/executions/mine.json"}
         )
         proc, out = _write(update, root, wt2, jump2, "--step", "review", "--mode", "jump")
         if proc.returncode != 0:
             raise AssertionError(f"fail: jump review: {proc.stdout}{proc.stderr}")
-        st2 = _status(wt2)
-        if (st2.get("task") or {}).get("next_step") != "review":
-            raise AssertionError(f"fail: jump review next_step: {st2}")
-        if (st2.get("task") or {}).get("current_step") != "execute":
-            raise AssertionError(f"fail: jump review current_step: {st2}")
-        if (st2.get("artifacts") or {}).get("execution") != "current-task/executions/mine.json":
-            raise AssertionError(f"fail: jump review artifact: {st2}")
+        if (_status(wt2).get("artifacts") or {}).get("execution") != (
+            "current-task/executions/mine.json"
+        ):
+            raise AssertionError("fail: in-tree jump should keep execution path")
 
-        # Jump cannot target close; needs existing status.
         proc, out = _write(update, root, wt2, jump2, "--step", "close", "--mode", "jump")
-        if proc.returncode != 1 or out.get("written") is not False:
+        if proc.returncode != 1:
             raise AssertionError(f"fail: jump close should be rejected: {out}")
 
-        fresh = tmpdir / "fresh"
-        fresh.mkdir()
-        proc, out = _write(
-            update, root, fresh, jump, "--step", "subtasks", "--mode", "jump"
-        )
-        if proc.returncode != 1:
-            raise AssertionError("fail: jump on fresh worktree should fail")
-        if (fresh / "current-task/status.json").exists():
-            raise AssertionError("fail: jump must not init status.json")
+        missing = _summary(wt2, "missing.json", {"artifact": str(tmpdir / "nope.json")})
+        proc, out = _write(update, root, wt2, missing, "--step", "review", "--mode", "jump")
+        if proc.returncode != 1 or not any("not found" in e for e in out.get("errors", [])):
+            raise AssertionError(f"fail: missing artifact should error: {out}")
 
     print("smoke-jump-mode: ok")

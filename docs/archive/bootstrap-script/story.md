@@ -1,5 +1,9 @@
 # P1 — Bootstrap script investigation
 
+> **Historical archive.** Captures the design at task time. Bootstrap stdout later
+> dropped `completed_steps` and added `current_step` — see [`flexibility.md`](../flexibility.md)
+> and current `nicki.md` harness table.
+
 ## Design decisions (approved)
 
 | Topic | Decision |

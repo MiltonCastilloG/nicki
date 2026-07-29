@@ -1,5 +1,8 @@
 # YAGNI simplify per-task status.json
 
+> **Historical archive.** `completed_steps` in the story line below was later removed
+> from the live schema (2026-07-29) — see [`flexibility.md`](../flexibility.md).
+
 ## Task
 
 - **Slug:** status-json-yagni

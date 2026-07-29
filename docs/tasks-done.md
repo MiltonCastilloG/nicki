@@ -17,7 +17,7 @@ Shipped work moved out of [`tasks.md`](tasks.md) to keep the backlog lean. Task 
 | 15 | `nicki.code-workspace` sync | `scripts/generate-code-workspace.sh` wired into `create-worktree.py` (start) and `close-scope` (close). Warn on regen failure; skip on `--dry-run`. Archive: [`archive/code-workspace-sync/`](archive/code-workspace-sync/). |
 | 16 | **Context handling** | Disk-first bootstrap in `nicki.md` + `nicki-default.mdc`. Archive: [`archive/context-handling/`](archive/context-handling/). |
 | 18 | **`bootstrap-context.py`** | Script sibling to `check-gate.py`; Nicki reads orchestration context from stdout. Archive: [`archive/bootstrap-script/`](archive/bootstrap-script/) — merge `55dca0a`. |
-| | **status.json YAGNI (v2)** | Simplify per-task status to task-status.v2: `task.completed_steps`, `artifacts.story` gates, no verbose history. Archive: [`archive/status-json-yagni/`](archive/status-json-yagni/). |
+| | **status.json YAGNI (v2)** | Simplify per-task status to task-status.v2: step pointers + `artifacts.*`, no verbose history. Originally shipped with `task.completed_steps`; that list was **removed 2026-07-29** (position is `current_step`/`next_step` only — see [`flexibility.md`](flexibility.md)). Archive: [`archive/status-json-yagni/`](archive/status-json-yagni/). |
 
 Projects on disk: `castlemill-landing`, `project-psychic-lemon`, `tetris-clone-frp` (one active worktree). Gitignored env is copied by script — not a layout problem.
 
@@ -45,7 +45,7 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 
 | Area | Shipped |
 |------|---------|
-| Schema | `task-status.v2` — `task.completed_steps`, `artifacts.*` pointers, lean `meta` |
+| Schema | `task-status.v2` — originally included `task.completed_steps`; **removed 2026-07-29**. Now `current_step`/`next_step` + `artifacts.*` pointers, lean `meta` |
 | Writers | `current-task-update` emits v2 only; `create-worktree.py` scaffolds v2 example |
 | Readers | `status-read.md`, `routing.yaml`, `nicki.md`, sheep disk-inputs use `artifacts.story` |
 | Archive | `task-archive` sources process from artifact handoffs, not status history |

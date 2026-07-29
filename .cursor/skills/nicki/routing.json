@@ -137,7 +137,7 @@
     "description": "Read by check-gate.py. Per-step flags above: user_confirm_required (deny without --user-confirmed, using that step's user_confirm sentence as the reason), adhoc_allowed (may run with --mode adhoc; start/close/done omit it), irreversible (remote-visible / hard to undo — consent still never waived; may combine with adhoc_allowed). Absent means false.\n",
     "classes": {
       "safety": "Must hold. Consent, readiness blocks, missing inputs, anything guarding an irreversible or remote-visible action. Never waived by --override or --mode adhoc.",
-      "sequence": "Pure ordering. Waived by --override or by --mode adhoc on a step where adhoc_allowed is true; the waiver is named in the allow reason."
+      "sequence": "Pure ordering. Waived by --override, by --mode adhoc on a step where adhoc_allowed is true, or by --mode jump; the waiver is named in the allow reason."
     },
     "sequence_denials": [
       "sync gate: need current_step acceptance (or archive for second sync)",
