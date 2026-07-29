@@ -8,14 +8,12 @@ Required inputs:
     position-only next_step.
 
 Modes (--mode):
-  normal — default; advances task.current_step / next_step / completed_steps.
-           next_step is derived from routing (next_step_for), not the summary.
+  normal — default; advances task.current_step / next_step from routing.
   adhoc  — step ran out of band: position fields are left untouched, the artifact
            pointer is still recorded, and one task.side_effects entry is appended
 
 Optional summary fields (defaults applied):
-  completed_step — overridden by --step; sets current_step / completed_steps /
-    artifact pointer when present
+  completed_step — overridden by --step; sets current_step / artifact pointer
   artifact — skip artifact pointer when absent or when the step has no
     routing artifact_key
   completed_status — default "complete"; must be one of COMPLETED_STATUSES
@@ -50,8 +48,7 @@ from gate_utils import (  # noqa: E402
     readiness,
 )
 
-# Closed set. "complete" is the only value that appends to task.completed_steps;
-# anything unknown used to skip the append silently and still report success.
+# Closed set. Sheep outcome only — does not drive a history list.
 COMPLETED_STATUSES = ("complete", "blocked")
 
 MODES = ("normal", "adhoc")
@@ -101,10 +98,8 @@ def _init_status(
     next_step: str | None,
     completed_status: str,
 ) -> dict[str, Any]:
+    del completed_status  # outcome is recorded on the write path, not in init history
     task = summary.get("task") if isinstance(summary.get("task"), dict) else {}
-    completed_steps: list[str] = []
-    if completed_step is not None and completed_status == "complete":
-        completed_steps = [completed_step]
     return {
         "meta": {"schema": "task-status.v2"},
         "task": {
@@ -114,7 +109,6 @@ def _init_status(
             "type": task.get("type"),
             "current_step": completed_step if completed_step is not None else "start",
             "next_step": next_step,
-            "completed_steps": completed_steps,
         },
         "scope": {"worktree_path": worktree_path},
         "artifacts": {},
@@ -278,9 +272,14 @@ def main() -> int:
             _fail(["adhoc mode needs an existing status.json"])
         # Derive before init when we already know the completed step.
         if completed_step is not None:
-            next_step = next_step_for(completed_step, {"task": {"slug": slug}, "artifacts": {}}, None)
-            if next_step is None:
-                next_step = "describe" if completed_step == "start" else completed_step
+            if completed_status == "blocked":
+                next_step = completed_step
+            else:
+                next_step = next_step_for(
+                    completed_step, {"task": {"slug": slug}, "artifacts": {}}, None
+                )
+                if next_step is None:
+                    next_step = "describe" if completed_step == "start" else completed_step
         status = _init_status(
             str(Path(worktree_arg)),
             slug,
@@ -305,12 +304,6 @@ def main() -> int:
         next_step = task.get("next_step")
     elif completed_step is not None:
         task["current_step"] = completed_step
-        completed_steps = task.get("completed_steps")
-        if not isinstance(completed_steps, list):
-            completed_steps = []
-        if completed_status == "complete" and completed_step not in completed_steps:
-            completed_steps.append(completed_step)
-        task["completed_steps"] = completed_steps
         _set_artifact_pointer(status, completed_step, artifact if isinstance(artifact, str) else None)
         next_step = _derive_next_step(
             worktree,
@@ -325,6 +318,9 @@ def main() -> int:
         existing = task.get("current_step")
         if not isinstance(existing, str) or not existing.strip():
             task["current_step"] = "start"
+
+    # Drop legacy history list if present — position + artifacts are enough.
+    task.pop("completed_steps", None)
 
     scope = status.setdefault("scope", {})
     if not isinstance(scope, dict):

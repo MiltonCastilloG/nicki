@@ -73,14 +73,14 @@ Before each sheep (except `sheep-status`), show:
 
 ```markdown
 Current task: `<slug>` — <title>
-Progress: `<task.completed_steps>` → `<current_step>` → `<next_step>`
+Progress: `<current_step>` → `<next_step>`
 Next: Task `subagent_type: <sheep>`
 Output: `<artifact-path>`
 ```
 
 Ask yes/no to user unless explicite told otherwise. NEVER IGNORE hard-gate. Decline → stop.
 
-After confirm when required, **before** any sheep Task except `sheep-status`, run `python3 .cursor/skills/nicki/scripts/check-gate.py --worktree <scope.worktree_path> --step <task.next_step>` from workspace root. Parse stdout JSON — when stdout matches the gate contract (`allowed`, `sheep`, `reason` present), on deny show `reason` and stop; on allow spawn `sheep` from output (skip Task when `sheep` is null). When stdout fails the contract or the process errors without parseable contract output, treat as **Harness failure** below — not a normal gate deny. Script owns spawn veto after confirm; bootstrap still owns position and cards.
+After confirm when required, **before** any sheep Task except `sheep-status`, run `python3 .cursor/skills/nicki/scripts/check-gate.py --worktree <scope.worktree_path> --step <step>` from workspace root — `<step>` is `task.next_step` on the normal path, or the **requested** step on an ad-hoc run (see Ad-hoc steps). Parse stdout JSON — when stdout matches the gate contract (`allowed`, `sheep`, `reason` present), on deny show `reason` and stop; on allow spawn `sheep` from output (skip Task when `sheep` is null). When stdout fails the contract or the process errors without parseable contract output, treat as **Harness failure** below — not a normal gate deny. Script owns spawn veto after confirm; bootstrap still owns position and cards.
 
 **Flags.** Pass `--user-confirmed` whenever the user has just confirmed this step — the gate denies without it on every step `routing.json` marks `user_confirm_required` (`start`, `sync`, `archive`, `integrate`, `close`, and partial `review`), quoting routing's own sentence as the reason. Pass `--override` only when the user asked to skip an ordering requirement; it waives nothing else. Pass `--mode adhoc` for an out-of-band run (see Ad-hoc steps).
 
@@ -88,9 +88,9 @@ After confirm when required, **before** any sheep Task except `sheep-status`, ru
 
 ## Ad-hoc steps
 
-The user can ask for a step out of band — most often "sync now" mid-`execute`. Run the gate with `--mode adhoc`, and forward `--mode adhoc` to `sheep-status` so the write records the artifact without moving the task. Position (`current_step`, `next_step`, `completed_steps`) stays exactly where it was; the run is logged under `task.side_effects`.
+The user can ask for a step out of band — most often "sync now" mid-`execute`. Gate and write with `--step <requested step>` (e.g. `sync`), **not** `task.next_step`, plus `--mode adhoc`. Forward the same step and mode to `sheep-status` so the write records the artifact without moving the task. Position (`current_step`, `next_step`) stays exactly where it was; the run is logged under `task.side_effects`.
 
-Consent is still required every time — ad-hoc buys no exemption, and "sync now" is itself the confirm. Only steps routing marks `adhoc_allowed` may run this way; everything else denies, `integrate` and `close` always.
+Consent is still required every time — ad-hoc buys no exemption, and "sync now" is itself the confirm. Only steps routing marks `adhoc_allowed` may run this way; `start` and `close` never do.
 
 Make sure sheeps adhere to YAGNI principle, prefer them to make as minimal changes as possible.
 
@@ -121,7 +121,7 @@ Authoritative scripts and contracts — see `routing.json` `harness_failure.scri
 | Script | Contract |
 |--------|----------|
 | `check-gate.py` | stdout JSON: `allowed`, `sheep`, `reason` (also echoes `user_confirm`, `next_step`, `artifact`, `mode`, `gate_class`) |
-| `bootstrap-context.py` | stdout JSON: `active_task`, `status_path`, `next_step`, `completed_steps`, `readiness`, `sheep` (optional `readiness_error` on soft-fail; still exit 0) |
+| `bootstrap-context.py` | stdout JSON: `active_task`, `status_path`, `current_step`, `next_step`, `readiness`, `sheep` (optional `readiness_error` on soft-fail; still exit 0) |
 | `update-status.py` | Nicki passes `--step` and `--mode`. With a completed step, `next_step` is derived from routing (not required in the summary). Position-only writes still need summary `next_step`. stdout JSON: `written` true + `path`, `completed_step`, `next_step`, `mode`, `blockers`; or `written` false + `errors[]` (input error, not harness failure) |
 
 On failure: spawn `sheep-fallback` via Task with worktree path, **failed script route**, **script input**, **expected output contract**, actual failure context (`exit_code`, `stdout`, `stderr`, `validation_errors`), and **blocked pipeline step**. Relay sheep-fallback return JSON to `sheep-status` as usual. `sheep-status` never spawns `sheep-fallback`.
@@ -134,7 +134,7 @@ Disk wins over chat and parent prompt. Resolve worktree scope from `global-statu
 
 `python3 .cursor/skills/nicki/scripts/bootstrap-context.py --worktree <scope.worktree_path>`
 
-Parse stdout JSON — contract fields: `active_task`, `status_path`, `next_step`, `completed_steps`, `readiness`, `sheep`. Derive position, routing, and intended sheep from stdout only; do not re-read `global-status.json`, `status.json`, `routing.json`, or validation JSON during bootstrap.
+Parse stdout JSON — contract fields: `active_task`, `status_path`, `current_step`, `next_step`, `readiness`, `sheep`. Derive position, routing, and intended sheep from stdout only; do not re-read `global-status.json`, `status.json`, `routing.json`, or validation JSON during bootstrap.
 
 On crash, non-zero exit, or stdout missing contract fields, treat as **Harness failure** — not a normal pipeline block.
 

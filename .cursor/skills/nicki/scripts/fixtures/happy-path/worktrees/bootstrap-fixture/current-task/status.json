@@ -3,8 +3,7 @@
   "task": {
     "slug": "bootstrap-fixture",
     "current_step": "subtasks",
-    "next_step": "execute",
-    "completed_steps": ["start", "describe", "spec", "subtasks"]
+    "next_step": "execute"
   },
   "scope": { "worktree_path": "worktrees/bootstrap-fixture" },
   "artifacts": {

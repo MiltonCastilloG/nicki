@@ -41,13 +41,13 @@ implementation half done.
 ### Target behavior
 
 An ad-hoc invocation that is gated for safety, runs the sheep, and leaves
-`current_step`, `next_step`, and `completed_steps` untouched.
+`current_step` and `next_step` untouched.
 
 ### Blockers
 
 **A1 — no no-advance write mode. Cleared 2026-07-29.** `update-status.py --mode
 adhoc` writes the artifact pointer and a `task.side_effects` entry and leaves
-`current_step`, `next_step`, and `completed_steps` untouched; `next_step` is not
+`current_step` and `next_step` untouched; `next_step` is not
 required in that mode. Remaining for A2: normal mode still takes `next_step` from
 the summary instead of routing (step 7).
 
@@ -69,26 +69,32 @@ named in `routing.json` `gate_policy.classes` and carried in every denial as
 only and `check-gate.py` waives it centrally on `--override` or an ad-hoc run,
 naming the waiver in the allow reason. Consent left the gates for routing.
 
-**A5 — no side-effect trail. Cleared 2026-07-29.** `task.side_effects[]` is
-append-only, one entry per ad-hoc write, with step, mode, UTC timestamp, and
-artifact. Documented in `status-format.md`. Still open: `archive-format.md`
-derives `process` from artifact handoffs, so the archive report must learn to read
-this log (step 8).
+**A5 — no side-effect trail. Cleared 2026-07-29 (archive 2026-07-29).**
+`task.side_effects[]` is append-only, one entry per ad-hoc write, with step, mode,
+UTC timestamp, and artifact. Documented in `status-format.md`. Archive
+`process` is handoff rows plus one row per side-effect entry (including null
+artifacts) — see `archive-format.md`.
 
 **A6 — per-step metadata is unread. Cleared 2026-07-29.** `adhoc_allowed`,
 `irreversible`, and `user_confirm_required` are read by `check-gate.py`, and a
 fixture fails if `gate_policy.sequence_denials` drifts from the `deny_sequence`
-calls in `gates.py`. Only `sync` opts into ad-hoc; widening it is a routing edit,
-not a code change. Still unread: `artifact_key`, `secondary_artifact_key` (step 7).
+calls in `gates.py`. **Ad-hoc policy (2026-07-29):** every step sets
+`adhoc_allowed` except `start`, `close`, and `done`. `irreversible` may combine
+with `adhoc_allowed` (consent and safety inputs still never waive).
+`artifact_key` / `secondary_artifact_key` are read on the write path (step 7).
 
 ### Acceptance checks
 
 - Ad-hoc sync during `execute`: gate allows, sheep runs, `status.json`
-  `current_step`/`next_step`/`completed_steps` byte-identical before and after.
+  `current_step`/`next_step` byte-identical before and after.
 - Artifact pointer for the ad-hoc sync is recorded; side effect appears in the
-  log and in the archive report.
-- Ad-hoc integrate: **denied** — safety gate, no waiver.
+  log and in the archive report (`process` row).
+- Ad-hoc `start` / `close`: **denied** — not `adhoc_allowed`.
+- Ad-hoc on other steps (including `integrate`): **allowed** when safety inputs
+  and consent hold; sequence-only denials are waived.
 - Fixture per case, through `check-gate.py`, in `test.py`.
+- Archive format contract asserts `side_effects` → `process` (including null
+  artifact rows).
 
 ## Capability B — external source of truth
 
@@ -164,8 +170,9 @@ a blunt override reproduces the exact failure this project just documented.
 | ~~5~~ | ~~Consent from routing + name safety vs sequence gates, enforced in `check-gate.py` only~~ — **done 2026-07-29**; `--mode` and `gate_class` in the contract | A4, A6 · Decisions 2, 3 · bug doc follow-ups 6, 7 |
 | ~~6~~ | ~~Strip workflow knowledge from every `sheep-*.md`; shrink the return contract~~ — **done 2026-07-29** | A3 · Decision 4 |
 | ~~7~~ | ~~Write path takes `--step`/`--mode`; calls `next_step_for()` on normal, leaves position on ad-hoc; wire `artifact_key` to replace `key_by_step`~~ — **done 2026-07-29** | A1, A2 · Decisions 1, 2, 4 |
-| 8 | Ad-hoc sync end to end | Capability A complete |
+| ~~8~~ | ~~Ad-hoc sync end to end~~ — **done 2026-07-29**; archive reads `side_effects`; ad-hoc widened to all steps except `start`/`close`/`done`; Nicki gates with requested `--step` | Capability A complete |
 | 9 | External spec as `sheep-spec` input, with provenance | B3 cheap path, B4 |
+| 10 | **Jump ahead / skip steps** — e.g. start then supply own spec and jump to subtasks; or implement yourself and jump to review. Distinct from ad-hoc (which leaves position put). Needs position rewrite + input adoption (`--mode adopt` / Decision 5), not only sequence waiver. | Capability B full path · user 2026-07-29 |
 
 ## Decisions
 

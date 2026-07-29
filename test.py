@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
 
 from tests.smoke import (  # noqa: E402
     agent_tools,
+    archive_side_effects,
     bootstrap_contract,
     errors_append,
     gate_paths,
@@ -42,6 +43,7 @@ MODULES = [
     ("routing_next_step", routing_next_step),
     ("routing_write", routing_write),
     ("git_tail", git_tail),
+    ("archive_side_effects", archive_side_effects),
 ]
 
 

@@ -7,8 +7,7 @@
     "original": "status-architecture",
     "type": "refactor",
     "current_step": "execute",
-    "next_step": "review",
-    "completed_steps": ["start", "describe", "spec", "subtasks"]
+    "next_step": "review"
   },
   "scope": {
     "worktree_path": "."

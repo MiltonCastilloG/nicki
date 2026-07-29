@@ -47,6 +47,7 @@ def run(root: Path) -> None:
         tmpdir = Path(tmp)
 
         # Enum members are accepted; unknown values are rejected loudly.
+        # complete advances next_step; blocked keeps next_step at the completed step.
         for value in ENUM:
             wt = tmpdir / f"enum-{value}"
             wt.mkdir()
@@ -58,10 +59,16 @@ def run(root: Path) -> None:
             proc, out = _write(update, root, wt, s)
             if proc.returncode != 0 or out.get("written") is not True:
                 raise AssertionError(f"fail: {value} should write: {proc.stdout}{proc.stderr}")
-            steps = (_status(wt).get("task") or {}).get("completed_steps") or []
-            expected = ["spec"] if value == "complete" else []
-            if steps != expected:
-                raise AssertionError(f"fail: {value} completed_steps {steps} != {expected}")
+            task = _status(wt).get("task") or {}
+            if "completed_steps" in task:
+                raise AssertionError("fail: status must not write completed_steps")
+            if task.get("current_step") != "spec":
+                raise AssertionError(f"fail: {value} current_step {task.get('current_step')!r}")
+            want_next = "subtasks" if value == "complete" else "spec"
+            if task.get("next_step") != want_next:
+                raise AssertionError(
+                    f"fail: {value} next_step {task.get('next_step')!r} != {want_next!r}"
+                )
 
         for value in ("done", "COMPLETE", "", None, 1):
             wt = tmpdir / f"bad-{value!r}".replace("/", "_")
@@ -111,9 +118,11 @@ def run(root: Path) -> None:
 
         after = _status(wt)
         task_before, task_after = before.get("task") or {}, after.get("task") or {}
-        for field in ("current_step", "next_step", "completed_steps"):
+        for field in ("current_step", "next_step"):
             if task_after.get(field) != task_before.get(field):
                 raise AssertionError(f"fail: adhoc changed task.{field}")
+        if "completed_steps" in task_after:
+            raise AssertionError("fail: adhoc must not revive completed_steps")
         if (after.get("artifacts") or {}).get("sync") != "current-task/syncs/foo.json":
             raise AssertionError("fail: adhoc should record artifact pointer")
         effects = task_after.get("side_effects") or []

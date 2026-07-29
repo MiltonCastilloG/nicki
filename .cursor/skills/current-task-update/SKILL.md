@@ -39,7 +39,7 @@ routing). Position-only writes (no completed step) still need `next_step`.
 whenever a completed step is known — routing owns it.
 
 **`completed_status` is a closed set:** `complete` or `blocked`. Any other value is an
-input error — nothing is written. Only `complete` appends to `completed_steps`.
+input error — nothing is written. `blocked` leaves `next_step` where it was.
 
 **CLI:** `--step <name>` names the dispatched step and wins over summary
 `completed_step`. `--mode normal|adhoc` selects whether the write moves the task.
@@ -69,7 +69,10 @@ Full write (when a step completed):
 }
 ```
 
-**`completed_step` semantics:** when present, updates `task.current_step`, may append `completed_steps`, and may set artifact pointer; when absent, only advances `next_step` but **always writes `task.current_step`** (preserve existing, or `"start"` on fresh init).
+**`completed_step` semantics:** when present (or via `--step`), updates `task.current_step`,
+may set artifact pointer, and derives `task.next_step` from routing on normal mode;
+when absent, only advances `next_step` but **always writes `task.current_step`**
+(preserve existing, or `"start"` on fresh init).
 
 Also optional: `task` (slug, title, original, type), `git`, `artifacts`.
 
@@ -112,13 +115,12 @@ Task Progress:
 Emit simplified shape on every write. **Legacy migration:** when loading v1 status, drop `version`, `meta.generated_by`, `meta.updated_by`, `scope.worktree`, `task.story_artifact`, `artifacts.status`, `artifacts.review`, `task.last_completed_step`, `constraints`, and `history` — preserve essential routing fields and artifact pointers.
 
 - `meta.schema: task-status.v2` only — do not write `meta.updated_by` or other ceremony fields
-- `task.current_step`, `task.next_step`
+- `task.current_step`, `task.next_step` — drop legacy `task.completed_steps` if present
 - Merge `artifacts`; after review set `artifacts.review_validation` to latest validation path from summary `artifact`
 - **Describe:** replace `task.original` with slug or one-line title; set `artifacts.story`
-- **completed_steps:** append `completed_step` name when `completed_status: complete` (init `[]` when absent); omit verbose `history`
-- Fix-loop: when `completed_step: fix` or review reruns after fix, append `fix` to `completed_steps`
-- Acceptance: when `completed_step: acceptance`, append `acceptance` to `completed_steps`; reject may populate `open_questions`
-- **Ad-hoc (`--mode adhoc`):** leave `current_step`, `next_step`, and `completed_steps` untouched; record the artifact pointer and append one `task.side_effects` entry. Needs an existing `status.json` — ad-hoc never initialises a task.
+- Fix-loop: when `--step fix` or review reruns after fix, routing derives `next_step` back to `execute`
+- Acceptance: when `--step acceptance`, set `current_step` and derive `next_step` to `sync`; reject may populate `open_questions`
+- **Ad-hoc (`--mode adhoc`):** leave `current_step` and `next_step` untouched; record the artifact pointer and append one `task.side_effects` entry. Needs an existing `status.json` — ad-hoc never initialises a task.
 - `open_questions` from summary; blocked when non-empty
 
 ### Step 4: Write and report

@@ -31,7 +31,6 @@ def _fixture(base: Path, *, validation: object | None) -> tuple[Path, Path]:
             "original": "demo",
             "current_step": "review",
             "next_step": "acceptance",
-            "completed_steps": ["review"],
         },
         "scope": {"worktree_path": str(worktree)},
         "artifacts": {},
@@ -76,8 +75,8 @@ def run(root: Path) -> None:
     required = (
         "active_task",
         "status_path",
+        "current_step",
         "next_step",
-        "completed_steps",
         "readiness",
         "sheep",
     )

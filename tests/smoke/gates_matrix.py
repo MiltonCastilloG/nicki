@@ -39,9 +39,8 @@ def _status(**over: Any) -> dict[str, Any]:
     task = {
         "slug": SLUG,
         "original": over.pop("original", "add a demo widget"),
-        "current_step": "start",
+        "current_step": over.pop("current_step", "start"),
         "next_step": over.pop("next_step", "describe"),
-        "completed_steps": list(over.pop("completed", ())),
     }
     task.update(over.pop("task_extra", {}))
     status = {
@@ -238,7 +237,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         "sync blocked by readiness routing",
         "sync",
         CONFIRMED,
-        _status(artifacts={"review_validation": VALIDATION}, completed=["acceptance"]),
+        _status(artifacts={"review_validation": VALIDATION}, current_step="acceptance"),
         {VALIDATION: _readiness("fix_required")},
         False,
         "readiness routing blocks sync",
@@ -247,19 +246,19 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         "sync blocked while a review rerun is pending",
         "sync",
         CONFIRMED,
-        _status(artifacts={"review_validation": VALIDATION}, completed=["acceptance"]),
+        _status(artifacts={"review_validation": VALIDATION}, current_step="acceptance"),
         {VALIDATION: _readiness("rerun_review")},
         False,
         "readiness routing blocks sync",
     ),
     (
-        "sync needs acceptance recorded",
+        "sync needs acceptance current_step",
         "sync",
         CONFIRMED,
         _status(artifacts={"review_validation": VALIDATION}),
         {VALIDATION: _readiness("ready_for_acceptance")},
         False,
-        "acceptance not recorded",
+        "need current_step acceptance",
     ),
     (
         "sync with override instead of acceptance",
@@ -271,11 +270,26 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         "waived by --override",
     ),
     (
-        "sync with acceptance recorded",
+        "sync with acceptance current_step",
         "sync",
         CONFIRMED,
-        _status(artifacts={"review_validation": VALIDATION}, completed=["acceptance"]),
+        _status(artifacts={"review_validation": VALIDATION}, current_step="acceptance"),
         {VALIDATION: _readiness("ready_for_acceptance")},
+        True,
+        "",
+    ),
+    (
+        "second sync allowed when archive exists",
+        "sync",
+        CONFIRMED,
+        _status(
+            artifacts={"review_validation": VALIDATION, "archive": ARCHIVE},
+            current_step="archive",
+        ),
+        {
+            VALIDATION: _readiness("ready_for_acceptance"),
+            ROOT_PREFIX + ARCHIVE: {"task": SLUG},
+        },
         True,
         "",
     ),
@@ -330,7 +344,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         "close needs confirmation",
         "close",
         (),
-        _status(completed=["integrate"]),
+        _status(artifacts={"integrate": INTEGRATE}),
         {},
         False,
         "user consent required",
@@ -344,8 +358,8 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         True,
         "",
     ),
-    ("done needs close", "done", (), _status(), {}, False, "close not completed"),
-    ("done after close", "done", (), _status(completed=["close"]), {}, True, ""),
+    ("done needs close", "done", (), _status(), {}, False, "current_step is not close"),
+    ("done after close", "done", (), _status(current_step="close"), {}, True, ""),
     ("unknown step denies", "bogus", (), _status(), {}, False, "unknown step: bogus"),
     (
         "legacy v1 status denies without story pointer",
@@ -360,7 +374,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
 
 
 READY = {VALIDATION: _readiness("ready_for_acceptance")}
-MID_EXECUTE = _status(next_step="review", completed=["spec", "subtasks"])
+MID_EXECUTE = _status(next_step="review", current_step="execute")
 
 # label, step, cli args, status, files, expected allowed, reason needle, gate_class
 POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str, str | None]] = [
@@ -370,7 +384,7 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         "sync denies without consent",
         "sync",
         (),
-        _status(artifacts={"review_validation": VALIDATION}, completed=["acceptance"]),
+        _status(artifacts={"review_validation": VALIDATION}, current_step="acceptance"),
         READY,
         False,
         "push feature branch",
@@ -400,7 +414,7 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         "close denies without consent",
         "close",
         (),
-        _status(completed=["integrate"]),
+        _status(artifacts={"integrate": INTEGRATE}),
         {},
         False,
         "delete worktree",
@@ -437,7 +451,8 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         "user consent required",
         "safety",
     ),
-    # Ad-hoc admission is routing data: sync opts in, nothing else does.
+    # Ad-hoc admission is routing data: every step except start/close/done opts in.
+    # Safety inputs and consent still hold; only sequence denials are waived.
     (
         "ad-hoc sync mid-execute allows",
         "sync",
@@ -449,31 +464,51 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         None,
     ),
     (
-        "ad-hoc archive is refused",
+        "ad-hoc archive allows when sync handoff is ready",
         "archive",
         CONFIRMED + ADHOC,
         _status(artifacts={"sync": SYNC}),
         {SYNC: MERGED},
-        False,
-        "cannot run out of band",
-        "safety",
+        True,
+        "",
+        None,
     ),
     (
-        "ad-hoc integrate is refused",
+        "ad-hoc integrate allows when inputs present",
         "integrate",
         CONFIRMED + ADHOC,
         _status(artifacts={"sync": SYNC, "archive": ARCHIVE}),
         {SYNC: MERGED, ROOT_PREFIX + ARCHIVE: {"task": SLUG}},
+        True,
+        "",
+        None,
+    ),
+    (
+        "ad-hoc execute allows when subtasks exist",
+        "execute",
+        ADHOC,
+        _status(artifacts={"subtasks": SUBTASKS}),
+        {SUBTASKS: "- [ ] work\n"},
+        True,
+        "",
+        None,
+    ),
+    (
+        "ad-hoc start is refused",
+        "start",
+        CONFIRMED + ADHOC,
+        None,
+        {},
         False,
         "cannot run out of band",
         "safety",
     ),
     (
-        "ad-hoc execute is refused",
-        "execute",
-        ADHOC,
-        _status(artifacts={"subtasks": SUBTASKS}),
-        {SUBTASKS: "- [ ] work\n"},
+        "ad-hoc close is refused",
+        "close",
+        CONFIRMED + ADHOC,
+        _status(artifacts={"integrate": INTEGRATE}),
+        {},
         False,
         "cannot run out of band",
         "safety",
@@ -548,8 +583,15 @@ def _policy_declarations(root: Path) -> list[str]:
             bad.append(f"fail: {name} has a user_confirm sentence but does not require it")
         if cfg.get("user_confirm_required") and not cfg.get("user_confirm"):
             bad.append(f"fail: {name} requires consent with no sentence to show the user")
-        if cfg.get("irreversible") and cfg.get("adhoc_allowed"):
-            bad.append(f"fail: {name} is both irreversible and adhoc_allowed")
+
+    # Ad-hoc is open by default; only bookends (and the terminal marker) stay out.
+    never_adhoc = {"start", "close", "done"}
+    for name, cfg in steps.items():
+        allowed = bool(cfg.get("adhoc_allowed"))
+        if name in never_adhoc and allowed:
+            bad.append(f"fail: {name} must not set adhoc_allowed")
+        if name not in never_adhoc and not allowed:
+            bad.append(f"fail: {name} should set adhoc_allowed")
 
     if set(policy.get("classes") or {}) != {"safety", "sequence"}:
         bad.append("fail: gate_policy must name exactly the safety and sequence classes")

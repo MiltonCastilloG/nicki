@@ -17,7 +17,10 @@ Spec and subtask paths from status are **not** archived — delete from worktree
 
 Read via `current-task/status.json` — [status-format.md](../current-task-update/status-format.md) `artifacts` + `open_questions`. Follow pointers; glob only if pointer missing.
 
-**Process sourcing:** derive `report.json` `process` from artifact presence and handoff `meta` under `current-task/` — not from `status.json` history. For each step with an artifact pointer, load the handoff and take a one-line summary from its `meta` or top-level summary fields.
+**Process sourcing:** build `report.json` `process` in two passes. Do **not** invent history from `completed_steps`.
+
+1. **Handoffs** — for each step with an artifact pointer, load the handoff and take a one-line summary from its `meta` or top-level summary fields.
+2. **Side effects** — append one `process` row per `task.side_effects[]` entry (log order). Always include the row, even when `artifact` is null — a null still means the out-of-band run happened. Summary shape: `Ad-hoc <step> at <at> — <artifact|no artifact>`.
 
 | Step | Artifact pointer | Summary source |
 |------|------------------|----------------|
@@ -28,6 +31,15 @@ Read via `current-task/status.json` — [status-format.md](../current-task-updat
 | `review` | `artifacts.review_validation` | validation `readiness.status` |
 | `sync` | `artifacts.sync` | sync handoff `meta` |
 | `integrate` | `artifacts.integrate` | integrate handoff `meta` |
+
+```json
+"process": [
+  {"step": "execute", "summary": "Subtasks in progress."},
+  {"step": "sync", "summary": "Feature branch pushed."},
+  {"step": "sync", "summary": "Ad-hoc sync at 2026-07-29T08:14:02Z — current-task/syncs/foo.json"},
+  {"step": "sync", "summary": "Ad-hoc sync at 2026-07-29T09:01:00Z — no artifact"}
+]
+```
 
 No status.json → ask: archive from artifacts or stop.
 

@@ -98,8 +98,8 @@ def run(root: Path) -> None:
             raise AssertionError("fail: status next_step not updated")
         if task_next.get("current_step") != "start":
             raise AssertionError("fail: fresh next_step-only current_step should be start")
-        if task_next.get("completed_steps") not in ([], None):
-            raise AssertionError("fail: completed_steps should stay empty without completed_step")
+        if "completed_steps" in task_next:
+            raise AssertionError("fail: status must not write completed_steps")
 
         status_before = status_path.read_text(encoding="utf-8")
 

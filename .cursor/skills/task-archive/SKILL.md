@@ -18,9 +18,9 @@ Draft + write archive. Format: [archive-format.md](archive-format.md).
 ## Steps
 
 1. Resolve `slug`, `repo_root`, `archive_dir` = `docs/archive/<slug>/` under `repo_root` (close-scope §1 or inline).
-2. Load handoffs via status `artifacts` — [status-format.md](../current-task-update/status-format.md).
+2. Load handoffs via status `artifacts` and `task.side_effects` — [status-format.md](../current-task-update/status-format.md).
 3. Set `outcome.status: pending_integrate` — integrate has not run yet.
-4. Draft `report.json` — task, story, outcome, process (from artifact handoffs per archive-format, not status history), decisions, open_questions, suggestions.
+4. Draft `report.json` — task, story, outcome, process (handoff rows, then one row per `side_effects` entry including null artifacts — see archive-format), decisions, open_questions, suggestions.
 5. Draft `report.md` — terse per caveman; mirror report.json.
 6. Write `report.json` and `report.md` under `docs/archive/<slug>/`.
 7. Copy `artifacts.story` → `docs/archive/<slug>/story.md`; when `current-task/specs/errors.json` exists, copy it verbatim → `docs/archive/<slug>/errors.json`; delete `artifacts.spec` and `artifacts.subtasks` from worktree when present.

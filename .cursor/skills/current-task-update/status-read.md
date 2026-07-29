@@ -2,13 +2,13 @@
 
 Per-task `current-task/status.json`. Writer schema: [status-format.md](status-format.md).
 
-**Nicki bootstrap:** `bootstrap-context.py` stdout supplies `next_step`, `completed_steps`, and `readiness` — do not re-read status fields during bootstrap.
+**Nicki bootstrap:** `bootstrap-context.py` stdout supplies `current_step`, `next_step`, and `readiness` — do not re-read status fields during bootstrap.
 
 ## Fields Nicki uses
 
 | Section | Fields |
 |---------|--------|
-| `task` | `slug`, `title`, `original`, `current_step`, `next_step`, `completed_steps` (optional) |
+| `task` | `slug`, `title`, `original`, `current_step`, `next_step` |
 | `scope` | `worktree_path` |
 | `artifacts` | Paths to story, spec, subtasks, execution, `review_validation`, sync, integrate, archive |
 | `open_questions` | Blockers — empty array when pipeline can continue |

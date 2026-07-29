@@ -447,7 +447,6 @@ def scaffold_current_task(
             "type": task_type,
             "current_step": "start",
             "next_step": "describe",
-            "completed_steps": ["start"],
         },
         "scope": {"worktree_path": wt_rel},
         "artifacts": {},

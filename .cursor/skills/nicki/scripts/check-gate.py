@@ -38,11 +38,8 @@ from gates import GATES, READINESS_STEPS
 
 def _policy_denial(step: str, cfg: dict[str, Any], mode: str, user_confirmed: bool):
     """Routing-declared checks, run before any per-step gate."""
-    irreversible = bool(cfg.get("irreversible"))
     adhoc_allowed = bool(cfg.get("adhoc_allowed"))
 
-    if irreversible and adhoc_allowed:
-        return deny(f"routing error: {step} is marked both irreversible and adhoc_allowed")
     if mode == "adhoc" and not adhoc_allowed:
         return deny(f"{step} cannot run out of band (routing: adhoc_allowed is not set)")
     if cfg.get("user_confirm_required") and not user_confirmed:

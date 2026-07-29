@@ -4,7 +4,7 @@
 Usage:
   bootstrap-context.py --worktree worktrees/nicki-my-task
 
-Stdout JSON: active_task, status_path, next_step, completed_steps, readiness, sheep
+Stdout JSON: active_task, status_path, current_step, next_step, readiness, sheep
 Optional on soft-fail: readiness_error (string). Exit 0 whenever this contract is
 printed — including when readiness cannot be parsed. Registry / status failures
 still exit 1 with stderr and empty stdout (harness failure).
@@ -90,8 +90,8 @@ def bootstrap(worktree_arg: str) -> dict[str, Any]:
     out: dict[str, Any] = {
         "active_task": active_task,
         "status_path": status_path,
+        "current_step": task.get("current_step"),
         "next_step": next_step,
-        "completed_steps": (task.get("completed_steps") or []),
         "readiness": readiness_status,
         "sheep": step_cfg.get("sheep"),
     }

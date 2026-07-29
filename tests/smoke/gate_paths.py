@@ -40,7 +40,6 @@ def _fixture(
                 "slug": SLUG,
                 "current_step": "archive",
                 "next_step": "integrate",
-                "completed_steps": ["sync", "archive"],
             },
             "scope": {"worktree_path": str(worktree)},
             "artifacts": {"sync": SYNC_REL, "archive": ARCHIVE_REL},

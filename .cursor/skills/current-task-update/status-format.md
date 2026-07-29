@@ -36,7 +36,6 @@ Handoff JSON/Markdown bodies stay separate; status holds pointers and step posit
 | `type` | No | `feature`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf` |
 | `current_step` | Yes | Step Nicki is on or just completed |
 | `next_step` | Yes | Next step Nicki should propose |
-| `completed_steps` | No | Step names completed so far (e.g. `["start", "describe", "spec"]`) |
 | `side_effects` | No | Append-only log of out-of-band runs — see below |
 
 Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`.
@@ -44,7 +43,7 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
 ### `side_effects`
 
 An ad-hoc step (`update-status.py --mode adhoc`) runs without moving the task:
-`current_step`, `next_step`, and `completed_steps` are left exactly as they were.
+`current_step` and `next_step` are left exactly as they were.
 The artifact pointer is still recorded, and one entry is appended here so the run
 is not invisible. Position fields stay the source of truth for *where the task is*;
 this log is the source of truth for *what else happened*.
@@ -118,7 +117,9 @@ After review, status-update sets `artifacts.review_validation` to latest validat
 
 ### Acceptance
 
-Nicki-only step after `ready_for_acceptance`. On user accept, append `acceptance` to `completed_steps`; `next_step` may advance to `sync` (still needs git confirm). On reject, update `open_questions` / blockers; route `execute` or `describe` per user.
+Nicki-only step after `ready_for_acceptance`. On user accept, set `current_step` to
+`acceptance` and derive `next_step` to `sync` (still needs git confirm). On reject,
+update `open_questions` / blockers; route `execute` or `describe` per user.
 
 ### Spec `open_questions` gate
 
@@ -136,8 +137,7 @@ Spec-to-subtasks gate reads `open_questions` from the spec artifact file — not
     "original": "hero-section",
     "type": "feature",
     "current_step": "spec",
-    "next_step": "subtasks",
-    "completed_steps": ["start", "describe"]
+    "next_step": "subtasks"
   },
   "scope": {
     "worktree_path": "worktrees/castlemill-landing-hero-section"

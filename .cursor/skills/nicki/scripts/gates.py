@@ -18,7 +18,6 @@ from gate_utils import (
     BLOCKED_READINESS,
     ArtifactParseError,
     artifact_path,
-    completed,
     deny,
     deny_sequence,
     file_ok,
@@ -99,8 +98,12 @@ def gate_sync(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any]
     rs = readiness(status, worktree)
     if rs in BLOCKED_READINESS:
         return deny(f"sync gate: readiness is {rs}")
-    if "acceptance" not in completed(status):
-        return deny_sequence("sync gate: acceptance not recorded")
+    # First sync: just finished acceptance. Second sync (git tail): archive exists.
+    current = ((status.get("task") or {}).get("current_step") or "")
+    if current != "acceptance" and not file_ok(artifact_path(worktree, status, "archive")):
+        return deny_sequence(
+            "sync gate: need current_step acceptance (or archive for second sync)"
+        )
     return None
 
 
@@ -129,17 +132,15 @@ def gate_integrate(status: dict, worktree: Path, _: bool, __: bool) -> dict[str,
 
 
 def gate_close(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
-    integrate_ok = "integrate" in completed(status) or file_ok(
-        artifact_path(worktree, status, "integrate")
-    )
-    if not integrate_ok:
+    if not file_ok(artifact_path(worktree, status, "integrate")):
         return deny("close gate: integrate not recorded")
     return None
 
 
 def gate_done(status: dict, _: Path, __: bool, ___: bool) -> dict[str, Any] | None:
-    if "close" not in completed(status):
-        return deny_sequence("done gate: close not completed")
+    current = ((status.get("task") or {}).get("current_step") or "")
+    if current != "close":
+        return deny_sequence("done gate: current_step is not close")
     return None
 
 

@@ -171,8 +171,8 @@ def run(root: Path) -> None:
         after = (_status(wt4).get("task") or {}).get("next_step")
         if after != before:
             raise AssertionError(f"fail: blocked must not advance next_step ({before} → {after})")
-        if "subtasks" in ((_status(wt4).get("task") or {}).get("completed_steps") or []):
-            raise AssertionError("fail: blocked must not append completed_steps")
+        if "completed_steps" in (_status(wt4).get("task") or {}):
+            raise AssertionError("fail: status must not write completed_steps")
 
         # start has artifact_key null — must not invent artifacts.status.
         wt5 = tmpdir / "start"

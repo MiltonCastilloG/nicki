@@ -86,7 +86,6 @@ def _gate_echo(root: Path) -> None:
                         "slug": SLUG,
                         "current_step": "subtasks",
                         "next_step": "execute",
-                        "completed_steps": ["subtasks"],
                     },
                     "scope": {"worktree_path": str(worktree)},
                     "artifacts": {"subtasks": f"current-task/subtasks/{SLUG}.md"},

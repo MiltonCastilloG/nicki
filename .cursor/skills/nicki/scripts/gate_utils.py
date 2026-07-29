@@ -106,10 +106,6 @@ def file_ok(path: Path | None) -> bool:
     return path is not None and path.is_file()
 
 
-def completed(status: dict[str, Any]) -> set[str]:
-    return set((status.get("task") or {}).get("completed_steps") or [])
-
-
 def readiness(status: dict[str, Any], worktree: Path) -> str | None:
     path = artifact_path(worktree, status, "review_validation")
     if not file_ok(path):

@@ -136,7 +136,7 @@ docs/archive/<slug>/
 
 **Workspace registry:** `global-status.json` at workspace root — active tasks, project, worktree path, route to per-task status. **Only sheep-start and sheep-close write this file.**
 
-**Per-task status:** `current-task/status.json` inside the worktree — `task-status.v2`: step pointers, `task.completed_steps`, artifact paths, `open_questions`. **Only sheep-status writes this file.**
+**Per-task status:** `current-task/status.json` inside the worktree — `task-status.v2`: step pointers (`current_step`, `next_step`), artifact paths, `open_questions`. **Only sheep-status writes this file.**
 
 Nicki and sheep read both; sheep must not edit either. Legacy `current-task/current-task-context.json` is deprecated.
 
@@ -145,7 +145,7 @@ Nicki and sheep read both; sheep must not edit either. Legacy `current-task/curr
 | Section | Purpose |
 | ------- | ------- |
 | `meta` | Schema identifier only (`task-status.v2`) |
-| `task` | Identity + step pointers: `current_step`, `next_step`, optional `completed_steps`, short `original` |
+| `task` | Identity + step pointers: `current_step`, `next_step`, short `original` |
 | `scope` | `worktree_path` — hard scope boundary |
 | `artifacts` | Paths to handoff files (`story`, `spec`, `review_validation`, etc.) |
 | `open_questions` | Blockers; empty list means Nicki can continue |
@@ -210,7 +210,7 @@ Each step produces compact handoff artifacts (YAML/Markdown). Downstream agents 
 
 ### 5. No broad state enum — step pointers + open questions
 
-Instead of a `state: in_progress | blocked | done` field, status uses `current_step`, `next_step`, optional `task.completed_steps`, and `open_questions`. Blockers live in `open_questions`; handoff summaries live in artifact files, not status.
+Instead of a `state: in_progress | blocked | done` field, status uses `current_step`, `next_step`, and `open_questions`. Blockers live in `open_questions`; handoff summaries live in artifact files, not status.
 
 ### 6. Worktree path is the hard scope boundary
 

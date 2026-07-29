@@ -20,7 +20,7 @@ Read `.cursor/skills/task-archive/SKILL.md` and `.cursor/skills/task-archive/arc
 |-------|---------------|-------|
 | Worktree path | From Nicki prompt | Required |
 | Sync handoff | `@current-task/syncs/<slug>.json` | Prefer when present |
-| Status | `@current-task/status.json` | Read only — artifact pointers |
+| Status | `@current-task/status.json` | Read only — artifact pointers and `task.side_effects` |
 
 ## Output
 
