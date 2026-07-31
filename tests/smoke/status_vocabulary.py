@@ -95,7 +95,6 @@ def run(root: Path) -> None:
             {
                 "completed_step": "execute",
                 "next_step": "review",
-                "artifact": "current-task/executions/foo.json",
             },
         )
         proc, _ = _write(update, root, wt, seed)

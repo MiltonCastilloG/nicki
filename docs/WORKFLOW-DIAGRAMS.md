@@ -144,7 +144,6 @@ flowchart TB
         Story["current-task/story.md"]
         SpecA["current-task/specs/slug.json"]
         SubA["current-task/subtasks/slug.md"]
-        ExecA["current-task/executions/slug.json"]
         RevA["current-task/reviews/slug.json"]
         ValA["current-task/review-validations/rN-validation.json"]
         SyncA["current-task/syncs/slug.json"]
@@ -189,7 +188,7 @@ flowchart TB
     CurrentUpdate --> ST
     SpecMaker --> SpecA
     SubtaskMaker --> SubA
-    ExecutePlan --> ExecA
+    ExecutePlan -->|code + checklist ticks| SubA
     ReviewExec --> RevA
     Validation --> ValA
     SyncTask --> SyncA
@@ -223,8 +222,8 @@ flowchart TB
 | **sheep-start** | `start-task` | worktree + `global-status.json` registry |
 | **sheep-spec** | `spec-maker` | `current-task/specs/<slug>.json` |
 | **sheep-subtask** | `subtask-maker` | `current-task/subtasks/<slug>.md` |
-| **sheep-execute** | `execute-plan` | `current-task/executions/<slug>.json` + checklist ticks |
-| **sheep-review** | `review-execution`, `validation` | review + validation YAML, optional next-steps |
+| **sheep-execute** | `execute-plan` | code changes + checklist ticks (no execution JSON) |
+| **sheep-review** | `review-execution`, `validation` | review + validation JSON, optional next-steps |
 | **sheep-sync** | `sync-task`, `conflict-resolution` | `current-task/syncs/<slug>.json` |
 | **sheep-archive** | `task-archive` | `docs/archive/<slug>/` |
 | **sheep-integrate** | `integrate-task`, `conflict-resolution` | `current-task/integrates/<slug>.json` |

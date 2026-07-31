@@ -30,7 +30,7 @@ Resolve path to absolute; confirm exists. Scope root = that path; `<slug>` = fin
 
 Load from path or inline JSON. Validate per [spec-input.md](spec-input.md). Extract `requirements`, `scope`, `constraints`, `acceptance`, `assumptions`. Map each requirement and acceptance item to subtask lines.
 
-If worktree path or spec is missing, ask before starting.
+If worktree path is missing, ask before starting. Use the prompt’s description or spec; ask when it is not enough to write a checklist.
 
 ### 3. Explore
 

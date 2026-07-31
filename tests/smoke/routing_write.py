@@ -130,11 +130,13 @@ def run(root: Path) -> None:
         seed = _summary(
             wt3,
             "seed.json",
-            {"completed_step": "execute", "artifact": "current-task/executions/foo.json"},
+            {"completed_step": "execute", "completed_status": "complete"},
         )
         proc, _ = _write(update, root, wt3, seed, "--step", "execute")
         if proc.returncode != 0:
             raise AssertionError(f"fail: execute seed: {proc.stderr}")
+        if (_status(wt3).get("artifacts") or {}).get("execution"):
+            raise AssertionError("fail: execute must not set artifacts.execution")
 
         rev = _summary(
             wt3,
@@ -200,7 +202,7 @@ def run(root: Path) -> None:
         }
         if declared.get("spec") != "spec" or declared.get("review") != "review_validation":
             raise AssertionError(f"fail: unexpected artifact_key map: {declared}")
-        if declared.get("start"):
-            raise AssertionError("fail: start must not declare an artifact_key")
+        if declared.get("start") or declared.get("execute"):
+            raise AssertionError("fail: start/execute must not declare an artifact_key")
 
     print("smoke-routing-write: ok")

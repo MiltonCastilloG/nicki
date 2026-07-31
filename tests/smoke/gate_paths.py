@@ -1,4 +1,4 @@
-"""Artifact path scope: archive is workspace-root-relative, the rest worktree-relative.
+"""Artifact path scope: every pointer (including archive) is worktree-relative.
 
 Consent on `integrate` is no longer asserted here — it left the gate for
 `routing.json`, and `gates_matrix.POLICY_CASES` covers it for every step at once.
@@ -26,9 +26,9 @@ def _write(path: Path, payload: dict) -> None:
 def _fixture(
     tmp: Path,
     *,
-    archive_at_root: bool,
-    archive_in_worktree: bool = False,
-    sync_at_root: bool = False,
+    archive_in_worktree: bool,
+    archive_at_workspace: bool = False,
+    sync_at_workspace: bool = False,
 ) -> tuple[Path, Path]:
     workspace = tmp / "workspace"
     worktree = workspace / "worktrees" / SLUG
@@ -46,12 +46,12 @@ def _fixture(
             "open_questions": [],
         },
     )
-    sync_base = workspace if sync_at_root else worktree
+    sync_base = workspace if sync_at_workspace else worktree
     _write(sync_base / SYNC_REL, {"pre_push_merge": {"status": "merged"}})
-    if archive_at_root:
-        _write(workspace / ARCHIVE_REL, {"task": SLUG})
     if archive_in_worktree:
         _write(worktree / ARCHIVE_REL, {"task": SLUG})
+    if archive_at_workspace:
+        _write(workspace / ARCHIVE_REL, {"task": SLUG})
     return workspace, worktree
 
 
@@ -86,27 +86,31 @@ def run(root: Path) -> None:
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
 
-        ws, wt = _fixture(tmp / "a", archive_at_root=True)
+        ws, wt = _fixture(tmp / "a", archive_in_worktree=True)
         _expect_allow(
             _gate(root, ws, wt, "--user-confirmed"),
-            "archive at workspace root resolves",
+            "archive in worktree resolves",
         )
 
-        ws, wt = _fixture(tmp / "b", archive_at_root=False)
+        ws, wt = _fixture(tmp / "b", archive_in_worktree=False)
         _expect_deny(
             _gate(root, ws, wt, "--user-confirmed"),
             "archive artifact missing",
             "archive genuinely absent still denies",
         )
 
-        ws, wt = _fixture(tmp / "c", archive_at_root=False, archive_in_worktree=True)
+        ws, wt = _fixture(
+            tmp / "c", archive_in_worktree=False, archive_at_workspace=True
+        )
         _expect_deny(
             _gate(root, ws, wt, "--user-confirmed"),
             "archive artifact missing",
-            "archive under worktree is not accepted",
+            "archive at Nicki workspace root is not accepted",
         )
 
-        ws, wt = _fixture(tmp / "d", archive_at_root=True, sync_at_root=True)
+        ws, wt = _fixture(
+            tmp / "d", archive_in_worktree=True, sync_at_workspace=True
+        )
         _expect_deny(
             _gate(root, ws, wt, "--user-confirmed"),
             "sync artifact missing",

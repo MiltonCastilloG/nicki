@@ -1,11 +1,13 @@
 ---
 name: review-execution
-description: "Review worktree changes against spec, subtasks, and execution evidence; write a JSON review with approved and content."
+description: "Review worktree changes against available current-task files and the git diff; write a JSON review with approved and content."
 ---
 
 # Review Execution
 
-Review implementation in a worktree. Compare changes against the spec, subtask list, execution handoff, optional review guidance, and actual git diff; run verification checks; produce JSON with exactly `approved` and `content`.
+Review implementation in a worktree. Compare changes against available story/spec/subtasks, optional review guidance, and the **actual git diff**; run verification checks; produce JSON with exactly `approved` and `content`.
+
+**Never load execution JSON.** Diff + whatever exists under `current-task/` is enough.
 
 - Review output: [review-format.md](review-format.md)
 - Guidance input: [review-guidance-format.md](review-guidance-format.md)
@@ -16,27 +18,22 @@ Review implementation in a worktree. Compare changes against the spec, subtask l
 | Input | Required | Notes |
 |-------|----------|-------|
 | Worktree path | Yes | Absolute or repo-relative |
-| Spec | Preferred | Path or inline JSON |
-| Subtask list | Preferred | Path or inline markdown |
-| Execution | Preferred | Path or inline JSON when present |
-| Review guidance | Optional | Path or inline JSON with `important-considerations` |
+| Review material | Yes* | Diff under the worktree plus whatever the prompt / `current-task/` supplies |
 | Review output path | No | Default `current-task/reviews/<slug>.json` under scope root |
 
-If worktree path is missing, ask before starting.
+\*Ask when the worktree path is missing, or when the diff alone is unclear and no usable planning files exist.
 
-If spec or subtask list is missing, ask whether to proceed with partial review or stop.
-
-Missing execution JSON is not a blocker when spec, subtasks, and diff are enough to review.
+Never load execution JSON.
 
 ## Procedure
 
 ```
 Task Progress:
 - [ ] Resolve and validate worktree scope
-- [ ] Load spec, subtask list, execution, optional guidance
+- [ ] Load whatever the prompt and current-task/ supply (never execution JSON)
 - [ ] Discover changes (git diff)
-- [ ] Check requirement coverage
-- [ ] Check subtask list completion and adherence
+- [ ] Check requirement coverage when a spec is available
+- [ ] Check subtask list completion when available
 - [ ] Run acceptance / verify commands
 - [ ] Spot-check CONTRIBUTING conventions
 - [ ] Decide approved true/false
@@ -64,14 +61,9 @@ Task Progress:
 
 ### Step 2: Load inputs
 
-1. Load spec from path or inline JSON.
-2. Load subtask list from path or inline markdown.
-3. Load execution handoff from path or inline JSON when present.
-4. Load optional review guidance when provided.
-5. If spec or subtask list is missing, ask before continuing with partial review.
-6. Extract: `requirements`, `scope`, `acceptance`, `constraints` from spec; checklist lines and completion state from subtasks; touched paths, subtask statuses, verification evidence, deviations, and hotspots from execution.
-7. Extract `important-considerations` from review guidance when present.
-8. Treat execution handoff and review guidance as guidance only. The git diff, source files, and rerun verification decide approval.
+1. Load whatever the prompt and `current-task/` supply (spec, subtasks, story, review guidance) — never execution JSON.
+2. Extract what exists: `requirements`, `scope`, `acceptance`, `constraints` from spec; checklist lines from subtasks; `important-considerations` from guidance; partial `review_scope` from the prompt when supplied.
+3. Treat review guidance as guidance only. The git diff, source files, and rerun verification decide approval.
 
 ### Step 2a: Apply important considerations
 
@@ -91,13 +83,12 @@ From the scope root, inspect what changed:
 
 Flag files changed that are:
 
-- Listed in spec `scope.out`
-- Not implied by any subtask line (possible scope creep)
-- Missing from execution `paths` or marked `unplanned: []` despite appearing in the diff
+- Listed in spec `scope.out` when a spec is present
+- Not implied by any subtask line when a checklist is present (possible scope creep)
 
 ### Step 4: Requirement coverage
 
-For each spec `requirements[].id`:
+When a spec is present, for each `requirements[].id`:
 
 - Read the implementation (and tests if applicable) in the worktree
 - Confirm the requirement description is satisfied
@@ -105,22 +96,20 @@ For each spec `requirements[].id`:
 
 ### Step 5: Subtask list adherence
 
-For each subtask line:
+When a subtask list is present, for each line:
 
 - Confirm checked `- [x]` items are actually done in the diff and source
-- Confirm unchecked `- [ ]` items are not silently skipped when execution claims `status: complete`
-- Compare execution `subtasks` entries with checklist completion state
+- Confirm unchecked `- [ ]` items are not silently skipped when the user asked for a full review
 - Record skipped or incorrect subtasks as `[subtask:<index>]` bullets
 
-If execution `deviations`, `open_questions`, or `review_scope.mode: triage` indicate partial or blocked work, do not approve unless the review scope explicitly excludes the incomplete work and the user asked for that narrower review.
+If the prompt or review-input supplies `review_scope.mode: partial` or triage, do not approve incomplete out-of-scope work unless that narrower review was confirmed.
 
 ### Step 6: Acceptance and verify
 
-1. Run verification commands from unchecked verification subtasks or spec `acceptance` from the scope root.
+1. Run verification commands from unchecked verification subtasks or spec `acceptance` from the scope root when available.
 2. If no verification subtasks exist, run CONTRIBUTING defaults: `npm run lint`, `npm test` (scoped to affected areas when possible).
-3. Compare rerun results with execution `verify` evidence when present.
-4. Map results to spec `acceptance` criteria.
-5. Record failures as `[verify]` bullets with command output context.
+3. Map results to spec `acceptance` criteria when present.
+4. Record failures as `[verify]` bullets with command output context.
 
 ### Step 7: Convention check
 
@@ -130,7 +119,6 @@ Spot-check [CONTRIBUTING.md](../../../CONTRIBUTING.md) rules relevant to the tas
 - i18n via `useTranslations` when strings were added
 - `no-new-deps` constraint — inspect `package.json` diff if constrained
 - Project layout expectations for new modules
-- Execution `hotspots` when present
 
 Record blocking violations as `[convention]` bullets.
 
@@ -158,7 +146,8 @@ Summarize: scope root, inputs used, files reviewed, commands run, review path, v
 ## Safety rules
 
 - Never edit application code — only review JSON files
-- Never modify specs or subtask lists during review
+- Never modify specs or subtask lists during review (except `## Fix` append when required)
+- Never load or require `current-task/executions/*.json`
 - Never modify files outside the scope root
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
 - Do not commit or push unless the user explicitly asks

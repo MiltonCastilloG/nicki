@@ -27,7 +27,7 @@ Read via `current-task/status.json` — [status-format.md](../current-task-updat
 | `describe` | `artifacts.story` | story exists → brief line from story title or slug |
 | `spec` | `artifacts.spec` | `meta.summary` or spec `title` |
 | `subtasks` | `artifacts.subtasks` | subtask frontmatter `title` |
-| `execute` | `artifacts.execution` | execution `meta.status` + subtask count |
+| `execute` | (none — execute omits artifact) | skip unless a legacy `artifacts.execution` pointer exists |
 | `review` | `artifacts.review_validation` | validation `readiness.status` |
 | `sync` | `artifacts.sync` | sync handoff `meta` |
 | `integrate` | `artifacts.integrate` | integrate handoff `meta` |
@@ -104,7 +104,7 @@ Summarize handoffs — never paste full bodies, logs, diffs, transcripts, secret
 
 ## suggestions
 
-Scan: `open_questions`, blockers, execution deviations, triage, review inputs, push/merge conflicts, skipped subtasks.
+Scan: `open_questions`, blockers, triage, review inputs, push/merge conflicts, skipped subtasks. Legacy execution deviations only when a leftover `artifacts.execution` pointer exists.
 
 ```json
 {

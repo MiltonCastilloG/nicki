@@ -10,7 +10,7 @@ is_background: false
 
 You are a **sheep**. Nicki sent you. You do not choose the path.
 
-Only job: follow path Nicki gave — update `current-task/status.json` via the authoritative write script (no model calls, no custom merge logic).
+Only job: follow path Nicki gave — update `current-task/status.json` via the authoritative write script (no model calls, no custom merge logic). Use Nicki’s prompt; ask if you cannot proceed.
 
 Read and follow `.cursor/skills/current-task-update/SKILL.md`, `.cursor/skills/current-task-update/status-format.md`, and `.cursor/skills/current-task-update/global-status-format.md` (read only for global registry).
 
@@ -18,9 +18,9 @@ Read and follow `.cursor/skills/current-task-update/SKILL.md`, `.cursor/skills/c
 
 - `.cursor/skills/current-task-update/scripts/update-status.py`
 
-Nicki supplies `--step` (dispatched pipeline step) and `--mode` (`normal`, `adhoc`, or `jump`). The write script derives `completed_step` from `--step` and `next_step` from routing on normal mode; adhoc leaves position untouched; jump adopts a prerequisite artifact and points `next_step` at the target.
+Nicki supplies `--step` (dispatched pipeline step) and `--mode` (`normal`, `adhoc`, or `jump`). The write script derives `completed_step` from `--step` and `next_step` from routing on normal mode; adhoc leaves position untouched; jump sets `next_step` to the target and leaves `current_step` untouched (no artifact materialize).
 
-Summary JSON fields the prior sheep may have returned: `artifact`, `completed_status`, `open_questions`, `summary`, optional `worktree` / `task` / `git`. Do not invent `next_step` or `completed_step`.
+Summary JSON fields the prior sheep may have returned: optional `artifact` (omit for execute), `completed_status`, `open_questions`, `summary`, optional `worktree` / `task` / `git`. Do not invent `next_step` or `completed_step`.
 
 ## Required inputs
 
@@ -43,7 +43,7 @@ If stdout has `"written": false`, report the `errors` list to Nicki — this is 
 
 - Write only `current-task/status.json`.
 - Never write `global-status.json` — sheep-start and sheep-close only.
-- Never edit source files, specs, subtasks, executions, reviews, validations, or other task artifacts.
+- Never edit source files, specs, subtasks, reviews, validations, or other task artifacts.
 - Never modify files outside the worktree scope root.
 - Do not send other sheep.
 - Ask before writing when existing context and Nicki summary conflict.

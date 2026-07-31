@@ -39,6 +39,14 @@ Default path: `current-task/syncs/<slug>.json` under the task worktree scope roo
 | `included_paths` | No | Paths staged |
 | `excluded_paths` | No | Paths left unstaged |
 
+## `pre_push_merge` sub-object
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `base` | Yes | Base ref merged into the feature branch (e.g. `origin/main`) |
+| `status` | Yes | Only `merged` or `not_needed`. Use `not_needed` when the base is already incorporated — never invent synonyms (e.g. `already_up_to_date`) |
+| `merge_commit` | If merged | Merge commit SHA |
+
 ## JSON example
 
 ```json

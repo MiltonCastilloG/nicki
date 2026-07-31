@@ -14,9 +14,10 @@ task:
 story: PatientDetail Generate control · completed-session-only synthesis · persisted profile + timestamp · full regeneration · no-completed-sessions error · dedicated profile page
 
 outcome:
-  status: pending_integrate
+  status: integrated
   target: main
   feature_branch: feature/clinical-profile
+  integrate_note: "Manual close-out 2026-07-30: feature already on project-jung main (1a9ab21 Merge branch 'feature/clinical-profile'); no live worktree/registry remained for sheep-integrate/sheep-close. Stale current-task harness files removed from project-jung and live worktrees."
   sync_handoff: current-task/syncs/clinical-profile.yaml
   archive_errors: docs/archive/clinical-profile/errors.yaml
 

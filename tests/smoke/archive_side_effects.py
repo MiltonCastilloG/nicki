@@ -6,17 +6,16 @@ from pathlib import Path
 
 FORMAT = ".cursor/skills/task-archive/archive-format.md"
 SKILL = ".cursor/skills/task-archive/SKILL.md"
-SHEEP = ".cursor/agents/sheep-archive.md"
 NICKI = ".cursor/agents/nicki.md"
 
 # Contract needles — archive drafts from these docs, so prose is the authority.
+# Sheep only points at the skill; side_effects language lives in skill + format.
 NEEDLES = (
     (FORMAT, "task.side_effects"),
     (FORMAT, "Ad-hoc <step> at <at>"),
     (FORMAT, "no artifact"),
     (FORMAT, "append one `process` row per"),
     (SKILL, "side_effects"),
-    (SHEEP, "side_effects"),
     (NICKI, "--step <requested step>"),
     (NICKI, "--mode adhoc"),
 )

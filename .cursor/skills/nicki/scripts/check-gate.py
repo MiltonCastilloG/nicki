@@ -3,12 +3,12 @@
 
 Usage:
   check-gate.py --worktree worktrees/nicki-my-task --step sync
-                [--user-confirmed] [--override] [--mode normal|adhoc|jump]
+                [--user-confirmed] [--mode normal|adhoc|jump]
 
 Stdout JSON: allowed, sheep, reason, user_confirm, next_step, artifact, mode,
-gate_class. `gate_class` names why a denial happened — `safety` denials never
-waive, `sequence` denials waive on `--override`, `--mode adhoc`, or `--mode jump`.
-See routing.json `gate_policy`.
+gate_class. Denials are never waived. `--mode` is echoed for write forwarding
+only (adhoc/jump change how update-status.py moves position). See routing.json
+`gate_policy`.
 """
 
 from __future__ import annotations
@@ -22,7 +22,6 @@ from typing import Any
 from gate_utils import (
     BLOCKED_READINESS,
     MODES,
-    SEQUENCE,
     ArtifactParseError,
     allow,
     deny,
@@ -55,12 +54,9 @@ def evaluate(
     step: str,
     *,
     user_confirmed: bool = False,
-    override: bool = False,
     mode: str = "normal",
 ) -> dict[str, Any]:
-    result = _evaluate(
-        worktree, step, user_confirmed=user_confirmed, override=override, mode=mode
-    )
+    result = _evaluate(worktree, step, user_confirmed=user_confirmed, mode=mode)
     result["mode"] = mode
     return result
 
@@ -70,7 +66,6 @@ def _evaluate(
     step: str,
     *,
     user_confirmed: bool,
-    override: bool,
     mode: str,
 ) -> dict[str, Any]:
     routing = load_routing()
@@ -108,26 +103,18 @@ def _evaluate(
         if rs and rr.get("sync_blocked") and step == "sync" and rs in BLOCKED_READINESS:
             return deny(f"sync gate: readiness routing blocks sync ({rs})")
 
-    waived = ""
     gate_fn = GATES.get(step)
     if gate_fn:
-        fail = gate_fn(status, worktree, user_confirmed, override)
+        fail = gate_fn(status, worktree, user_confirmed)
         if fail:
-            waivable = fail.get("gate_class") == SEQUENCE and (
-                override or mode in {"adhoc", "jump"}
-            )
-            if not waivable:
-                fail["user_confirm"] = user_confirm
-                return fail
-            by = "--override" if override else ("jump" if mode == "jump" else "ad-hoc run")
-            waived = f"sequence check waived by {by}: {fail['reason']}"
+            fail["user_confirm"] = user_confirm
+            return fail
 
     return allow(
         sheep,
         user_confirm,
         next_step=next_step_for(step, status),
         artifact=expected_artifact_for(step, status),
-        reason=waived,
     )
 
 
@@ -141,15 +128,10 @@ def main() -> int:
         help="User confirmed git/close step in chat",
     )
     parser.add_argument(
-        "--override",
-        action="store_true",
-        help="User override: waives sequence denials only",
-    )
-    parser.add_argument(
         "--mode",
         default="normal",
         choices=MODES,
-        help="adhoc = out of band; jump = skip ahead to this step; both waive sequence",
+        help="Echoed for write forwarding; adhoc/jump are not gate waivers",
     )
     parser.add_argument(
         "--smoke-contract-fail",
@@ -167,7 +149,6 @@ def main() -> int:
             resolve_worktree(args.worktree),
             args.step,
             user_confirmed=args.user_confirmed,
-            override=args.override,
             mode=args.mode,
         )
     except Exception as exc:  # noqa: BLE001 — contract must always print

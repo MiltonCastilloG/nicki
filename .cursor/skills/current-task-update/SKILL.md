@@ -45,9 +45,9 @@ input error — nothing is written. `blocked` leaves `next_step` where it was.
 `completed_step`. `--mode normal|adhoc|jump` selects whether the write moves the task.
 On `normal`, `next_step` is derived via `gate_utils.next_step_for()` (including the
 git tail and review readiness). On `jump`, `--step` is the **target** sheep step:
-the summary `artifact` is registered as that step's prerequisite pointer and
-`next_step` becomes the target. Artifact pointers use routing's `artifact_key`,
-not a hardcoded map.
+`next_step` becomes the target and `current_step` is left untouched — no summary
+`artifact` required or materialized. Artifact pointers on normal/adhoc writes use
+routing's `artifact_key` (execute has none).
 
 Minimal write (valid — advances next step only):
 

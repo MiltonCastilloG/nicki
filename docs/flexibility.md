@@ -1,14 +1,15 @@
 # Nicki flexibility
 
-Date: 2026-07-29. Gate history: [`harness-gate-bugs.md`](harness-gate-bugs.md).
+Date: 2026-07-31. Gate history: [`harness-gate-bugs.md`](harness-gate-bugs.md).
 Next steps / leftover backlog: [`flexibility_next_steps.md`](flexibility_next_steps.md).
+Pending: none for sequenced flexibility — see [`flexibility_next_steps.md`](flexibility_next_steps.md) for hygiene backlog.
 
 ## Goal
 
 Nicki is no longer a strict linear march. Two capabilities shipped:
 
 1. **Run a step out of band.** Sync mid-`execute`, without acceptance, without moving workflow position.
-2. **Accept a source of truth from outside the workflow.** Register an external artifact and jump to the sheep that consumes it (e.g. a spec produced by the `brainstorm` skill).
+2. **Jump ahead with informal input.** Set pipeline position to a target sheep; chat (and any path the user mentions) is enough — jump does not copy or materialize predecessor files. See [`2026-07-30-informal-jump-and-drop-execution-design.md`](superpowers/specs/2026-07-30-informal-jump-and-drop-execution-design.md).
 
 ## Constraints
 
@@ -18,8 +19,8 @@ Standing. Do not trade these for convenience.
 |---|---|
 | Scripts stay authoritative | `check-gate.py`, `update-status.py`, `bootstrap-context.py` keep the veto. No decision moves back into prose. |
 | `status.json` stays source of truth for pipeline state | Position is `current_step` + `next_step` + artifact pointers. Ad-hoc runs log to `side_effects` without moving position; jump moves position deliberately. |
-| Safety gates never waive | Push to main, merge, worktree delete stay hard-confirmed. `--override`, `--mode adhoc`, and `--mode jump` waive **sequence** denials only. |
-| Flexibility is not `--override` | Use `--mode adhoc` or `--mode jump` with their own reason strings. Reusing the blunt flag hides the next bug — see `harness-gate-bugs.md`, "Why these recur". |
+| Gate denials never waive | Consent, readiness blocks, missing inputs, and every other gate deny are final. No `--override`. No `deny_sequence` / sequence class. See [`2026-07-31-drop-sequence-and-override-design.md`](superpowers/specs/2026-07-31-drop-sequence-and-override-design.md). |
+| Modes own write shape, not waivers | `--mode adhoc` / `--mode jump` change how `update-status.py` moves position. They are not flags to bypass the gate. |
 
 ## Write modes
 
@@ -27,13 +28,13 @@ Both `check-gate.py` and `update-status.py` take `--mode normal|adhoc|jump` (def
 
 | Mode | Gate | Write | Position after write |
 |---|---|---|---|
-| **normal** | Standard sequence + safety checks | Sets `current_step` from `--step`; derives `next_step` from routing via `next_step_for()` | Advances along the pipeline |
-| **adhoc** | Waives sequence when `adhoc_allowed`; consent and safety still apply | Records artifact pointer; appends `task.side_effects[]`; leaves `current_step` and `next_step` untouched | Unchanged |
-| **jump** | Waives sequence; cannot target `start`, `close`, or `done` | Copies summary `artifact` into `current-task/` at the predecessor slot (archiveable), registers that worktree-relative pointer, sets `current_step` to the predecessor and `next_step` to the target; appends `side_effects` | Points at target sheep — Nicki gates and runs it next |
+| **normal** | Safety + consent (+ policy bookends) | Sets `current_step` from `--step`; derives `next_step` from routing via `next_step_for()` | Advances along the pipeline |
+| **adhoc** | Same denials as normal; step must be `adhoc_allowed` | Records artifact pointer; appends `task.side_effects[]`; leaves `current_step` and `next_step` untouched | Unchanged |
+| **jump** | Same denials as normal; cannot target `start`, `close`, or `done` | Sets `next_step` to the target; leaves `current_step` untouched; no summary `artifact` required; appends `side_effects` with `artifact: null` | Points at target sheep — Nicki gates and runs it next |
 
 **Ad-hoc policy:** every step sets `adhoc_allowed` in `routing.json` except `start`, `close`, and `done`. `irreversible` may combine with `adhoc_allowed` (consent and safety inputs still never waive).
 
-**Sheep return contract:** sheep return `artifact`, `completed_status`, `open_questions`, `summary` only — not `next_step` or `completed_step`. Nicki forwards the return plus the `--step` and `--mode` she dispatched.
+**Sheep return contract:** sheep return `artifact`, `completed_status`, `open_questions`, `summary` only — not `next_step` or `completed_step`. Execute **omits** `artifact` (no `executions/*.json`). Nicki forwards the return plus the `--step` and `--mode` she dispatched.
 
 ## Position model
 
@@ -49,7 +50,7 @@ An ad-hoc invocation is gated for safety, runs the sheep, and leaves `current_st
 
 | Layer | Behavior |
 |---|---|
-| Gate | `check-gate.py --mode adhoc --step <requested>`; sequence denials waived when `adhoc_allowed`; safety and consent never waived |
+| Gate | `check-gate.py --mode adhoc --step <requested>`; step must be `adhoc_allowed`; denials never waived |
 | Sheep | Position-free return; no workflow knowledge in sheep files |
 | Write | `update-status.py --mode adhoc`: artifact pointer recorded, one `task.side_effects` entry appended, position untouched |
 
@@ -64,46 +65,47 @@ Archive `process` is handoff rows plus one row per side-effect entry (including 
 - Ad-hoc sync during `execute`: gate allows, sheep runs, `current_step`/`next_step` byte-identical before and after.
 - Artifact pointer for the ad-hoc sync is recorded; side effect appears in the log and in the archive report (`process` row).
 - Ad-hoc `start` / `close` / `done`: **denied** — not `adhoc_allowed`.
-- Ad-hoc on other steps (including `integrate`): **allowed** when safety inputs and consent hold; sequence-only denials are waived.
+- Ad-hoc on other steps (including `integrate`): **allowed** when safety inputs and consent hold.
+- Acceptance before first sync is Nicki’s chat confirm only — the sync gate does not require `current_step == acceptance` (pending drop-sequence design).
 - Fixture per case, through `check-gate.py`, in `test.py`.
 - Archive format contract asserts `side_effects` → `process` (including null artifact rows).
 
-## Capability B — external source of truth
+## Capability B — informal jump (position-only)
 
 ### Behavior
 
-Jump ahead registers an external path as the prerequisite artifact for a target sheep, moves position to that target, and lets Nicki gate and run the sheep.
+Jump ahead sets `next_step` to a target sheep and leaves `current_step` untouched. No predecessor artifact on the jump write — chat is enough; a document path in chat is optional context for the sheep, not a harness payload.
 
 Typical flow (Nicki):
 
-1. User provides a path already in the **format that slot uses** (e.g. JSON spec for jump → `subtasks`). No harness conversion from brainstorm markdown.
-2. Write with `--mode jump --step <target>` and summary `artifact` set to that path. The write **copies** into `current-task/` at the predecessor `expected_artifact` when the file is outside (suffix must match); registers the worktree-relative pointer; sets position; logs `side_effects`.
-3. Gate the **target** with `--step <target>` (`normal` is enough after the jump write; `--mode jump` also waives sequence if needed).
-4. Spawn that step's sheep. After it returns, `sheep-status` with `--mode normal --step <target>` as usual.
+1. User asks to skip ahead (chat / optional path / diff context). If unclear which target, ask once.
+2. Write with `--mode jump --step <target>` — position only; no summary `artifact`; no copy into `current-task/`; no suffix match. Logs `side_effects` with `artifact: null`.
+3. Gate the **target** with `--step <target>` (denials never waived; mode is for write forwarding).
+4. Spawn that step's sheep with chat as primary input. On-disk `current-task/` files are optional when present. After return, `sheep-status` with `--mode normal --step <target>` as usual (execute omits `artifact`).
 
-`start`, `close`, and `done` are not jump targets.
+No “ensure X exists” / convert prelude before jump. Sync remains **adhoc**, not jump. `start`, `close`, and `done` are not jump targets.
 
 ### Resolved items
 
 | Item | Status |
 |---|---|
-| **B1 — path scope** | Done. `artifact_path()` resolves per-key scope via `gate_utils.ROOT_SCOPED_ARTIFACTS`. |
-| **B2 — register pointer without claiming a step** | Done. `--mode jump` materializes and registers the prerequisite under `current-task/`. |
-| **B3 — brainstorm output does not fit the spec slot** | Wontfix. Jump copies whatever path the user provides into `current-task/`; no special `.md` loader. |
-| **B4 — materialize into worktree for archive** | Done 2026-07-29 (YAGNI). Jump copies into `current-task/` only when the suffix already matches the predecessor slot. Wrong format → input error; Nicki asks or runs the normal producer sheep. No markdown↔JSON conversion in the harness. **Real-use blocker** (brainstorm `.md` → jump `subtasks`): see [`jump_blocker.md`](jump_blocker.md). |
+| **B1 — path scope** | Done (corrected 2026-07-31). All artifact pointers including `archive` resolve against the worktree (project repo). Earlier workspace-root archive scope was a Nicki-only mistake. |
+| **B2 — jump without claiming a step** | Done (superseded shape). `--mode jump` is position-only: `next_step` = target, `current_step` untouched; no materialize. |
+| **B3 — brainstorm / informal input** | Done via informal jump. Chat (or a design `.md` path in chat) jumps to `subtasks` / `spec` / etc.; harness does not convert. Sheep accept whatever Nicki passes. Was blocked under materialize — see [`jump_blocker.md`](jump_blocker.md) (resolved). |
+| **B4 — materialize into worktree for archive** | Done 2026-07-29; **removed** 2026-07-30 by informal jump. Jump no longer copies or suffix-matches. Artifacts under `current-task/` still come from normal sheep writes when produced. |
 | **B5 — status vocabulary** | Done. Skip-ahead is `--mode jump`; `completed_status` stays `complete`/`blocked` only. |
+| **B6 — drop execution artifact** | Done. Execute omits `artifact`; review never requires or loads `executions/*.json`. |
 
 ### Acceptance checks
 
-- Jump to `subtasks` with an external spec path: file appears under `current-task/`, `artifacts.spec` points there, `next_step` is `subtasks`, side effect logged.
-- Jump to `review` with an execution handoff path: prerequisite under `current-task/`, target sheep runs after gate.
+- Jump to `subtasks` (or `spec` / `execute` / `review`) with only chat: `next_step` is the target, `current_step` byte-identical, no file copied into `current-task/`, side effect logged with `artifact: null`.
 - Jump to `start` / `close` / `done`: **denied**.
-- Missing jump artifact path: write fails with a clear error.
+- Jump write succeeds with no summary `artifact` (no “artifact not found” / wrong-suffix failure).
 - Fixture per case in `test.py`.
 
 ## Sequencing
 
-All sequenced flexibility work is done.
+Sequenced flexibility through informal jump and drop-sequence / override is done.
 
 | Order | Work | Status |
 |---|---|---|
@@ -116,7 +118,9 @@ All sequenced flexibility work is done.
 | 7 | Write path: `--step`/`--mode`; `next_step_for()` on normal; wire `artifact_key` | **Done** 2026-07-29 |
 | 8 | Ad-hoc sync end to end; archive reads `side_effects` | **Done** 2026-07-29 |
 | 9 | Jump ahead (`--mode jump`) | **Done** 2026-07-29 |
-| 10 | B4: materialize prior artifact into `current-task/` on jump | **Done** 2026-07-29 |
+| 10 | B4: materialize prior artifact into `current-task/` on jump | **Done** 2026-07-29; **removed** 2026-07-30 (informal jump) |
+| 11 | Informal jump + drop execution artifact | **Done** 2026-07-30 |
+| 12 | Drop `deny_sequence` + `--override` | **Done** 2026-07-31 |
 
 ## Decisions
 
@@ -128,7 +132,7 @@ Decided 2026-07-28.
 - On normal completion, `update-status.py` sets `task.next_step` from `routing.json` via `next_step_for()` for the completed step (`--step`).
 - Git-tail nuance (first sync → `archive`, second sync → `integrate` when `artifacts.archive` is set) lives in the script/routing, not sheep prose.
 - Ad-hoc: write mode does **not** apply `default_next_step`; position fields stay byte-identical.
-- Jump: write mode copies the summary `artifact` into `current-task/` at the predecessor slot when outside the worktree (**suffix must match** the predecessor `expected_artifact`); wrong suffix is an input error — no harness md→json conversion. Sets `current_step` to predecessor and `next_step` to target; Nicki then gates and runs the target sheep. Brainstorm `.md` → jump `subtasks`: [`jump_blocker.md`](jump_blocker.md).
+- Jump: write mode sets `next_step` to the target and leaves `current_step` untouched; no summary `artifact`, no copy into `current-task/`, no suffix match. Nicki then gates and runs the target sheep with chat as primary input. Former materialize blocker: [`jump_blocker.md`](jump_blocker.md) (resolved).
 
 ### 2. How flexibility is spelled — **`--mode` enum**
 
@@ -136,7 +140,8 @@ Decided 2026-07-28.
 
 - `check-gate.py` takes `--mode normal|adhoc|jump` (default `normal`) and **echoes the resolved mode in stdout**.
 - Nicki forwards the mode to `sheep-status`; `update-status.py` applies routing's `default_next_step` only when mode is `normal`.
-- One axis: ad-hoc and jump share the same flag. Do not add `--adhoc`/`--jump` booleans alongside `--override`.
+- One axis: ad-hoc and jump share the same `--mode` flag. Do not add `--adhoc`/`--jump` booleans.
+- **Amended 2026-07-31:** drop `--override` and the sequence-waiver class entirely — modes are write semantics only. Design: [`2026-07-31-drop-sequence-and-override-design.md`](superpowers/specs/2026-07-31-drop-sequence-and-override-design.md).
 - Step names stay as they are; no duplicate steps in `routing.json`.
 
 ### 3. Consent lives in routing, required every time
@@ -145,7 +150,9 @@ Decided 2026-07-28.
 
 - Per-step `user_confirm_required: true|false`; `check-gate.py` enforces generically.
 - **Amended on implementation (2026-07-29):** `gate_review` keeps its conditional check (artifact-dependent confirm). `gate_start` was deleted outright.
+- **Amended 2026-07-30:** `start` omits `user_confirm_required` — the user's start request is the confirm (hard-gating it double-asked with the transition card).
 - Ad-hoc included — no session grants. "Sync now" from the user is itself the confirm.
+- **Amended 2026-07-31:** acceptance before first sync is chat ask/confirm only — not a sync gate condition.
 
 ### 4. Sheep hold no workflow knowledge
 
@@ -155,10 +162,19 @@ Sheep do one job inside a scope root. Sequence gating, position, and transitions
 
 **Sheep return:** `artifact`, `completed_status`, `open_questions`, `summary`. Position-free.
 
-**Write path:** `update-status.py` takes `--step` and `--mode` from Nicki. Normal derives position from routing; adhoc leaves position untouched; jump copies the prerequisite into `current-task/` when the file suffix matches the predecessor slot (wrong suffix → input error; no md→json convert — see [`jump_blocker.md`](jump_blocker.md) for brainstorm markdown) and points at the target.
+**Write path:** `update-status.py` takes `--step` and `--mode` from Nicki. Normal derives position from routing; adhoc leaves position untouched; jump sets `next_step` to the target only (`current_step` unchanged; no materialize).
 
 ### 5. `completed_status` stays two-valued; mode carries the rest
 
 Decided 2026-07-29.
 
-`completed_status` reports **what the sheep did** — `complete` or `blocked`. `--mode` reports **what the write should do to position** — `normal`, `adhoc`, `jump`. They are orthogonal: an ad-hoc sync is `complete` (it did its job) *and* must not advance; a jump registers a prerequisite artifact *and* moves position so the target sheep runs next.
+`completed_status` reports **what the sheep did** — `complete` or `blocked`. `--mode` reports **what the write should do to position** — `normal`, `adhoc`, `jump`. They are orthogonal: an ad-hoc sync is `complete` (it did its job) *and* must not advance; a jump sets `next_step` to the target *and* leaves `current_step` untouched so Nicki can gate and run that sheep next.
+
+### 6. No sequence class; no `--override`
+
+Done 2026-07-31. Spec: [`2026-07-31-drop-sequence-and-override-design.md`](superpowers/specs/2026-07-31-drop-sequence-and-override-design.md).
+
+- Removed `deny_sequence` / `SEQUENCE` and the only two call sites (sync acceptance ordering; done-before-close).
+- Removed `--override`. Gate denials are never waived.
+- Adhoc and jump remain for write position behavior and policy bookends (`adhoc_allowed`, jump non-targets).
+- Why override died: it duplicated sequence waiver without write semantics, and historically kept broken gates alive.

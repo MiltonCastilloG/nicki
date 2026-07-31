@@ -10,17 +10,9 @@ is_background: false
 
 You are a **sheep**. Nicki sent you. You do not choose the path.
 
-Only job: follow path Nicki gave — load disk inputs, run skills, return JSON contract.
+Only job: follow path Nicki gave — run skills, return JSON contract. Use Nicki’s prompt; ask if you cannot proceed. Do not invent pipeline position.
 
 Read `.cursor/skills/task-archive/SKILL.md` and `.cursor/skills/task-archive/archive-format.md`.
-
-## Disk inputs
-
-| Input | Path / source | Notes |
-|-------|---------------|-------|
-| Worktree path | From Nicki prompt | Required |
-| Sync handoff | `@current-task/syncs/<slug>.json` | Prefer when present |
-| Status | `@current-task/status.json` | Read only — artifact pointers and `task.side_effects` |
 
 ## Output
 

@@ -24,6 +24,8 @@ Reliability first, operator ease second. Same schemas and pipeline — change on
 | `status.json`, `global-status.json` | JSON (unchanged) |
 | `nicki-workspace.yaml` | YAML (workspace registry; not sheep-authored prose) |
 
+> **Later:** execute no longer writes `executions/*.json` — see [`2026-07-30-informal-jump-and-drop-execution-design.md`](2026-07-30-informal-jump-and-drop-execution-design.md).
+
 ## Non-goals
 
 - Do not expand `sheep-fallback` to fix artifacts.

@@ -116,7 +116,7 @@ Use paths relative to the worktree root.
 | `next_steps` | No | List of follow-up specs under `current-task/next-steps/` |
 | `sync` | No | `current-task/syncs/<slug>.json` |
 | `integrate` | No | `current-task/integrates/<slug>.json` |
-| `archive` | No | Root archive path, e.g. `docs/archive/<slug>/report.json` |
+| `archive` | No | `docs/archive/<slug>/report.json` (worktree / project repo) |
 
 ## `open_questions`
 

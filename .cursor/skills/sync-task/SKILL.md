@@ -99,7 +99,14 @@ git merge origin/main
 
 If conflicts occur, follow [conflict-resolution](../conflict-resolution/SKILL.md).
 
-If merge succeeds but push not yet run, record progress in handoff — use `status: partial` if stopping before push.
+Record `pre_push_merge.status` with **only** these values (archive gate rejects anything else):
+
+- `merged` — a merge commit was created
+- `not_needed` — base already incorporated (`Already up to date` / no merge commit)
+
+Never invent synonyms (`already_up_to_date`, `skipped`, etc.).
+
+If merge succeeds but push not yet run, record progress in handoff — use top-level `status: partial` if stopping before push.
 
 ### Step 5: Push feature branch
 
@@ -113,7 +120,7 @@ No force push. No `main`/`master`. If both fail: `status: partial`.
 
 ### Step 6: Write handoff
 
-Write per [sync-format.md](sync-format.md). Include commit phase, pre_push_merge, remote/push, conflicts, blockers.
+Write per [sync-format.md](sync-format.md). Include commit phase, pre_push_merge, remote/push, conflicts, blockers. `pre_push_merge.status` must be `merged` or `not_needed` only.
 
 ### Step 7: Report
 

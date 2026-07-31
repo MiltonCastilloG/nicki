@@ -45,14 +45,16 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
 An ad-hoc step (`update-status.py --mode adhoc`) runs without moving the task:
 `current_step` and `next_step` are left exactly as they were.
 The artifact pointer is still recorded, and one entry is appended here so the run
-is not invisible. A jump (`--mode jump`) also appends here and **does** move
-position: `current_step` to the predecessor, `next_step` to the target. Position
-fields stay the source of truth for *where the task is*; this log is the source
-of truth for *what else happened*.
+is not invisible. A jump (`--mode jump`) also appends here: sets `next_step` to
+the target and leaves `current_step` untouched; `artifact` is always `null` on
+the jump log entry (jump carries no file). Position fields stay the source of
+truth for *where the task is*; this log is the source of truth for *what else
+happened*.
 
 ```json
 "side_effects": [
-  {"step": "sync", "mode": "adhoc", "at": "2026-07-29T08:14:02Z", "artifact": "current-task/syncs/foo.json"}
+  {"step": "sync", "mode": "adhoc", "at": "2026-07-29T08:14:02Z", "artifact": "current-task/syncs/foo.json"},
+  {"step": "review", "mode": "jump", "at": "2026-07-30T12:00:00Z", "artifact": null}
 ]
 ```
 
@@ -64,23 +66,23 @@ of truth for *what else happened*.
 
 ## `artifacts`
 
-**Path scope.** Every pointer is **worktree-relative** except `archive`, which is
-**workspace-root-relative** — the archived report must outlive the worktree, so it
-is never written under it. Gates resolve `archive` against the workspace root and
-all other keys against the worktree (`gate_utils.ROOT_SCOPED_ARTIFACTS`).
+**Path scope.** Every pointer is **worktree-relative** (project repo under the
+feature worktree). That includes `archive`: `docs/archive/<slug>/` is written in
+the worktree, committed on the second sync, and lands on the target branch via
+integrate. Gates always resolve `worktree / artifacts.<key>` — never against the
+Nicki workspace root (historical mistake when Nicki was the only project).
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `story` | No | `current-task/story.md` |
 | `spec` | No | Spec JSON path |
 | `subtasks` | No | Subtask markdown path |
-| `execution` | No | Execution JSON path |
 | `review_validation` | No | Latest validation JSON — sole review gate pointer |
 | `review_input` | No | Latest review guidance JSON |
 | `next_steps` | No | Array of follow-up spec paths |
 | `sync` | No | Sync handoff path (`current-task/syncs/<slug>.json`) |
 | `integrate` | No | Integrate handoff path (`current-task/integrates/<slug>.json`) |
-| `archive` | No | `docs/archive/<slug>/report.json` — **workspace-root-relative** (dir also holds `report.md`, `story.md`) |
+| `archive` | No | `docs/archive/<slug>/report.json` — worktree-relative (dir also holds `report.md`, `story.md`) |
 
 ## `open_questions`
 
@@ -156,7 +158,6 @@ Spec-to-subtasks gate reads `open_questions` from the spec artifact file — not
 
 | Root | Role |
 |------|------|
-| Workspace | `global-status.json`, `docs/archive/` |
-| Project | `projects/<project>/` git repo root |
-| Task worktree | `worktrees/<project>-<slug>/`, `current-task/*` |
+| Workspace | `global-status.json` (Nicki orchestrator) |
+| Project / task worktree | git repo checkout: `worktrees/<project>-<slug>/`, `current-task/*`, `docs/archive/` |
 | Target branch | project checkout for integrate (`main` default) |

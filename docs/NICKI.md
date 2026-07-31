@@ -99,7 +99,7 @@ Each sheep produces YAML handoff under `worktrees/<project>-<slug>/current-task/
 | Describe | Nicki only | No | `artifacts.story` → `current-task/story.md` (Gherkin user story) |
 | Spec | `sheep-spec` | No | `current-task/specs/<slug>.json` |
 | Subtasks | `sheep-subtask` | No | `current-task/subtasks/<slug>.md` |
-| Execute | `sheep-execute` | Yes | Code changes + updated subtasks + `current-task/executions/<slug>.json` |
+| Execute | `sheep-execute` | Yes | Code changes + updated subtasks (no execution JSON) |
 | Review | `sheep-review` | No | `reviews/<slug>.json` + `review-validations/rN-validation.json` + optional `next-steps/*.json` |
 | Sync | `sheep-sync` | Yes (commit + pre-push merge + push feature) | `current-task/syncs/<slug>.json` |
 | Archive | `sheep-archive` | No (writes `docs/archive/`) | `docs/archive/<slug>/report.json` |
@@ -109,15 +109,14 @@ Each sheep produces YAML handoff under `worktrees/<project>-<slug>/current-task/
 ### Artifact handoff chain
 
 ```
-spec ──→ subtasks ──→ execution ──→ review + validation (+ next-steps when deferred scope)
+spec ──→ subtasks ──→ execute (code + checklist) ──→ review + validation (+ next-steps when deferred scope)
 sync ──→ archive ──→ sync ──→ integrate ──→ close
 ```
 
 - **Spec** defines *what* to build — requirements, scope, acceptance. No file paths.
 - **Subtask list** breaks spec into one-sentence build items with checkbox completion state (tests included).
-- **Execute-plan** implements unchecked subtasks in order and marks each `- [x]` in place.
-- **Execution** is an evidence map for review, not an approval.
-- **Review** has `approved` and `content`; **validation** skill emits readiness and out-of-scope next-steps in same spawn.
+- **Execute-plan** implements unchecked subtasks in order and marks each `- [x]` in place. No `executions/*.json` handoff.
+- **Review** inspects the worktree diff plus available `current-task/` files; has `approved` and `content`. **Validation** skill emits readiness and out-of-scope next-steps in same spawn.
 - **Archive** — `report.yaml`, `report.md`, `story.md` under `docs/archive/`; committed on feature branch before integrate. `current-task/` is gitignored (worktree-local).
 - **Close** — unregister + delete whole worktree after integrate.
 
@@ -184,7 +183,7 @@ Before sending any sheep except `sheep-status`, Nicki shows a compact state card
 
 Git side effects (`sync`, `integrate`) and close (delete worktree) still need explicit chat confirmation naming the side effect — the gate script records `--user-confirmed` only after that. Which steps require it is declared per step in `routing.json` (`user_confirm_required`) and enforced once in `check-gate.py`, so consent is data rather than a check repeated in each gate.
 
-`--override` waives ordering only: a denial carries `gate_class`, and `safety` denials — consent, readiness blocks, missing inputs — ignore every flag.
+Gate denials are never waived. `--mode adhoc` / `--mode jump` change how `update-status.py` moves position; they are not bypass flags. There is no `--override`.
 
 ---
 
@@ -240,12 +239,12 @@ sheep-status runs automatically after each sheep without asking. Exception: shee
 
 close-task checks integrate handoff, unregisters `global-status.json`, deletes whole worktree last. Archive runs earlier via `sheep-archive`.
 
-### 11. Spec/subtask/execution separation
+### 11. Spec/subtask/execute separation
 
 - **Spec-maker** defines requirements — no file paths, no implementation subtasks.
 - **Subtask-maker** maps requirements to one-sentence checklist items, including tests and verification.
-- **Execute-plan** follows unchecked subtasks in order, marks completed items `- [x]`, and asks on ambiguity.
-- **Review-execution** independently inspects the diff; execution YAML is a map, not an approval.
+- **Execute-plan** follows unchecked subtasks in order, marks completed items `- [x]`, and asks on ambiguity. Omits execution JSON.
+- **Review-execution** independently inspects the diff plus available current-task files; no execution handoff required.
 
 ### 12. Review emits readiness; scripts route
 
@@ -253,15 +252,15 @@ close-task checks integrate handoff, unregisters `global-status.json`, deletes w
 
 ### 13. Acceptance before sync
 
-`ready_for_acceptance` → Nicki-only checkpoint (gate returns `sheep: null`). No sync until user accepts or overrides; `check-gate.py` enforces.
+`ready_for_acceptance` → Nicki-only checkpoint (gate returns `sheep: null`). No sync until the user accepts in chat. The sync gate does not require `current_step == acceptance`; Nicki enforces the checkpoint in conversation.
 
 ### 14. Spec open_questions gate
 
 Non-empty spec `open_questions` blocks subtasks — enforced by `check-gate.py`, mirrored in status until cleared.
 
-### 15. Partial execution review
+### 15. Partial review scope
 
-`review_scope.mode: partial` needs user confirm before review spawn — enforced by `check-gate.py`. No sync without full readiness.
+Partial review scope (when supplied via Nicki prompt / review-input) needs user confirm before review spawn — enforced by `check-gate.py`. No sync without full readiness. Review does not load an execution artifact for scope.
 
 ---
 
@@ -290,7 +289,7 @@ Non-empty spec `open_questions` blocks subtasks — enforced by `check-gate.py`,
 | Start | `sheep-start.md` | `start-task/SKILL.md` | — |
 | Spec | `sheep-spec.md` | `spec-maker/SKILL.md` | `spec-format.md` |
 | Subtasks | `sheep-subtask.md` | `subtask-maker/SKILL.md` | `subtask-format.md` |
-| Execute | `sheep-execute.md` | `execute-plan/SKILL.md` | `execution-format.md` |
+| Execute | `sheep-execute.md` | `execute-plan/SKILL.md` | — (no execution JSON) |
 | Review | `sheep-review.md` | `review-execution/SKILL.md` | `review-format.md`, `validation/` |
 | Sync | `sheep-sync.md` | `sync-task/SKILL.md` | `sync-format.md` |
 | Archive | `sheep-archive.md` | `task-archive/SKILL.md` | `task-archive/archive-format.md` |

@@ -8,4 +8,4 @@ disable-model-invocation: true
 
 Post-review step inside `review-execution`. Single source: [validation-format.md](validation-format.md).
 
-Trust review prefixes. Do not re-read spec, subtasks, or execution for verdicts.
+Trust review prefixes. Do not re-read spec, subtasks, or invent an execution handoff for verdicts.

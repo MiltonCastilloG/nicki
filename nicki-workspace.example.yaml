@@ -64,6 +64,8 @@ projects:
     copy:
       - .env
       - .env.*
+      - backend/.env
+      - backend/.env.*
       - node_modules
     post_create:
       - pnpm install

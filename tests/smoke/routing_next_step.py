@@ -107,9 +107,9 @@ def _gate_echo(root: Path) -> None:
             raise AssertionError(f"fail: allow should echo next_step review, got {allowed}")
         print("ok: gate allow echoes routing next_step")
 
-        if allowed.get("artifact") != f"current-task/executions/{SLUG}.json":
-            raise AssertionError(f"fail: allow should echo resolved artifact, got {allowed}")
-        print("ok: gate allow echoes expected_artifact with <slug> resolved")
+        if allowed.get("artifact") is not None:
+            raise AssertionError(f"fail: execute expected_artifact is null, got {allowed}")
+        print("ok: gate allow echoes null expected_artifact for execute")
 
         denied = json_line(
             run_py(gate, "--worktree", str(worktree), "--step", "integrate", env=env).stdout

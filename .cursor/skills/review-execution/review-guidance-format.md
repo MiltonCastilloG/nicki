@@ -11,6 +11,7 @@ Default path: `current-task/review-inputs/rN-review.json`.
 | `approved` | Yes | Usually `false` |
 | `content` | Yes | Why prior review should not drive fixes |
 | `important-considerations` | Yes | Context for next review |
+| `review_scope` | No | When `mode` is `partial`, gate requires user confirm |
 
 Output reviews still have only `approved` and `content`.
 

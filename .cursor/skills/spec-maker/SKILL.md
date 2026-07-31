@@ -14,7 +14,7 @@ Spec schema: [spec-format.md](spec-format.md) (single source of truth).
 | Input | Required | Notes |
 |-------|----------|-------|
 | Worktree path | Yes | Absolute or repo-relative (e.g. `worktrees/hero-section`) |
-| Task description | Yes* | Gherkin story, free text, or `task.original` — passed in the prompt |
+| Task description | Yes* | Whatever the prompt supplies — Gherkin, free text, or `task.original` |
 | Output path | No | Default `current-task/specs/<slug>.json` under scope root; agent may override |
 | `meta.context` | No | Optional traceability path; set only when the agent passes one |
 

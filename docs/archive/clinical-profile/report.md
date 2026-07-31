@@ -13,7 +13,7 @@ PatientDetail Generate control · completed-session-only synthesis · persisted 
 
 ## Outcome
 
-`pending_integrate` — feature branch `feature/clinical-profile` synced and pushed (`0301b91`). Sync handoff: `current-task/syncs/clinical-profile.yaml`. Harness errors recorded during the run — see `docs/archive/clinical-profile/errors.yaml`. Integrate not run yet.
+`integrated` — feature branch `feature/clinical-profile` was already on project-jung `main` (`1a9ab21`). Manual close-out 2026-07-30: no live worktree/registry for sheep-integrate/sheep-close; stale `current-task` harness files removed from project-jung and live worktrees. Earlier sync pushed `0301b91`; harness errors from the run remain in `docs/archive/clinical-profile/errors.yaml`.
 
 ## Process
 

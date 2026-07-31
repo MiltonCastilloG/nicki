@@ -10,7 +10,7 @@ Per-task `current-task/status.json`. Writer schema: [status-format.md](status-fo
 |---------|--------|
 | `task` | `slug`, `title`, `original`, `current_step`, `next_step` |
 | `scope` | `worktree_path` |
-| `artifacts` | Paths to story, spec, subtasks, execution, `review_validation`, sync, integrate, archive |
+| `artifacts` | Paths to story, spec, subtasks, `review_validation`, sync, integrate, archive |
 | `open_questions` | Blockers — empty array when pipeline can continue |
 
 Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`.

@@ -1,12 +1,9 @@
 """Per-step gate checks for Nicki pipeline routing.
 
-Every check returns a classed denial. `deny` is a safety check — it must hold, and
-no flag waives it. `deny_sequence` is ordering only; `check-gate.py` waives it on
-`--override` or on an ad-hoc run of a step routing marks `adhoc_allowed`.
-
-Consent is not checked here. `user_confirm_required` in `routing.json` is enforced
-once in `check-gate.py`, before any of these run. The one exception is `review`,
-whose confirm depends on the execution artifact's contents rather than on the step.
+Every check returns a denial via `deny`. Denials are never waived — no
+`--override`, no sequence class. Consent is enforced in `check-gate.py` from
+`user_confirm_required` in routing before these run. The one exception is
+`review`, whose confirm may depend on review-input scope rather than the step.
 """
 
 from __future__ import annotations
@@ -19,95 +16,83 @@ from gate_utils import (
     ArtifactParseError,
     artifact_path,
     deny,
-    deny_sequence,
     file_ok,
     load_artifact,
     readiness,
 )
 
-GateFn = Callable[[dict[str, Any], Path, bool, bool], dict[str, Any] | None]
+GateFn = Callable[[dict[str, Any], Path, bool], dict[str, Any] | None]
 
 READINESS_STEPS = frozenset({"review", "acceptance", "sync", "fix"})
 
 
-def gate_describe(status: dict, _: Path, __: bool, ___: bool) -> dict[str, Any] | None:
+def gate_describe(status: dict, _: Path, __: bool) -> dict[str, Any] | None:
     original = ((status.get("task") or {}).get("original") or "").strip()
     if not original:
         return deny("describe gate: task.original missing")
     return None
 
 
-def gate_spec(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
-    story = artifact_path(worktree, status, "story")
-    if not story:
-        return deny("spec gate: artifacts.story unset")
-    if not file_ok(story):
-        return deny("spec gate: story file missing on disk")
+def gate_spec(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
+    # Story file optional — informal jump / chat-first. Deny only on open questions
+    # when a spec is already present (handled in subtasks). Spec itself: no hard pred.
     return None
 
 
-def gate_subtasks(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
+def gate_subtasks(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
     if status.get("open_questions"):
         return deny("subtasks gate: status open_questions non-empty")
     spec_path = artifact_path(worktree, status, "spec")
-    if not spec_path or not spec_path.is_file():
-        return deny("subtasks gate: spec artifact missing")
-    try:
-        oq = load_artifact(spec_path).get("open_questions")
-    except ArtifactParseError as exc:
-        return deny(f"subtasks gate: spec parse error: {exc}")
-    if oq:
-        return deny("subtasks gate: spec open_questions non-empty")
+    if spec_path and spec_path.is_file():
+        try:
+            oq = load_artifact(spec_path).get("open_questions")
+        except ArtifactParseError as exc:
+            return deny(f"subtasks gate: spec parse error: {exc}")
+        if oq:
+            return deny("subtasks gate: spec open_questions non-empty")
     return None
 
 
-def gate_execute(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
-    sub = artifact_path(worktree, status, "subtasks")
-    if not file_ok(sub):
-        return deny("execute gate: subtasks artifact missing")
+def gate_execute(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
+    # Subtasks file optional — informal jump / chat-first.
     return None
 
 
-def gate_review(status: dict, worktree: Path, user_confirmed: bool, _: bool) -> dict[str, Any] | None:
-    exe = artifact_path(worktree, status, "execution")
-    if not file_ok(exe):
-        return deny("review gate: execution artifact missing")
+def gate_review(status: dict, worktree: Path, user_confirmed: bool) -> dict[str, Any] | None:
+    # Execution artifact dropped. Partial scope only from review-input when present.
+    review_input = artifact_path(worktree, status, "review_input")
+    if not file_ok(review_input):
+        return None
     try:
-        scope = load_artifact(exe).get("review_scope") or {}
+        scope = load_artifact(review_input).get("review_scope") or {}
     except ArtifactParseError as exc:
-        return deny(f"review gate: execution parse error: {exc}")
+        return deny(f"review gate: review_input parse error: {exc}")
     if scope.get("mode") == "partial" and not user_confirmed:
         return deny("review gate: partial review_scope needs user confirm")
     return None
 
 
-def gate_acceptance(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
+def gate_acceptance(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
     rs = readiness(status, worktree)
     if rs != "ready_for_acceptance":
         return deny(f"acceptance gate: readiness is {rs or 'unset'}, need ready_for_acceptance")
     return None
 
 
-def gate_fix(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
+def gate_fix(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
     if readiness(status, worktree) != "fix_required":
         return deny("fix gate: readiness is not fix_required")
     return None
 
 
-def gate_sync(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
+def gate_sync(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
     rs = readiness(status, worktree)
     if rs in BLOCKED_READINESS:
         return deny(f"sync gate: readiness is {rs}")
-    # First sync: just finished acceptance. Second sync (git tail): archive exists.
-    current = ((status.get("task") or {}).get("current_step") or "")
-    if current != "acceptance" and not file_ok(artifact_path(worktree, status, "archive")):
-        return deny_sequence(
-            "sync gate: need current_step acceptance (or archive for second sync)"
-        )
     return None
 
 
-def gate_archive(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
+def gate_archive(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
     sync_path = artifact_path(worktree, status, "sync")
     if not file_ok(sync_path):
         return deny("archive gate: sync artifact missing")
@@ -123,7 +108,7 @@ def gate_archive(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, A
     return None
 
 
-def gate_integrate(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
+def gate_integrate(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
     if not file_ok(artifact_path(worktree, status, "sync")):
         return deny("integrate gate: sync artifact missing")
     if not file_ok(artifact_path(worktree, status, "archive")):
@@ -131,16 +116,9 @@ def gate_integrate(status: dict, worktree: Path, _: bool, __: bool) -> dict[str,
     return None
 
 
-def gate_close(status: dict, worktree: Path, _: bool, __: bool) -> dict[str, Any] | None:
+def gate_close(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
     if not file_ok(artifact_path(worktree, status, "integrate")):
         return deny("close gate: integrate not recorded")
-    return None
-
-
-def gate_done(status: dict, _: Path, __: bool, ___: bool) -> dict[str, Any] | None:
-    current = ((status.get("task") or {}).get("current_step") or "")
-    if current != "close":
-        return deny_sequence("done gate: current_step is not close")
     return None
 
 
@@ -156,5 +134,4 @@ GATES: dict[str, GateFn] = {
     "archive": gate_archive,
     "integrate": gate_integrate,
     "close": gate_close,
-    "done": gate_done,
 }

@@ -4,6 +4,8 @@ Date: 2026-07-28. Replaces the deleted per-bug notes (`bug_1`–`bug_3`).
 Recurrence evidence for Finding 5: [`fallback_bug_investigation.md`](fallback_bug_investigation.md).
 Target these fixes serve: [`flexibility.md`](flexibility.md).
 
+**Note (2026-07-31):** `deny_sequence` / `gate_class: sequence` and `--override` were removed — see [`2026-07-31-drop-sequence-and-override-design.md`](superpowers/specs/2026-07-31-drop-sequence-and-override-design.md). Historical sections below still describe the old waiver model.
+
 Scope: `check-gate.py`, `gates.py`, `gate_utils.py`, `bootstrap-context.py`,
 `update-status.py`, `routing.json`, `test.py`, `tests/smoke/`.
 
@@ -20,7 +22,7 @@ of the real work.
 
 | # | Finding | State | Flexibility impact |
 |---|---------|-------|--------------------|
-| 1 | `gate_integrate` resolves the archive path against the worktree; archive is workspace-root-relative | **Fixed 2026-07-28** (follow-up 1) | Foundation. External sources of truth need the same scope model. |
+| 1 | `gate_integrate` / archive path scope | **Corrected 2026-07-31** | 07-28 made archive Nicki-workspace-root-relative; that was wrong for multi-repo. Archive is worktree-relative again (project repo → main via integrate). |
 | 2 | `completed_status` must be the literal `"complete"` or `completed_steps` silently skips the append | **Fixed 2026-07-29** (follow-up 3) | Closed enum plus a `--mode` axis; ad-hoc writes no longer move position. |
 | 3 | `routing.json` per-step fields are unread by any script | **Mostly fixed / mitigated 2026-07-29** (follow-up 5) | Was a direct block; core fields (`default_next_step`, `artifact_key`, `adhoc_allowed`, `user_confirm_required`, `gate_class`, …) are now read. Residual drift risk is suite-guarded, not prose-only. |
 | 4 | `bootstrap-context.py` still crashes on a malformed artifact | **Fixed 2026-07-29** (follow-up 4 — bootstrap soft-fail) | Was worse on every response; malformed readiness now yields contract JSON + `readiness_error`, exit 0 — not a harness failure. |
@@ -30,16 +32,21 @@ of the real work.
 
 ## Finding 1 — integrate gate cannot see the archive
 
-`gate_integrate` (`gates.py:120`) calls `artifact_path(worktree, status,
-"archive")`. `artifact_path` (`gate_utils.py:86-88`) is unconditionally
-`worktree / rel`. The archive value is workspace-root-relative by design — the
-report must outlive the worktree — so the join builds a path that structurally
-cannot exist.
+> **Correction 2026-07-31.** The original bug was writers putting archive under
+> the Nicki workspace while gates joined `worktree / rel`. The 07-28 follow-up
+> inverted that: gates looked at the Nicki root. Correct end state (skills always
+> said this): archive is **worktree / project-repo** `docs/archive/<slug>/`, then
+> second sync + integrate merge it to main. Do not write under the Nicki
+> workspace `docs/archive/`.
 
-`gate_integrate`'s fourth parameter is named `_` and never read, so
-`--override` is silently discarded. No CLI bypass exists.
+Historical notes below describe the 07-28 diagnosis; see follow-up 1 for the
+07-31 correction.
 
-Verified: fixture with `artifacts.archive:
+`gate_integrate` (`gates.py`) calls `artifact_path(worktree, status,
+"archive")`. Pre-07-28, `artifact_path` was unconditionally `worktree / rel`.
+When writers put the report only at the Nicki workspace root, the join missed it.
+
+Verified then: fixture with `artifacts.archive:
 "docs/archive/demo/report.json"`, file present at the workspace root, both
 `--user-confirmed --override` passed.
 
@@ -48,7 +55,7 @@ Verified: fixture with `artifacts.archive:
 ```
 
 Copy the same file to `<worktree>/docs/archive/demo/report.json` and it flips
-to `allowed: true`. Systemic — every task hits it after a normal archive.
+to `allowed: true`. That worktree location is the intended one.
 
 ## Finding 2 — `completed_status` is an undocumented load-bearing enum
 
@@ -189,9 +196,8 @@ and `readiness_mapping.py` now asserts every documented status has a route.
   around with `--override`; the task archived and closed. The only gate that got
   a correct root cause is the one whose override is broken. (Addressed in
   follow-up 7: a denial now says whether a waiver can even reach it.)
-- **Path scope is unwritten.** `archive` is workspace-root-relative; every other
-  artifact is worktree-relative. `artifact_path()` knows one rule. No format doc
-  states the difference.
+- **Path scope (resolved 2026-07-31).** All artifact pointers including `archive`
+  are worktree-relative; see `status-format.md` and follow-up 1.
 - **Migrations go big-bang mid-flight.** `8fa5569` flipped every artifact and
   return contract from YAML to JSON across 39 files on the same day as these
   reports, with a task in flight holding `.yaml` artifacts.
@@ -202,23 +208,24 @@ Ordered. Each is a prerequisite for [`flexibility.md`](flexibility.md), and
 names the blocker there it clears. Each states current behavior, target, and a
 done-when check so a future session can pick one up cold.
 
-### 1. Scope-aware artifact resolution — **done 2026-07-28**
+### 1. Scope-aware artifact resolution — **done 2026-07-28; corrected 2026-07-31**
 
 Unblocked flexibility B1.
 
-- **Was:** `artifact_path()` was `worktree / rel` for every key.
-  `gate_integrate` discarded its override argument.
-- **Now:** `gate_utils.ROOT_SCOPED_ARTIFACTS` declares which pointers are
-  workspace-root-relative (`archive`); everything else resolves against the
-  worktree. `readiness()` goes through `artifact_path()` instead of its own join.
-  `gate_integrate`'s consent deny said that `--override` does not apply; follow-up
-  7 replaced that sentence with the `gate_class` field.
+- **Was (pre-07-28):** `artifact_path()` was `worktree / rel` for every key, but
+  some writers put archive under the Nicki workspace root.
+- **Was (07-28 “fix”):** `ROOT_SCOPED_ARTIFACTS` forced `archive` to resolve
+  against the Nicki workspace root so the report “outlived the worktree.” That
+  matched Nicki-as-only-project and broke multi-repo (e.g. jung): sheep correctly
+  write `docs/archive/` in the project worktree; integrate then denied missing
+  archive at the Nicki root.
+- **Now (07-31):** every artifact pointer is worktree-relative, including
+  archive. Archive reaches main via second sync + integrate. No
+  `ROOT_SCOPED_ARTIFACTS`.
 - **Documented:** path-scope rule in `status-format.md` `artifacts`.
-- **Proven:** `tests/smoke/gate_paths.py`, wired into `test.py`. Four path cases:
-  archive at root resolves; archive genuinely absent still denies; archive under
-  the worktree is *not* accepted; worktree-scoped `sync` is *not* read from the
-  root. Reverting the resolution change turns the suite red. Its two consent cases
-  moved to the policy matrix in follow-up 6, which covers every step.
+- **Proven:** `tests/smoke/gate_paths.py` — archive in worktree allows; absent
+  denies; archive only at Nicki workspace root is *not* accepted; worktree-scoped
+  `sync` is *not* read from the workspace root.
 
 ### 2. Real gate fixtures in `test.py` — **done 2026-07-28**
 
@@ -332,15 +339,20 @@ Implements [`flexibility.md`](flexibility.md) Decision 3, and closes Finding 6.
 - **Now:** `user_confirm_required` per step in `routing.json`, enforced once in
   `check-gate.py` before any gate runs, with that step's `user_confirm` sentence
   as the deny reason. `gate_start` is gone entirely (consent was its only check);
-  `gate_integrate` and `gate_close` lost theirs. `start` gained the
-  `user_confirm` sentence it had always needed.
+  `gate_integrate` and `gate_close` lost theirs. (`start` briefly gained a
+  `user_confirm` sentence; dropped 2026-07-30 — see amendment below.)
 - **Kept in code, deliberately:** `gate_review`'s confirm depends on the
   execution artifact's `review_scope`, not on the step, so it cannot be declared
   per step without inventing a condition language in JSON.
-- **Behavior change, as warned:** `start`, `sync`, and `archive` now deny without
+  **Amended 2026-07-30:** execution artifact dropped; partial scope (when any)
+  comes from Nicki prompt / review-input only — see
+  [`2026-07-30-informal-jump-and-drop-execution-design.md`](superpowers/specs/2026-07-30-informal-jump-and-drop-execution-design.md).
+- **Behavior change, as warned:** `sync` and `archive` now deny without
   the flag. `nicki.md` says to pass it after any confirm, and
-  `permissions.json` lists it.
-- **Proven:** `gates_matrix.POLICY_CASES` — five consent denials, two cases
+  `permissions.json` lists it. (**Amended 2026-07-30:** `start` does *not*
+  require `--user-confirmed` — the user's start request is the confirm;
+  hard-gating it caused a double ask with the transition card.)
+- **Proven:** `gates_matrix.POLICY_CASES` — four consent denials, two cases
   showing no flag buys consent, plus a declaration check asserting that every
   step with a `user_confirm` sentence requires it and vice versa.
 

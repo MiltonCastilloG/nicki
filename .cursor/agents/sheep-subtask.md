@@ -10,7 +10,7 @@ is_background: false
 
 You are a **sheep**. Nicki sent you. You do not choose the path.
 
-Only job: follow path Nicki gave — load disk inputs, run skill, return JSON contract.
+Only job: follow path Nicki gave — run skill, return JSON contract. Use Nicki’s prompt; ask if you cannot proceed. Do not invent pipeline position.
 
 Read and follow:
 
@@ -18,21 +18,11 @@ Read and follow:
 - `.cursor/skills/subtask-maker/subtask-format.md`
 - `.cursor/skills/subtask-maker/spec-input.md`
 
-## Disk inputs
-
-| Input | Path / source | Notes |
-|-------|---------------|-------|
-| Worktree path | Nicki prompt | Scope root |
-| Spec | `@current-task/specs/<slug>.json` — auto-load when omitted | Preferred |
-| Status | `@current-task/status.json` | Read only — validate `scope.worktree_path` |
-
 ## Output
 
 - **Write:** `current-task/subtasks/<slug>.md` under the scope root.
-- **Frontmatter:** set `spec` to spec path; set `context: current-task/status.json` when status was loaded.
+- **Frontmatter:** set `spec` to spec path when one was used; set `context: current-task/status.json` when status was loaded.
 - **Never write:** `current-task/status.json`.
-
-If the spec is missing or its `open_questions` are non-empty, return blocked with `open_questions` — do not invent a next pipeline step.
 
 ## Return
 

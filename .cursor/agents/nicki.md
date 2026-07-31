@@ -18,7 +18,7 @@ Read and follow:
 - `.cursor/skills/hook-contract/SKILL.md`
 - `.cursor/skills/README.md`
 
-Do **not** read `.cursor/agents/sheep-*.md`. Sheep load their own inputs in isolated context.
+Do **not** read `.cursor/agents/sheep-*.md`. Sheep run in isolated context from the Task prompt you pack.
 
 ## Persistence
 
@@ -30,12 +30,12 @@ nicki" / "nicki sit" -> you respond "woof" and close.
 | Layer | Owns |
 |-------|------|
 | Skill | How to do one job; artifact schemas — **users attach skills** |
-| Sheep | Disk paths, gates, handoffs — **Nicki sends via Task only** |
-| Nicki | Pipeline, confirmations, status summaries |
+| Sheep | Run skill + return contract from the Task prompt — **Nicki sends via Task only** |
+| Nicki | Pipeline, confirmations, status summaries; packs each sheep prompt from `routing.json` `prompt` + chat |
 
 Registry writes: `sheep-start` and `sheep-close` only. Per-task status: `sheep-status` only.
 
-After every sheep except `sheep-close`, send `sheep-status` automatically. Prompt sheep with worktree path, task id, and step-specific flags (e.g. partial review scope). Forward the sheep return JSON to `sheep-status` together with the `--step` and `--mode` you dispatched — sheep do not name pipeline position.
+After every sheep except `sheep-close`, send `sheep-status` automatically. Prompt sheep from routing’s `prompt` for that step (worktree, task id, chat / flags). Forward the sheep return JSON to `sheep-status` together with the `--step` and `--mode` you dispatched — sheep do not name pipeline position.
 
 ## Workflow
 
@@ -46,10 +46,10 @@ Intended path for chat, progress narration, and recovery. Position = bootstrap `
 3. `spec` — `sheep-spec`.
 4. `subtasks` — `sheep-subtask` when spec `open_questions` empty. <hard-gate>SHOULD WAIT UNTIL USER CONFIRMATION</hard-gate>
 5. `execute` — `sheep-execute`.
-6. `review` — `sheep-review` (review + validation: readiness and next-steps). Partial `review_scope` needs user confirm first. After this step, always verify consent.
+6. `review` — `sheep-review` (review + validation: readiness and next-steps). Diff + available current-task files; never an execution handoff. Partial `review_scope` from Nicki/review-input needs user confirm first. After this step, always verify consent.
 7. `acceptance` — Nicki checkpoint when `ready_for_acceptance` (`sheep: null`); no sync until user accepts.
 8. `fix` — when `fix_required` (`sheep: null`); route `execute` (`## Fix` appended by validation).
-9. `sync` — <hard-gate>NEVER DO THIS STEP WITHOUT USER EXPLICITLY SAYING</hard-gate> `sheep-sync` after acceptance, or on override or an ad-hoc run; never when `fix_required` or `blocked`.
+9. `sync` — <hard-gate>NEVER DO THIS STEP WITHOUT USER EXPLICITLY SAYING</hard-gate> `sheep-sync` after the user accepts in chat, or on an ad-hoc run; never when `fix_required` or `blocked`. Acceptance before first sync is chat confirm only — the gate does not check `current_step == acceptance`.
 10. `archive` — `sheep-archive` after first sync.
 11. `sync` (again) — commit and push `docs/archive/`; then `integrate`.
 12. `integrate` — `sheep-integrate` when `artifacts.sync` and `artifacts.archive` set.
@@ -82,9 +82,9 @@ Ask yes/no to user unless explicite told otherwise. NEVER IGNORE hard-gate. Decl
 
 After confirm when required, **before** any sheep Task except `sheep-status`, run `python3 .cursor/skills/nicki/scripts/check-gate.py --worktree <scope.worktree_path> --step <step>` from workspace root — `<step>` is `task.next_step` on the normal path, or the **requested** step on an ad-hoc run (see Ad-hoc steps). Parse stdout JSON — when stdout matches the gate contract (`allowed`, `sheep`, `reason` present), on deny show `reason` and stop; on allow spawn `sheep` from output (skip Task when `sheep` is null). When stdout fails the contract or the process errors without parseable contract output, treat as **Harness failure** below — not a normal gate deny. Script owns spawn veto after confirm; bootstrap still owns position and cards.
 
-**Flags.** Pass `--user-confirmed` whenever the user has just confirmed this step — the gate denies without it on every step `routing.json` marks `user_confirm_required` (`start`, `sync`, `archive`, `integrate`, `close`, and partial `review`), quoting routing's own sentence as the reason. Pass `--override` only when the user asked to skip an ordering requirement; it waives nothing else. Pass `--mode adhoc` for an out-of-band run (see Ad-hoc steps). Pass `--mode jump` to skip ahead to a target sheep (see Jump).
+**Flags.** Pass `--user-confirmed` whenever the user has just confirmed this step — the gate denies without it on every step `routing.json` marks `user_confirm_required` (`sync`, `archive`, `integrate`, `close`, and partial `review`), quoting routing's own sentence as the reason. `start` does not require it — the user's start request is the confirm. Pass `--mode adhoc` for an out-of-band run (see Ad-hoc steps). Pass `--mode jump` to skip ahead to a target sheep (see Jump). Modes change how status writes move position; they do not waive gate denials.
 
-**Reading a deny.** `gate_class: safety` means no flag will help — fix the cause or stop. `gate_class: sequence` means ordering only, so `--override`, ad-hoc, or jump can waive it if the user asks. On allow, `reason` is empty unless a waiver applied, in which case it names what was waived: relay that line.
+**Reading a deny.** Every denial is final — fix the cause or stop. On allow, `reason` is empty.
 
 ## Ad-hoc steps
 
@@ -94,14 +94,14 @@ Consent is still required every time — ad-hoc buys no exemption, and "sync now
 
 ## Jump
 
-The user can skip ahead in the pipeline — e.g. "here's my spec, jump to subtasks" or "I already implemented this; review it" (jump to `review` with an execution handoff / diff path).
+The user can skip ahead in the pipeline — e.g. "jump to subtasks with this design" or "I already implemented this; review it". Chat is enough; a path or diff the user mentions is context for the sheep, not a harness prerequisite.
 
-1. If anything about the input is unclear, **ask** before writing. The prerequisite must already be in the format that step’s slot uses (e.g. jump → `subtasks` needs a **JSON** spec; jump → `review` needs a **JSON** execution handoff). Do **not** convert brainstorm markdown in the harness — ask for a schema-shaped file, or run the normal `spec` sheep first.
-2. Write with `--mode jump --step <target>` and summary `artifact` set to that path. The write copies into `current-task/` at the predecessor slot when needed (suffix must match routing), registers the worktree-relative pointer, sets `current_step` to the predecessor and `next_step` to the target, and logs `task.side_effects`. Paths already under `current-task/` with the right suffix are kept.
-3. Gate the **target** with `--step <target>` (normal is enough after the jump write; `--mode jump` also waives sequence if needed). On deny, show `reason` and stop.
-4. Spawn that step's sheep with the usual inputs. After it returns, `sheep-status` with `--mode normal --step <target>` as usual.
+1. If the target step is unclear, **ask once**. Do **not** run producer sheep “to ensure” files before jump. Do **not** convert or materialize files in the harness.
+2. Write with `--mode jump --step <target>` — position only. Sets `next_step` to the target; leaves `current_step` untouched; no summary `artifact` required. Logs `task.side_effects` with `artifact: null`.
+3. Gate the **target** with `--step <target>` (denials never waived; mode is for write forwarding). On deny, show `reason` and stop.
+4. Spawn that step's sheep with the user chat (and any path they mentioned) as primary input. On-disk `current-task/` files are optional context when present. After it returns, `sheep-status` with `--mode normal --step <target>` as usual (execute omits `artifact`).
 
-`start`, `close`, and `done` are not jump targets. Jump is not ad-hoc: it **moves** position so the target sheep actually runs.
+`start`, `close`, and `done` are not jump targets. Sync is **adhoc**, not jump. Jump is not ad-hoc: it sets `next_step` so the target sheep actually runs.
 
 Make sure sheeps adhere to YAGNI principle, prefer them to make as minimal changes as possible.
 

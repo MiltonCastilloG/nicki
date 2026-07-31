@@ -2,15 +2,14 @@
 
 CASES cover the per-step checks in `gates.py`. POLICY_CASES cover what
 `routing.json` `gate_policy` decides before those run — consent, ad-hoc
-admission, and which denials a waiver may reach — and assert the `gate_class`
-and `mode` the gate contract echoes back.
+admission, jump bookends — and assert the `gate_class` and `mode` the gate
+contract echoes back. Denials are never waived.
 """
 
 from __future__ import annotations
 
 import json
 import os
-import re
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -18,12 +17,10 @@ from typing import Any
 from tests.smoke._helpers import json_line, run_py, script
 
 SLUG = "matrix"
-ROOT_PREFIX = "root:"
 
 STORY = "current-task/story.md"
 SPEC = f"current-task/specs/{SLUG}.json"
 SUBTASKS = f"current-task/subtasks/{SLUG}.md"
-EXECUTION = f"current-task/executions/{SLUG}.json"
 VALIDATION = "current-task/review-validations/r1-validation.json"
 SYNC = f"current-task/syncs/{SLUG}.json"
 INTEGRATE = f"current-task/integrates/{SLUG}.json"
@@ -63,22 +60,13 @@ def _validation(value: str) -> dict[str, Any]:
 
 # label, step, cli args, status, files, expected allowed, reason needle
 CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
-    ("start needs confirmation", "start", (), None, {}, False, "user consent required"),
-    ("start with confirmation", "start", ("--user-confirmed",), None, {}, True, ""),
+    ("start allows without confirmation", "start", (), None, {}, True, ""),
+    ("start with confirmation still allows", "start", ("--user-confirmed",), None, {}, True, ""),
     ("describe needs task.original", "describe", (), _status(original=" "), {}, False, "task.original missing"),
     ("describe with task.original", "describe", (), _status(), {}, True, ""),
-    ("spec needs story pointer", "spec", (), _status(), {}, False, "artifacts.story unset"),
+    ("spec allows without story", "spec", (), _status(), {}, True, ""),
     (
-        "spec needs story on disk",
-        "spec",
-        (),
-        _status(artifacts={"story": STORY}),
-        {},
-        False,
-        "story file missing on disk",
-    ),
-    (
-        "spec with story present",
+        "spec still allows when story present",
         "spec",
         (),
         _status(artifacts={"story": STORY}),
@@ -96,13 +84,13 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         "status open_questions non-empty",
     ),
     (
-        "subtasks needs spec on disk",
+        "subtasks allows without spec file",
         "subtasks",
         (),
-        _status(artifacts={"spec": SPEC}),
+        _status(),
         {},
-        False,
-        "spec artifact missing",
+        True,
+        "",
     ),
     (
         "subtasks blocked by spec open_questions",
@@ -131,9 +119,9 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         True,
         "",
     ),
-    ("execute needs subtasks", "execute", (), _status(), {}, False, "subtasks artifact missing"),
+    ("execute allows without subtasks", "execute", (), _status(), {}, True, ""),
     (
-        "execute with subtasks",
+        "execute with subtasks still allows",
         "execute",
         (),
         _status(artifacts={"subtasks": SUBTASKS}),
@@ -141,22 +129,29 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         True,
         "",
     ),
-    ("review needs execution", "review", (), _status(), {}, False, "execution artifact missing"),
+    ("review allows without execution", "review", (), _status(), {}, True, ""),
     (
-        "review denies cleanly on unparseable execution",
+        "review denies cleanly on unparseable review_input",
         "review",
         (),
-        _status(artifacts={"execution": EXECUTION}),
-        {EXECUTION: BROKEN_JSON},
+        _status(artifacts={"review_input": "current-task/review-inputs/r1-review.json"}),
+        {"current-task/review-inputs/r1-review.json": BROKEN_JSON},
         False,
-        "execution parse error",
+        "review_input parse error",
     ),
     (
         "partial review needs confirmation",
         "review",
         (),
-        _status(artifacts={"execution": EXECUTION}),
-        {EXECUTION: {"review_scope": {"mode": "partial"}}},
+        _status(artifacts={"review_input": "current-task/review-inputs/r1-review.json"}),
+        {
+            "current-task/review-inputs/r1-review.json": {
+                "approved": False,
+                "content": "n",
+                "important-considerations": [],
+                "review_scope": {"mode": "partial"},
+            }
+        },
         False,
         "partial review_scope needs user confirm",
     ),
@@ -164,8 +159,15 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         "partial review with confirmation",
         "review",
         ("--user-confirmed",),
-        _status(artifacts={"execution": EXECUTION}),
-        {EXECUTION: {"review_scope": {"mode": "partial"}}},
+        _status(artifacts={"review_input": "current-task/review-inputs/r1-review.json"}),
+        {
+            "current-task/review-inputs/r1-review.json": {
+                "approved": False,
+                "content": "n",
+                "important-considerations": [],
+                "review_scope": {"mode": "partial"},
+            }
+        },
         True,
         "",
     ),
@@ -173,8 +175,15 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         "full review needs no confirmation",
         "review",
         (),
-        _status(artifacts={"execution": EXECUTION}),
-        {EXECUTION: {"review_scope": {"mode": "full"}}},
+        _status(artifacts={"review_input": "current-task/review-inputs/r1-review.json"}),
+        {
+            "current-task/review-inputs/r1-review.json": {
+                "approved": False,
+                "content": "n",
+                "important-considerations": [],
+                "review_scope": {"mode": "full"},
+            }
+        },
         True,
         "",
     ),
@@ -252,22 +261,13 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         "readiness routing blocks sync",
     ),
     (
-        "sync needs acceptance current_step",
+        "sync without acceptance allows when confirmed",
         "sync",
         CONFIRMED,
         _status(artifacts={"review_validation": VALIDATION}),
         {VALIDATION: _readiness("ready_for_acceptance")},
-        False,
-        "need current_step acceptance",
-    ),
-    (
-        "sync with override instead of acceptance",
-        "sync",
-        CONFIRMED + ("--override",),
-        _status(artifacts={"review_validation": VALIDATION}),
-        {VALIDATION: _readiness("ready_for_acceptance")},
         True,
-        "waived by --override",
+        "",
     ),
     (
         "sync with acceptance current_step",
@@ -288,7 +288,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         ),
         {
             VALIDATION: _readiness("ready_for_acceptance"),
-            ROOT_PREFIX + ARCHIVE: {"task": SLUG},
+            ARCHIVE: {"task": SLUG},
         },
         True,
         "",
@@ -335,7 +335,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         "integrate",
         ("--user-confirmed",),
         _status(artifacts={"archive": ARCHIVE}),
-        {ROOT_PREFIX + ARCHIVE: {"task": SLUG}},
+        {ARCHIVE: {"task": SLUG}},
         False,
         "sync artifact missing",
     ),
@@ -358,17 +358,17 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         True,
         "",
     ),
-    ("done needs close", "done", (), _status(), {}, False, "current_step is not close"),
+    ("done allows without close", "done", (), _status(), {}, True, ""),
     ("done after close", "done", (), _status(current_step="close"), {}, True, ""),
     ("unknown step denies", "bogus", (), _status(), {}, False, "unknown step: bogus"),
     (
-        "legacy v1 status denies without story pointer",
+        "legacy v1 status allows spec without story pointer",
         "spec",
         (),
         _status(task_extra={"story_artifact": STORY}, history=[{"step": "describe"}]),
         {STORY: "# Story\n"},
-        False,
-        "artifacts.story unset",
+        True,
+        "",
     ),
 ]
 
@@ -405,7 +405,7 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         "integrate",
         (),
         _status(artifacts={"sync": SYNC, "archive": ARCHIVE}),
-        {SYNC: MERGED, ROOT_PREFIX + ARCHIVE: {"task": SLUG}},
+        {SYNC: MERGED, ARCHIVE: {"task": SLUG}},
         False,
         "push main",
         "safety",
@@ -421,22 +421,22 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         "safety",
     ),
     (
-        "start denies without consent",
+        "start allows without consent",
         "start",
         (),
         None,
         {},
-        False,
-        "create the task worktree",
-        "safety",
+        True,
+        "",
+        None,
     ),
-    # Consent is a safety check, so no flag reaches it.
+    # Consent is a safety check — no mode flag reaches it.
     (
-        "override cannot buy consent",
+        "missing confirm cannot buy consent",
         "integrate",
-        ("--override",),
+        (),
         _status(artifacts={"sync": SYNC, "archive": ARCHIVE}),
-        {SYNC: MERGED, ROOT_PREFIX + ARCHIVE: {"task": SLUG}},
+        {SYNC: MERGED, ARCHIVE: {"task": SLUG}},
         False,
         "user consent required",
         "safety",
@@ -452,7 +452,7 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         "safety",
     ),
     # Ad-hoc admission is routing data: every step except start/close/done opts in.
-    # Safety inputs and consent still hold; only sequence denials are waived.
+    # Mode does not waive denials; write semantics are separate.
     (
         "ad-hoc sync mid-execute allows",
         "sync",
@@ -460,7 +460,7 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         MID_EXECUTE,
         {},
         True,
-        "waived by ad-hoc run",
+        "",
         None,
     ),
     (
@@ -478,7 +478,7 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         "integrate",
         CONFIRMED + ADHOC,
         _status(artifacts={"sync": SYNC, "archive": ARCHIVE}),
-        {SYNC: MERGED, ROOT_PREFIX + ARCHIVE: {"task": SLUG}},
+        {SYNC: MERGED, ARCHIVE: {"task": SLUG}},
         True,
         "",
         None,
@@ -513,7 +513,7 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         "cannot run out of band",
         "safety",
     ),
-    # A waiver reaches ordering only. Missing inputs and readiness blocks hold.
+    # Readiness and missing inputs still hold under adhoc/jump.
     (
         "ad-hoc sync still blocked by fix_required",
         "sync",
@@ -525,44 +525,34 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         "safety",
     ),
     (
-        "override cannot conjure a missing spec",
+        "no flag clears status open_questions",
         "subtasks",
-        ("--override",),
-        _status(artifacts={"spec": SPEC}),
+        ADHOC,
+        _status(open_questions=[{"question": "which CTA?"}]),
         {},
         False,
-        "spec artifact missing",
+        "status open_questions non-empty",
         "safety",
     ),
     (
-        "override cannot skip integrate before close",
+        "no flag skips integrate before close",
         "close",
-        CONFIRMED + ("--override",),
+        CONFIRMED + ADHOC,
         _status(),
         {},
         False,
-        "integrate not recorded",
+        "cannot run out of band",
         "safety",
     ),
+    # Jump: bookends refused; denials never waived; sync mid-execute ok when confirmed.
     (
-        "done is ordering only, so override waives it",
-        "done",
-        ("--override",),
-        _status(),
-        {},
-        True,
-        "waived by --override",
-        None,
-    ),
-    # Jump: sequence waived; bookends refused; safety still holds.
-    (
-        "jump waives sync acceptance sequence",
+        "jump sync mid-execute allows",
         "sync",
         CONFIRMED + ("--mode", "jump"),
         MID_EXECUTE,
         {},
         True,
-        "waived by jump",
+        "",
         None,
     ),
     (
@@ -596,9 +586,7 @@ def _build(base: Path, status: dict | None, files: dict[str, Any]) -> tuple[Path
         status = {**status, "scope": {"worktree_path": str(worktree)}}
         _put(worktree / "current-task/status.json", status)
     for rel, payload in files.items():
-        root_scoped = rel.startswith(ROOT_PREFIX)
-        target = (workspace if root_scoped else worktree) / rel.removeprefix(ROOT_PREFIX)
-        _put(target, payload)
+        _put(worktree / rel, payload)
     return workspace, worktree
 
 
@@ -624,14 +612,14 @@ def _policy_declarations(root: Path) -> list[str]:
         if name not in never_adhoc and not allowed:
             bad.append(f"fail: {name} should set adhoc_allowed")
 
-    if set(policy.get("classes") or {}) != {"safety", "sequence"}:
-        bad.append("fail: gate_policy must name exactly the safety and sequence classes")
+    if set(policy.get("classes") or {}) != {"safety"}:
+        bad.append("fail: gate_policy must name exactly the safety class")
 
     source = (root / ".cursor/skills/nicki/scripts/gates.py").read_text(encoding="utf-8")
-    in_code = sorted(re.findall(r'deny_sequence\(\s*"([^"]+)"', source))
-    declared = sorted(policy.get("sequence_denials") or [])
-    if in_code != declared:
-        bad.append(f"fail: gate_policy sequence_denials {declared} != gates.py {in_code}")
+    if "deny_sequence" in source:
+        bad.append("fail: gates.py must not define or call deny_sequence")
+    if policy.get("sequence_denials"):
+        bad.append("fail: gate_policy must not declare sequence_denials")
     return bad
 
 

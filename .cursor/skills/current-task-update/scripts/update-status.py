@@ -11,10 +11,9 @@ Modes (--mode):
   normal — default; advances task.current_step / next_step from routing.
   adhoc  — step ran out of band: position fields are left untouched, the artifact
            pointer is still recorded, and one task.side_effects entry is appended
-  jump   — skip ahead to --step: copy summary artifact into current-task/ at the
-           predecessor expected path when suffixes match (no format conversion);
-           register that worktree-relative pointer; set position; log side_effects.
-           Nicki then gates and runs that sheep. Wrong suffix → input error.
+  jump   — skip ahead to --step: set next_step to the target; leave current_step
+           untouched; no summary artifact required or materialized; log
+           side_effects with artifact null. Nicki then gates and runs that sheep.
 
 Optional summary fields (defaults applied):
   completed_step — overridden by --step; sets current_step / artifact pointer
@@ -36,7 +35,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,7 +47,6 @@ if str(_NICKI_SCRIPTS) not in sys.path:
 from gate_utils import (  # noqa: E402
     ArtifactParseError,
     MODES,
-    expected_artifact_for,
     load_routing,
     next_step_for,
     readiness,
@@ -194,102 +191,6 @@ def _append_side_effect(
     task["side_effects"] = effects
 
 
-def _predecessor_for(target: str) -> tuple[str | None, str | None]:
-    """Happy-path predecessor step and its artifact_key for a jump target."""
-    steps = load_routing().get("steps") or {}
-    matches = [
-        (name, cfg.get("artifact_key"))
-        for name, cfg in steps.items()
-        if isinstance(cfg, dict) and cfg.get("default_next_step") == target
-    ]
-    with_key = [(n, k) for n, k in matches if k and k not in NON_ARTIFACT_KEYS]
-    if with_key:
-        return with_key[0][0], with_key[0][1]
-    if matches:
-        return matches[0][0], None
-    return None, None
-
-
-def _set_artifact_key(status: dict[str, Any], key: str, artifact_path: str) -> None:
-    artifacts = status.setdefault("artifacts", {})
-    if not isinstance(artifacts, dict):
-        status["artifacts"] = {}
-        artifacts = status["artifacts"]
-    artifacts[key] = artifact_path
-
-
-def _resolve_existing_file(worktree: Path, source: str) -> Path:
-    """Resolve a jump artifact path to an existing file."""
-    raw = Path(source)
-    candidates: list[Path] = []
-    if raw.is_absolute():
-        candidates.append(raw)
-    else:
-        candidates.extend(
-            [
-                (worktree / raw).resolve(),
-                (Path.cwd() / raw).resolve(),
-                raw.resolve(),
-            ]
-        )
-    for path in candidates:
-        if path.is_file():
-            return path
-    _fail([f"jump artifact not found: {source}"])
-    raise AssertionError("unreachable")
-
-
-def _dest_rel_for_jump(status: dict[str, Any], pred_step: str | None, src: Path) -> str:
-    """Worktree-relative destination under current-task/ for a jump prerequisite.
-
-    Destination is routing's expected_artifact for the predecessor. Source suffix
-    must match — no conversion. Wrong format → clear input error (Nicki asks).
-    """
-    expected = expected_artifact_for(pred_step, status) if pred_step else None
-    if not expected or not expected.startswith("current-task/"):
-        _fail(
-            [
-                f"jump: predecessor {pred_step!r} has no current-task expected_artifact "
-                "to materialize into"
-            ]
-        )
-    dest = Path(expected)
-    if src.suffix.lower() != dest.suffix.lower():
-        _fail(
-            [
-                f"jump artifact must be {dest.suffix} (routing expected for "
-                f"{pred_step}), got {src.suffix or '(none)'}: {src.name}"
-            ]
-        )
-    return dest.as_posix()
-
-
-def _materialize_jump_artifact(
-    worktree: Path, status: dict[str, Any], pred_step: str | None, source: str
-) -> str:
-    """Ensure the jump prerequisite lives under worktree current-task/; return rel path.
-
-    Copies only when the file is outside current-task/. Format must already match
-    the predecessor slot — harness does not convert markdown ↔ JSON.
-    """
-    src = _resolve_existing_file(worktree, source)
-    try:
-        already = src.resolve().relative_to(worktree.resolve())
-        if already.as_posix().startswith("current-task/"):
-            # Still enforce suffix vs routing so a .md in specs/ cannot sneak through.
-            _dest_rel_for_jump(status, pred_step, src)
-            return already.as_posix()
-    except ValueError:
-        pass
-
-    dest_rel = _dest_rel_for_jump(status, pred_step, src)
-    dest = worktree / dest_rel
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    if dest.resolve() != src.resolve():
-        shutil.copy2(src, dest)
-    return dest_rel
-
-
 def _optional_completed_step(summary: dict[str, Any]) -> str | None:
     raw = summary.get("completed_step")
     if raw is None:
@@ -416,25 +317,12 @@ def main() -> int:
         _append_side_effect(status, completed_step, art, mode="adhoc")
         next_step = task.get("next_step")
     elif args.mode == "jump":
-        # Skip ahead to target: materialize prerequisite under current-task/,
-        # point next_step at the target so Nicki can gate and run that sheep.
+        # Position-only: set next_step to target; leave current_step untouched;
+        # never materialize or require a summary artifact.
         assert completed_step is not None  # validated above
-        pred_step, pred_key = _predecessor_for(completed_step)
-        if art:
-            if not pred_key:
-                _fail(
-                    [
-                        f"jump to {completed_step}: no prerequisite artifact_key "
-                        "in routing for the provided artifact"
-                    ]
-                )
-            art = _materialize_jump_artifact(worktree, status, pred_step, art)
-            _set_artifact_key(status, pred_key, art)
-        if pred_step:
-            task["current_step"] = pred_step
         task["next_step"] = completed_step
         next_step = completed_step
-        _append_side_effect(status, completed_step, art, mode="jump")
+        _append_side_effect(status, completed_step, None, mode="jump")
     elif completed_step is not None:
         task["current_step"] = completed_step
         _set_artifact_pointer(status, completed_step, art)

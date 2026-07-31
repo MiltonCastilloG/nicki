@@ -13,14 +13,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ROUTING_PATH = SCRIPT_DIR.parent / "routing.json"
 BLOCKED_READINESS = frozenset({"fix_required", "blocked", "rerun_review"})
 
-# Artifact pointers whose value is workspace-root-relative, not worktree-relative.
-# The archive report must outlive the worktree, so it is never written under it.
-ROOT_SCOPED_ARTIFACTS = frozenset({"archive"})
-
-# Gate classes. SAFETY must hold; SEQUENCE is ordering only and can be waived.
-# Declared in routing.json gate_policy.classes.
+# Denials are never waived. gate_class stays "safety" for contract stability.
 SAFETY = "safety"
-SEQUENCE = "sequence"
 
 MODES = ("normal", "adhoc", "jump")
 
@@ -98,8 +92,10 @@ def artifact_path(worktree: Path, status: dict[str, Any], key: str) -> Path | No
     rel = (status.get("artifacts") or {}).get(key)
     if not rel:
         return None
-    base = workspace_root() if key in ROOT_SCOPED_ARTIFACTS else worktree
-    return base / rel
+    # All artifact pointers are worktree-relative (project repo), including
+    # archive — docs/archive/<slug>/ lives in the feature worktree and reaches
+    # main via the second sync + integrate. Never resolve against Nicki workspace.
+    return worktree / rel
 
 
 def file_ok(path: Path | None) -> bool:
@@ -147,8 +143,8 @@ def expected_artifact_for(step: str, status: dict[str, Any]) -> str | None:
     return rel.replace("<slug>", slug) if slug else rel
 
 
-def deny(reason: str, gate_class: str = SAFETY) -> dict[str, Any]:
-    """Deny with a class. Default SAFETY: an unclassified check is never waived."""
+def deny(reason: str) -> dict[str, Any]:
+    """Deny. Never waived by mode or any flag."""
     return {
         "allowed": False,
         "sheep": None,
@@ -156,13 +152,8 @@ def deny(reason: str, gate_class: str = SAFETY) -> dict[str, Any]:
         "user_confirm": None,
         "next_step": None,
         "artifact": None,
-        "gate_class": gate_class,
+        "gate_class": SAFETY,
     }
-
-
-def deny_sequence(reason: str) -> dict[str, Any]:
-    """Deny on ordering alone — waivable by --override or an ad-hoc run."""
-    return deny(reason, SEQUENCE)
 
 
 def allow(
