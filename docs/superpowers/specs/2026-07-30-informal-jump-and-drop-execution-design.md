@@ -95,7 +95,7 @@ Optional files remain useful when present; they are not admission tickets for th
 - Return contract: **omit** `artifact` (better than `null`).
 - `routing.json` execute step: `artifact_key: null`, `expected_artifact: null` (or remove key per existing null pattern).
 - `update-status.py` normal write for execute: no execution pointer to set when artifact omitted.
-- Deprecate or delete `execution-format.md` as a live writer schema; update readers that assumed the file.
+- Deprecate or delete `execution-format.md` as a live writer schema; update readers that assumed the file. **Done** — file deleted 2026-07-31.
 
 ### Review
 

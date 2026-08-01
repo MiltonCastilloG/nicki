@@ -5,9 +5,9 @@ Usage:
   check-gate.py --worktree worktrees/nicki-my-task --step sync
                 [--user-confirmed] [--mode normal|adhoc|jump]
 
-Stdout JSON: allowed, sheep, reason, user_confirm, next_step, artifact, mode,
-gate_class. Denials are never waived. `--mode` is echoed for write forwarding
-only (adhoc/jump change how update-status.py moves position). See routing.json
+Stdout JSON: allowed, sheep, reason, user_confirm, next_step, artifact, mode.
+Denials are never waived. `--mode` is echoed for write forwarding only
+(adhoc/jump change how update-status.py moves position). See routing.json
 `gate_policy`.
 """
 
@@ -20,19 +20,16 @@ from pathlib import Path
 from typing import Any
 
 from gate_utils import (
-    BLOCKED_READINESS,
     MODES,
-    ArtifactParseError,
     allow,
     deny,
     expected_artifact_for,
     load_routing,
     load_status,
     next_step_for,
-    readiness,
     resolve_worktree,
 )
-from gates import GATES, READINESS_STEPS
+from gates import GATES
 
 
 def _policy_denial(step: str, cfg: dict[str, Any], mode: str, user_confirmed: bool):
@@ -93,15 +90,6 @@ def _evaluate(
         status = load_status(worktree)
     except FileNotFoundError as exc:
         return deny(str(exc))
-
-    if step in READINESS_STEPS and step != "review":
-        try:
-            rs = readiness(status, worktree)
-        except ArtifactParseError as exc:
-            return deny(f"readiness parse error: {exc}")
-        rr = (routing.get("readiness_routing") or {}).get(rs or "") or {}
-        if rs and rr.get("sync_blocked") and step == "sync" and rs in BLOCKED_READINESS:
-            return deny(f"sync gate: readiness routing blocks sync ({rs})")
 
     gate_fn = GATES.get(step)
     if gate_fn:

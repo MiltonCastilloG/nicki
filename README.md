@@ -128,8 +128,8 @@ Nicki-only steps: `acceptance`, `fix`. Validation (readiness + deferred next-ste
 | Describe | `sheep-describe` | status, `task.original` | `current-task/story.md` (Gherkin) |
 | Spec | `sheep-spec` | status, story | `current-task/specs/<slug>.json` |
 | Subtasks | `sheep-subtask` | status, spec | `current-task/subtasks/<slug>.md` |
-| Execute | `sheep-execute` | status, subtasks, spec | code + `current-task/executions/<slug>.json` |
-| Review | `sheep-review` | spec, subtasks, execution | `current-task/reviews/<slug>.json` + `current-task/review-validations/rN-validation.json` + optional `current-task/next-steps/*.json` |
+| Execute | `sheep-execute` | status, subtasks, spec (optional) | code changes in worktree (no execution JSON) |
+| Review | `sheep-review` | worktree diff + available current-task files | `current-task/reviews/<slug>.json` + `current-task/review-validations/rN-validation.json` + optional `current-task/next-steps/*.json` |
 | Sync / archive / integrate | `sheep-sync`, `sheep-archive`, `sheep-integrate` | status, review validation | `current-task/syncs/<slug>.json`, `docs/archive/<slug>/`, `current-task/integrates/<slug>.json` |
 | Close | `sheep-close` | status, integrate handoff | worktree deleted; unregister `global-status.json` |
 
@@ -148,7 +148,6 @@ worktrees/<path>/current-task/
   story.md
   specs/<slug>.json
   subtasks/<slug>.md
-  executions/<slug>.json
   reviews/<slug>.json
   review-validations/rN-validation.json
   next-steps/*.json

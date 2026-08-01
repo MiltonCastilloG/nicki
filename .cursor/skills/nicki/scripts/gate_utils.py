@@ -13,9 +13,6 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ROUTING_PATH = SCRIPT_DIR.parent / "routing.json"
 BLOCKED_READINESS = frozenset({"fix_required", "blocked", "rerun_review"})
 
-# Denials are never waived. gate_class stays "safety" for contract stability.
-SAFETY = "safety"
-
 MODES = ("normal", "adhoc", "jump")
 
 
@@ -152,7 +149,6 @@ def deny(reason: str) -> dict[str, Any]:
         "user_confirm": None,
         "next_step": None,
         "artifact": None,
-        "gate_class": SAFETY,
     }
 
 
@@ -171,7 +167,6 @@ def allow(
         "user_confirm": user_confirm or False,
         "next_step": next_step,
         "artifact": artifact,
-        "gate_class": None,
     }
 
 

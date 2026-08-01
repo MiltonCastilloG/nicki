@@ -32,7 +32,7 @@ Both `check-gate.py` and `update-status.py` take `--mode normal|adhoc|jump` (def
 | **adhoc** | Same denials as normal; step must be `adhoc_allowed` | Records artifact pointer; appends `task.side_effects[]`; leaves `current_step` and `next_step` untouched | Unchanged |
 | **jump** | Same denials as normal; cannot target `start`, `close`, or `done` | Sets `next_step` to the target; leaves `current_step` untouched; no summary `artifact` required; appends `side_effects` with `artifact: null` | Points at target sheep — Nicki gates and runs it next |
 
-**Ad-hoc policy:** every step sets `adhoc_allowed` in `routing.json` except `start`, `close`, and `done`. `irreversible` may combine with `adhoc_allowed` (consent and safety inputs still never waive).
+**Ad-hoc policy:** every step sets `adhoc_allowed` in `routing.json` except `start`, `close`, and `done`.
 
 **Sheep return contract:** sheep return `artifact`, `completed_status`, `open_questions`, `summary` only — not `next_step` or `completed_step`. Execute **omits** `artifact` (no `executions/*.json`). Nicki forwards the return plus the `--step` and `--mode` she dispatched.
 

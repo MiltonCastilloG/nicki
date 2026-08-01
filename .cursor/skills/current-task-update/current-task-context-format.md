@@ -11,7 +11,6 @@ current-task/
   status.json
   specs/<slug>.json
   subtasks/<slug>.md
-  executions/<slug>.json
   reviews/<slug>.json
   review-validations/rN-validation.json
   review-inputs/rN-review.json
@@ -109,7 +108,6 @@ Use paths relative to the worktree root.
 | `context` | Yes | `current-task/status.json` |
 | `spec` | No | `current-task/specs/<slug>.json` |
 | `subtasks` | No | `current-task/subtasks/<slug>.md` |
-| `execution` | No | `current-task/executions/<slug>.json` |
 | `review` | No | `current-task/reviews/<slug>.json` |
 | `review_validation` | No | Latest `current-task/review-validations/rN-validation.json` |
 | `review_input` | No | Latest `current-task/review-inputs/rN-review.json` |
@@ -184,7 +182,6 @@ Append one event per workflow result.
     "context": "current-task/status.json",
     "spec": "current-task/specs/hero-section.json",
     "subtasks": "current-task/subtasks/hero-section.md",
-    "execution": "current-task/executions/hero-section.json",
     "review": "current-task/reviews/hero-section.json",
     "review_validation": "current-task/review-validations/r1-validation.json",
     "sync": "current-task/syncs/hero-section.json",

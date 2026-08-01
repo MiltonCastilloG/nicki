@@ -10,8 +10,8 @@ disable-model-invocation: true
 
 ## When
 
-- `integrate-task` done (or tail override approved)
-- status-update recorded integrate (or override)
+- `integrate-task` done
+- status-update recorded integrate
 - User confirms worktree delete
 
 ## Inputs
@@ -27,13 +27,13 @@ Missing path → ask.
 
 - `current-task/integrates/<slug>.json` exists (or `artifacts.integrate` resolves)
 
-Missing integrate handoff → **block** unless user approves override. Then unregister → teardown.
+Missing integrate handoff → **block**. Do not unregister or teardown.
 
 ## Checklist
 
 ```
 - [ ] close-scope §1 — paths
-- [ ] Tail gate (integrate or override)
+- [ ] Tail gate (integrate handoff on disk)
 - [ ] close-scope §2–3 — unregister + teardown
 - [ ] Report
 ```
@@ -41,5 +41,5 @@ Missing integrate handoff → **block** unless user approves override. Then unre
 ## Safety
 
 - No close without Nicki confirm.
-- No teardown before integrate handoff (or override).
+- No teardown before integrate handoff.
 - No `task: true`.

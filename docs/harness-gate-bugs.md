@@ -4,7 +4,7 @@ Date: 2026-07-28. Replaces the deleted per-bug notes (`bug_1`–`bug_3`).
 Recurrence evidence for Finding 5: [`fallback_bug_investigation.md`](fallback_bug_investigation.md).
 Target these fixes serve: [`flexibility.md`](flexibility.md).
 
-**Note (2026-07-31):** `deny_sequence` / `gate_class: sequence` and `--override` were removed — see [`2026-07-31-drop-sequence-and-override-design.md`](superpowers/specs/2026-07-31-drop-sequence-and-override-design.md). Historical sections below still describe the old waiver model.
+**Note (2026-07-31):** `deny_sequence` / `gate_class` / `--override` / unused `irreversible` routing flag were removed — see [`2026-07-31-drop-sequence-and-override-design.md`](superpowers/specs/2026-07-31-drop-sequence-and-override-design.md). Historical sections below still describe the old waiver model.
 
 Scope: `check-gate.py`, `gates.py`, `gate_utils.py`, `bootstrap-context.py`,
 `update-status.py`, `routing.json`, `test.py`, `tests/smoke/`.

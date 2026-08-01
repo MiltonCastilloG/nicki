@@ -1,9 +1,8 @@
 """Per-step gate checks for Nicki pipeline routing.
 
-Every check returns a denial via `deny`. Denials are never waived — no
-`--override`, no sequence class. Consent is enforced in `check-gate.py` from
-`user_confirm_required` in routing before these run. The one exception is
-`review`, whose confirm may depend on review-input scope rather than the step.
+Every check returns a denial via `deny`. Denials are never waived. Consent is
+enforced in `check-gate.py` from `user_confirm_required` in routing before these
+run. Partial review confirm may depend on review-input scope rather than the step.
 """
 
 from __future__ import annotations
@@ -23,19 +22,11 @@ from gate_utils import (
 
 GateFn = Callable[[dict[str, Any], Path, bool], dict[str, Any] | None]
 
-READINESS_STEPS = frozenset({"review", "acceptance", "sync", "fix"})
-
 
 def gate_describe(status: dict, _: Path, __: bool) -> dict[str, Any] | None:
     original = ((status.get("task") or {}).get("original") or "").strip()
     if not original:
         return deny("describe gate: task.original missing")
-    return None
-
-
-def gate_spec(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    # Story file optional — informal jump / chat-first. Deny only on open questions
-    # when a spec is already present (handled in subtasks). Spec itself: no hard pred.
     return None
 
 
@@ -53,13 +44,8 @@ def gate_subtasks(status: dict, worktree: Path, _: bool) -> dict[str, Any] | Non
     return None
 
 
-def gate_execute(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    # Subtasks file optional — informal jump / chat-first.
-    return None
-
-
 def gate_review(status: dict, worktree: Path, user_confirmed: bool) -> dict[str, Any] | None:
-    # Execution artifact dropped. Partial scope only from review-input when present.
+    # Partial scope only from review-input when present.
     review_input = artifact_path(worktree, status, "review_input")
     if not file_ok(review_input):
         return None
@@ -73,20 +59,30 @@ def gate_review(status: dict, worktree: Path, user_confirmed: bool) -> dict[str,
 
 
 def gate_acceptance(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    rs = readiness(status, worktree)
+    try:
+        rs = readiness(status, worktree)
+    except ArtifactParseError as exc:
+        return deny(f"acceptance gate: readiness parse error: {exc}")
     if rs != "ready_for_acceptance":
         return deny(f"acceptance gate: readiness is {rs or 'unset'}, need ready_for_acceptance")
     return None
 
 
 def gate_fix(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    if readiness(status, worktree) != "fix_required":
+    try:
+        rs = readiness(status, worktree)
+    except ArtifactParseError as exc:
+        return deny(f"fix gate: readiness parse error: {exc}")
+    if rs != "fix_required":
         return deny("fix gate: readiness is not fix_required")
     return None
 
 
 def gate_sync(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    rs = readiness(status, worktree)
+    try:
+        rs = readiness(status, worktree)
+    except ArtifactParseError as exc:
+        return deny(f"sync gate: readiness parse error: {exc}")
     if rs in BLOCKED_READINESS:
         return deny(f"sync gate: readiness is {rs}")
     return None
@@ -124,9 +120,7 @@ def gate_close(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
 
 GATES: dict[str, GateFn] = {
     "describe": gate_describe,
-    "spec": gate_spec,
     "subtasks": gate_subtasks,
-    "execute": gate_execute,
     "review": gate_review,
     "acceptance": gate_acceptance,
     "fix": gate_fix,

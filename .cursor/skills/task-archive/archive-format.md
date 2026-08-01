@@ -27,7 +27,7 @@ Read via `current-task/status.json` — [status-format.md](../current-task-updat
 | `describe` | `artifacts.story` | story exists → brief line from story title or slug |
 | `spec` | `artifacts.spec` | `meta.summary` or spec `title` |
 | `subtasks` | `artifacts.subtasks` | subtask frontmatter `title` |
-| `execute` | (none — execute omits artifact) | skip unless a legacy `artifacts.execution` pointer exists |
+| `execute` | (none — execute omits artifact) | skip |
 | `review` | `artifacts.review_validation` | validation `readiness.status` |
 | `sync` | `artifacts.sync` | sync handoff `meta` |
 | `integrate` | `artifacts.integrate` | integrate handoff `meta` |
@@ -63,8 +63,7 @@ Summarize handoffs — never paste full bodies, logs, diffs, transcripts, secret
   "meta": {
     "schema": "task-archive.v1",
     "generated_by": "task-archive",
-    "source_context": "current-task/status.json",
-    "tail_override": null
+    "source_context": "current-task/status.json"
   },
   "task": {
     "slug": "hero-section",
@@ -104,7 +103,7 @@ Summarize handoffs — never paste full bodies, logs, diffs, transcripts, secret
 
 ## suggestions
 
-Scan: `open_questions`, blockers, triage, review inputs, push/merge conflicts, skipped subtasks. Legacy execution deviations only when a leftover `artifacts.execution` pointer exists.
+Scan: `open_questions`, blockers, triage, review inputs, push/merge conflicts, skipped subtasks.
 
 ```json
 {

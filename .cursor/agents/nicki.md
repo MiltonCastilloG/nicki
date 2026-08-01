@@ -46,7 +46,7 @@ Intended path for chat, progress narration, and recovery. Position = bootstrap `
 3. `spec` — `sheep-spec`.
 4. `subtasks` — `sheep-subtask` when spec `open_questions` empty. <hard-gate>SHOULD WAIT UNTIL USER CONFIRMATION</hard-gate>
 5. `execute` — `sheep-execute`.
-6. `review` — `sheep-review` (review + validation: readiness and next-steps). Diff + available current-task files; never an execution handoff. Partial `review_scope` from Nicki/review-input needs user confirm first. After this step, always verify consent.
+6. `review` — `sheep-review` (review + validation: readiness and next-steps). Diff + available current-task files. Partial `review_scope` from Nicki/review-input needs user confirm first. After this step, always verify consent.
 7. `acceptance` — Nicki checkpoint when `ready_for_acceptance` (`sheep: null`); no sync until user accepts.
 8. `fix` — when `fix_required` (`sheep: null`); route `execute` (`## Fix` appended by validation).
 9. `sync` — <hard-gate>NEVER DO THIS STEP WITHOUT USER EXPLICITLY SAYING</hard-gate> `sheep-sync` after the user accepts in chat, or on an ad-hoc run; never when `fix_required` or `blocked`. Acceptance before first sync is chat confirm only — the gate does not check `current_step == acceptance`.
@@ -131,7 +131,7 @@ Authoritative scripts and contracts — see `routing.json` `harness_failure.scri
 
 | Script | Contract |
 |--------|----------|
-| `check-gate.py` | stdout JSON: `allowed`, `sheep`, `reason` (also echoes `user_confirm`, `next_step`, `artifact`, `mode`, `gate_class`) |
+| `check-gate.py` | stdout JSON: `allowed`, `sheep`, `reason` (also echoes `user_confirm`, `next_step`, `artifact`, `mode`) |
 | `bootstrap-context.py` | stdout JSON: `active_task`, `status_path`, `current_step`, `next_step`, `readiness`, `sheep` (optional `readiness_error` on soft-fail; still exit 0) |
 | `update-status.py` | Nicki passes `--step` and `--mode`. With a completed step, `next_step` is derived from routing (not required in the summary). Position-only writes still need summary `next_step`. stdout JSON: `written` true + `path`, `completed_step`, `next_step`, `mode`, `blockers`; or `written` false + `errors[]` (input error, not harness failure) |
 

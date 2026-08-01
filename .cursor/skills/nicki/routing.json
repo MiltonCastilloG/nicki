@@ -103,7 +103,6 @@
       "gate": "sync artifact exists; archive artifact exists; user confirmed merge into main and push main",
       "user_confirm": "merge feature into main and push main to remote",
       "user_confirm_required": true,
-      "irreversible": true,
       "adhoc_allowed": true,
       "prompt": "worktree path, task id"
     },
@@ -115,7 +114,6 @@
       "gate": "integrate recorded; user confirmed close",
       "user_confirm": "delete worktree",
       "user_confirm_required": true,
-      "irreversible": true,
       "prompt": "worktree path, task id"
     },
     "done": {
@@ -132,10 +130,7 @@
     "skip_user_confirm": true
   },
   "gate_policy": {
-    "description": "Read by check-gate.py. Per-step flags above: user_confirm_required (deny without --user-confirmed, using that step's user_confirm sentence as the reason), adhoc_allowed (may run with --mode adhoc; start/close/done omit it), irreversible (remote-visible / hard to undo — consent never waived; may combine with adhoc_allowed). Absent means false. Denials are never waived; --mode adhoc/jump only change update-status write semantics and policy bookends (adhoc_allowed; jump cannot target start/close/done).\n",
-    "classes": {
-      "safety": "Must hold. Consent, readiness blocks, missing inputs, anything guarding an irreversible or remote-visible action. Never waived."
-    }
+    "description": "Read by check-gate.py. Per-step flags: user_confirm_required (deny without --user-confirmed, using that step's user_confirm sentence as the reason), adhoc_allowed (may run with --mode adhoc; start/close/done omit it or set false). Absent means false. Denials are never waived; --mode adhoc/jump only change update-status write semantics and policy bookends (adhoc_allowed; jump cannot target start/close/done).\n"
   },
   "readiness_routing": {
     "ready_for_acceptance": {

@@ -7,7 +7,7 @@ description: "Review worktree changes against available current-task files and t
 
 Review implementation in a worktree. Compare changes against available story/spec/subtasks, optional review guidance, and the **actual git diff**; run verification checks; produce JSON with exactly `approved` and `content`.
 
-**Never load execution JSON.** Diff + whatever exists under `current-task/` is enough.
+Diff + whatever exists under `current-task/` is enough.
 
 - Review output: [review-format.md](review-format.md)
 - Guidance input: [review-guidance-format.md](review-guidance-format.md)
@@ -23,14 +23,12 @@ Review implementation in a worktree. Compare changes against available story/spe
 
 \*Ask when the worktree path is missing, or when the diff alone is unclear and no usable planning files exist.
 
-Never load execution JSON.
-
 ## Procedure
 
 ```
 Task Progress:
 - [ ] Resolve and validate worktree scope
-- [ ] Load whatever the prompt and current-task/ supply (never execution JSON)
+- [ ] Load whatever the prompt and current-task/ supply
 - [ ] Discover changes (git diff)
 - [ ] Check requirement coverage when a spec is available
 - [ ] Check subtask list completion when available
@@ -61,7 +59,7 @@ Task Progress:
 
 ### Step 2: Load inputs
 
-1. Load whatever the prompt and `current-task/` supply (spec, subtasks, story, review guidance) — never execution JSON.
+1. Load whatever the prompt and `current-task/` supply (spec, subtasks, story, review guidance).
 2. Extract what exists: `requirements`, `scope`, `acceptance`, `constraints` from spec; checklist lines from subtasks; `important-considerations` from guidance; partial `review_scope` from the prompt when supplied.
 3. Treat review guidance as guidance only. The git diff, source files, and rerun verification decide approval.
 
@@ -147,7 +145,6 @@ Summarize: scope root, inputs used, files reviewed, commands run, review path, v
 
 - Never edit application code — only review JSON files
 - Never modify specs or subtask lists during review (except `## Fix` append when required)
-- Never load or require `current-task/executions/*.json`
 - Never modify files outside the scope root
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
 - Do not commit or push unless the user explicitly asks

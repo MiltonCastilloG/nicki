@@ -11,8 +11,6 @@ The worktree path is a hard boundary: never modify files outside it.
 
 Subtask input: [subtask-input.md](../subtask-maker/subtask-input.md).
 
-**Do not write** `current-task/executions/<slug>.json`. Evidence for review is the git diff plus whatever exists under `current-task/`.
-
 ## Inputs
 
 | Input | Required | Notes |
@@ -30,7 +28,7 @@ Task Progress:
 - [ ] Parse plan from the prompt
 - [ ] Flag ambiguous or out-of-scope items (ask user)
 - [ ] Execute work in order, marking checklist items when a list exists
-- [ ] Report summary (omit execution artifact)
+- [ ] Report summary (omit `artifact`)
 ```
 
 ### Step 1: Resolve worktree scope
@@ -101,13 +99,12 @@ Summarize:
 - Remaining unchecked subtasks, if any
 - Any questions left for the user
 
-Do **not** write an execution handoff JSON. Omit `artifact` from the sheep return.
+Omit `artifact` from the sheep return.
 
 ## Safety rules
 
 - Never modify files outside the scope root
 - May edit the subtask markdown file only to flip checklist completion state
-- Never write `current-task/executions/*.json`
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
 - Do not commit or push unless the user explicitly asks
 - When in doubt, ask — improvisation is a last resort, not a default

@@ -22,7 +22,7 @@ Read and follow:
 ## Output
 
 - **May edit:** files under the scope root per the plan; `current-task/subtasks/<slug>.md` checklist `- [ ]` → `- [x]` only when that file exists.
-- **Never write:** `current-task/executions/<slug>.json` or `current-task/status.json`.
+- **Never write:** `current-task/status.json`.
 
 ## Return
 

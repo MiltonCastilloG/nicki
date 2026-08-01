@@ -1,7 +1,7 @@
 # Design: Drop sequence denials and `--override`
 
 Date: 2026-07-31  
-Status: **implemented**  
+Status: **implemented** (plus follow-up dead-surface cleanup the same day)  
 Related: [`docs/flexibility.md`](../../flexibility.md), [`docs/flexibility_next_steps.md`](../../flexibility_next_steps.md), [`docs/harness-gate-bugs.md`](../../harness-gate-bugs.md)
 
 ## Problem

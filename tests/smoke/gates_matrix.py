@@ -2,8 +2,8 @@
 
 CASES cover the per-step checks in `gates.py`. POLICY_CASES cover what
 `routing.json` `gate_policy` decides before those run — consent, ad-hoc
-admission, jump bookends — and assert the `gate_class` and `mode` the gate
-contract echoes back. Denials are never waived.
+admission, jump bookends — and assert `mode` the gate contract echoes back.
+Denials are never waived.
 """
 
 from __future__ import annotations
@@ -249,7 +249,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         _status(artifacts={"review_validation": VALIDATION}, current_step="acceptance"),
         {VALIDATION: _readiness("fix_required")},
         False,
-        "readiness routing blocks sync",
+        "readiness is fix_required",
     ),
     (
         "sync blocked while a review rerun is pending",
@@ -258,7 +258,7 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
         _status(artifacts={"review_validation": VALIDATION}, current_step="acceptance"),
         {VALIDATION: _readiness("rerun_review")},
         False,
-        "readiness routing blocks sync",
+        "readiness is rerun_review",
     ),
     (
         "sync without acceptance allows when confirmed",
@@ -376,8 +376,8 @@ CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
 READY = {VALIDATION: _readiness("ready_for_acceptance")}
 MID_EXECUTE = _status(next_step="review", current_step="execute")
 
-# label, step, cli args, status, files, expected allowed, reason needle, gate_class
-POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str, str | None]] = [
+# label, step, cli args, status, files, expected allowed, reason needle
+POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str]] = [
     # Consent comes from routing user_confirm_required, and the routing sentence
     # is the reason. Every step that declares it denies without the flag.
     (
@@ -388,7 +388,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         READY,
         False,
         "push feature branch",
-        "safety",
     ),
     (
         "archive denies without consent",
@@ -398,7 +397,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {SYNC: MERGED},
         False,
         "write task archive",
-        "safety",
     ),
     (
         "integrate denies without consent",
@@ -408,7 +406,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {SYNC: MERGED, ARCHIVE: {"task": SLUG}},
         False,
         "push main",
-        "safety",
     ),
     (
         "close denies without consent",
@@ -418,7 +415,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {},
         False,
         "delete worktree",
-        "safety",
     ),
     (
         "start allows without consent",
@@ -428,7 +424,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {},
         True,
         "",
-        None,
     ),
     # Consent is a safety check — no mode flag reaches it.
     (
@@ -439,7 +434,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {SYNC: MERGED, ARCHIVE: {"task": SLUG}},
         False,
         "user consent required",
-        "safety",
     ),
     (
         "ad-hoc cannot buy consent",
@@ -449,7 +443,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {},
         False,
         "user consent required",
-        "safety",
     ),
     # Ad-hoc admission is routing data: every step except start/close/done opts in.
     # Mode does not waive denials; write semantics are separate.
@@ -461,7 +454,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {},
         True,
         "",
-        None,
     ),
     (
         "ad-hoc archive allows when sync handoff is ready",
@@ -471,7 +463,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {SYNC: MERGED},
         True,
         "",
-        None,
     ),
     (
         "ad-hoc integrate allows when inputs present",
@@ -481,7 +472,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {SYNC: MERGED, ARCHIVE: {"task": SLUG}},
         True,
         "",
-        None,
     ),
     (
         "ad-hoc execute allows when subtasks exist",
@@ -491,7 +481,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {SUBTASKS: "- [ ] work\n"},
         True,
         "",
-        None,
     ),
     (
         "ad-hoc start is refused",
@@ -501,7 +490,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {},
         False,
         "cannot run out of band",
-        "safety",
     ),
     (
         "ad-hoc close is refused",
@@ -511,7 +499,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {},
         False,
         "cannot run out of band",
-        "safety",
     ),
     # Readiness and missing inputs still hold under adhoc/jump.
     (
@@ -521,8 +508,7 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         _status(artifacts={"review_validation": VALIDATION}),
         {VALIDATION: _readiness("fix_required")},
         False,
-        "readiness routing blocks sync",
-        "safety",
+        "readiness is fix_required",
     ),
     (
         "no flag clears status open_questions",
@@ -532,7 +518,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {},
         False,
         "status open_questions non-empty",
-        "safety",
     ),
     (
         "no flag skips integrate before close",
@@ -542,7 +527,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {},
         False,
         "cannot run out of band",
-        "safety",
     ),
     # Jump: bookends refused; denials never waived; sync mid-execute ok when confirmed.
     (
@@ -553,7 +537,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {},
         True,
         "",
-        None,
     ),
     (
         "jump cannot target close",
@@ -563,7 +546,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {INTEGRATE: {"merged": True}},
         False,
         "cannot be a jump target",
-        "safety",
     ),
     (
         "jump cannot skip missing integrate before close",
@@ -573,7 +555,6 @@ POLICY_CASES: list[tuple[str, str, tuple[str, ...], dict | None, dict, bool, str
         {},
         False,
         "cannot be a jump target",
-        "safety",
     ),
 ]
 
@@ -602,6 +583,8 @@ def _policy_declarations(root: Path) -> list[str]:
             bad.append(f"fail: {name} has a user_confirm sentence but does not require it")
         if cfg.get("user_confirm_required") and not cfg.get("user_confirm"):
             bad.append(f"fail: {name} requires consent with no sentence to show the user")
+        if cfg.get("irreversible"):
+            bad.append(f"fail: {name} must not set irreversible (unused)")
 
     # Ad-hoc is open by default; only bookends (and the terminal marker) stay out.
     never_adhoc = {"start", "close", "done"}
@@ -612,14 +595,8 @@ def _policy_declarations(root: Path) -> list[str]:
         if name not in never_adhoc and not allowed:
             bad.append(f"fail: {name} should set adhoc_allowed")
 
-    if set(policy.get("classes") or {}) != {"safety"}:
-        bad.append("fail: gate_policy must name exactly the safety class")
-
-    source = (root / ".cursor/skills/nicki/scripts/gates.py").read_text(encoding="utf-8")
-    if "deny_sequence" in source:
-        bad.append("fail: gates.py must not define or call deny_sequence")
-    if policy.get("sequence_denials"):
-        bad.append("fail: gate_policy must not declare sequence_denials")
+    if "classes" in policy or "sequence_denials" in policy:
+        bad.append("fail: gate_policy must not declare classes or sequence_denials")
     return bad
 
 
@@ -634,8 +611,8 @@ def run(root: Path) -> None:
     failures: list[str] = []
 
     with tempfile.TemporaryDirectory() as td:
-        cases = [(*c, None) for c in CASES] + POLICY_CASES
-        for i, (label, step, args, status, files, want_allow, needle, want_class) in enumerate(cases):
+        cases = list(CASES) + list(POLICY_CASES)
+        for i, (label, step, args, status, files, want_allow, needle) in enumerate(cases):
             workspace, worktree = _build(Path(td) / f"c{i}", status, files)
             proc = run_py(
                 gate,
@@ -653,8 +630,8 @@ def run(root: Path) -> None:
             reason = result.get("reason") or ""
             expect_mode = "normal"
             if "--mode" in args:
-                i = args.index("--mode")
-                expect_mode = args[i + 1] if i + 1 < len(args) else "normal"
+                mi = args.index("--mode")
+                expect_mode = args[mi + 1] if mi + 1 < len(args) else "normal"
             if result.get("allowed") is not want_allow:
                 failures.append(f"fail: {label}: expected allowed={want_allow}, got {result}")
             elif needle and needle not in reason:
@@ -663,12 +640,8 @@ def run(root: Path) -> None:
                 failures.append(f"fail: {label}: leaked internal error: {reason}")
             elif result.get("mode") != expect_mode:
                 failures.append(f"fail: {label}: mode {result.get('mode')!r} != {expect_mode!r}")
-            elif want_allow and result.get("gate_class") is not None:
-                failures.append(f"fail: {label}: allow should carry no gate_class")
-            elif want_class is not None and result.get("gate_class") != want_class:
-                failures.append(
-                    f"fail: {label}: gate_class {result.get('gate_class')!r} != {want_class!r}"
-                )
+            elif "gate_class" in result:
+                failures.append(f"fail: {label}: gate_class must be absent from contract, got {result}")
 
         bad_mode = run_py(
             gate,
