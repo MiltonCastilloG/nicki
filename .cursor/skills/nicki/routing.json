@@ -13,18 +13,18 @@
       "artifact_key": "story",
       "expected_artifact": "current-task/story.md",
       "default_next_step": "spec",
-      "gate": "after start + first sheep-status; task.original present or collected in chat",
+      "gate": "task.original present",
       "adhoc_allowed": true,
-      "prompt": "worktree path, task id, chat / optional path"
+      "prompt": "output path (Nicki-owned; usually worktree current-task/story.md), task id, chat"
     },
     "spec": {
       "sheep": "sheep-spec",
       "artifact_key": "spec",
       "expected_artifact": "current-task/specs/<slug>.json",
       "default_next_step": "subtasks",
-      "gate": "chat or optional on-disk story/status context; predecessor story not required",
+      "gate": "chat or optional on-disk context",
       "adhoc_allowed": true,
-      "prompt": "worktree path, task id, chat / optional path"
+      "prompt": "output path (Nicki-owned; usually worktree specs/<slug>.json), task id, chat"
     },
     "subtasks": {
       "sheep": "sheep-subtask",
@@ -33,33 +33,32 @@
       "default_next_step": "execute",
       "gate": "status open_questions empty; if spec present, its open_questions empty",
       "adhoc_allowed": true,
-      "prompt": "worktree path, task id, chat / optional path"
+      "prompt": "output path (Nicki-owned; usually worktree subtasks/<slug>.md), task id, chat"
     },
     "execute": {
       "sheep": "sheep-execute",
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "review",
-      "gate": "chat or optional on-disk subtasks; predecessor subtasks file not required",
+      "gate": "position / chat",
       "adhoc_allowed": true,
-      "prompt": "worktree path, task id, chat / optional path"
+      "prompt": "worktree path, task id, chat"
     },
     "review": {
       "sheep": "sheep-review",
-      "artifact_key": "review_validation",
-      "secondary_artifact_key": "review_input",
-      "expected_artifact": "current-task/review-validations/rN-validation.json",
-      "default_next_step": null,
-      "gate": "diff + available current-task files; partial review_scope from review_input needs user confirm",
+      "artifact_key": null,
+      "expected_artifact": null,
+      "default_next_step": "acceptance",
+      "gate": "diff + available current-task files; Nicki may pass next_step override (acceptance|execute|review)",
       "adhoc_allowed": true,
-      "prompt": "worktree path, task id, chat / review_scope when partial"
+      "prompt": "worktree path, task id, chat"
     },
     "acceptance": {
       "sheep": null,
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "sync",
-      "gate": "readiness.status is ready_for_acceptance; user accepts on disk summary",
+      "gate": "user accepts in chat",
       "adhoc_allowed": true,
       "prompt": null
     },
@@ -68,17 +67,17 @@
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "execute",
-      "gate": "readiness.status is fix_required",
+      "gate": "Nicki set next_step to fix",
       "adhoc_allowed": true,
       "prompt": null
     },
     "sync": {
       "sheep": "sheep-sync",
-      "artifact_key": "sync",
-      "expected_artifact": "current-task/syncs/<slug>.json",
+      "artifact_key": null,
+      "expected_artifact": null,
       "default_next_step": "archive",
       "next_step_when_archived": "integrate",
-      "gate": "user confirmed; readiness not fix_required, blocked, or rerun_review",
+      "gate": "user confirmed",
       "user_confirm": "local commit, merge main into feature branch, push feature branch",
       "user_confirm_required": true,
       "adhoc_allowed": true,
@@ -89,18 +88,18 @@
       "artifact_key": "archive",
       "expected_artifact": "docs/archive/<slug>/report.json",
       "default_next_step": "sync",
-      "gate": "sync artifact exists; pre_push_merge merged on sync handoff",
+      "gate": "user confirmed",
       "user_confirm": "write task archive to docs/archive",
       "user_confirm_required": true,
       "adhoc_allowed": true,
-      "prompt": "worktree path, task id"
+      "prompt": "output path (Nicki-owned; usually worktree docs/archive/<slug>/), task id"
     },
     "integrate": {
       "sheep": "sheep-integrate",
-      "artifact_key": "integrate",
-      "expected_artifact": "current-task/integrates/<slug>.json",
+      "artifact_key": null,
+      "expected_artifact": null,
       "default_next_step": "close",
-      "gate": "sync artifact exists; archive artifact exists; user confirmed merge into main and push main",
+      "gate": "user confirmed merge into main and push main",
       "user_confirm": "merge feature into main and push main to remote",
       "user_confirm_required": true,
       "adhoc_allowed": true,
@@ -111,7 +110,7 @@
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "done",
-      "gate": "integrate recorded; user confirmed close",
+      "gate": "user confirmed close",
       "user_confirm": "delete worktree",
       "user_confirm_required": true,
       "prompt": "worktree path, task id"
@@ -130,35 +129,18 @@
     "skip_user_confirm": true
   },
   "gate_policy": {
-    "description": "Read by check-gate.py. Per-step flags: user_confirm_required (deny without --user-confirmed, using that step's user_confirm sentence as the reason), adhoc_allowed (may run with --mode adhoc; start/close/done omit it or set false). Absent means false. Denials are never waived; --mode adhoc/jump only change update-status write semantics and policy bookends (adhoc_allowed; jump cannot target start/close/done).\n"
-  },
-  "readiness_routing": {
-    "ready_for_acceptance": {
-      "route_step": "acceptance",
-      "sync_blocked": true
-    },
-    "fix_required": {
-      "route_step": "execute",
-      "sync_blocked": true
-    },
-    "rerun_review": {
-      "route_step": "review",
-      "sync_blocked": true
-    },
-    "blocked": {
-      "route_step": "blocked",
-      "sync_blocked": true
-    }
+    "description": "Read by check-gate.py. Per-step flags: user_confirm_required (deny without --user-confirmed), adhoc_allowed. Denials are never waived; --mode adhoc/jump only change update-status write semantics and policy bookends.\n"
   },
   "sheep_return_contract": {
-    "description": "Every sheep ends its final message with compact JSON. Nicki forwards the return plus the --step and --mode she dispatched to sheep-status. Sheep do not name pipeline position — update-status.py derives completed_step from --step and next_step from routing.\n",
+    "description": "Every sheep ends with compact JSON. Nicki forwards the return plus --step/--mode to sheep-status. Sheep do not name pipeline position — update-status derives next_step from routing, or from summary next_step when Nicki supplies one (e.g. after review).\n",
     "required_fields": [],
     "optional_fields": [
       "worktree",
       "completed_status",
       "artifact",
       "open_questions",
-      "summary"
+      "summary",
+      "next_step"
     ],
     "completed_status_values": [
       "complete",
@@ -189,11 +171,9 @@
             "status_path",
             "current_step",
             "next_step",
-            "readiness",
             "sheep"
           ]
-        },
-        "notes": "Exit 0 whenever contract JSON is printed. Malformed review_validation sets readiness null and readiness_error (string) — not a harness failure. Missing registry / status.json still exit 1 with empty stdout.\n"
+        }
       },
       "update-status.py": {
         "route": ".cursor/skills/current-task-update/scripts/update-status.py",
@@ -202,7 +182,7 @@
             "written"
           ]
         },
-        "notes": "Nicki passes --step and --mode. With a completed step, next_step is derived from routing (not required in the summary). Position-only writes (no completed step) still require summary next_step. Missing required field → written false. Success: written true plus path, completed_step (value or null), next_step, mode, blockers. Input error is not a harness failure; retry sheep-status with corrected JSON.\n"
+        "notes": "Nicki passes --step and --mode. next_step from routing, or summary next_step when Nicki sets it. Position-only writes need summary next_step. Missing required field → written false.\n"
       }
     }
   }

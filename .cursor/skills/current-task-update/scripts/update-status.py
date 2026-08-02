@@ -21,12 +21,12 @@ Optional summary fields (defaults applied):
     routing artifact_key
   completed_status — default "complete"; must be one of COMPLETED_STATUSES
   open_questions — default []
-  next_step — ignored when a completed step is known (routing owns position);
-    still required for position-only writes with no completed step
+  next_step — when set, overrides routing after a completed step (Nicki review
+    outcomes); required for position-only writes with no completed step
   summary, task.* — ignored or derived
 
 Success stdout: {"written": true, "path", "completed_step", "next_step", "mode", "blockers"}
-  completed_step is the JSON value or null when omitted.
+  completed_step echoes --step (not a status.json field).
 Input error stdout: {"written": false, "errors": [...]}
 Exit 0 on success, 1 on input error or write failure.
 """
@@ -45,11 +45,9 @@ if str(_NICKI_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_NICKI_SCRIPTS))
 
 from gate_utils import (  # noqa: E402
-    ArtifactParseError,
     MODES,
     load_routing,
     next_step_for,
-    readiness,
 )
 
 # Closed set. Sheep outcome only — does not drive a history list.
@@ -202,23 +200,22 @@ def _optional_completed_step(summary: dict[str, Any]) -> str | None:
 
 
 def _derive_next_step(
-    worktree: Path,
     status: dict[str, Any],
     completed_step: str,
     completed_status: str,
+    summary: dict[str, Any],
 ) -> str | None:
-    """Routing owns next_step on normal completion. Blocked stays put."""
+    """Routing owns next_step; Nicki may override via summary next_step (e.g. review)."""
     task = status.get("task") or {}
     if completed_status == "blocked":
         existing = task.get("next_step")
         return existing if isinstance(existing, str) and existing.strip() else completed_step
 
-    rs: str | None = None
-    try:
-        rs = readiness(status, worktree)
-    except ArtifactParseError:
-        rs = None
-    derived = next_step_for(completed_step, status, rs)
+    explicit = summary.get("next_step")
+    if isinstance(explicit, str) and explicit.strip():
+        return explicit.strip()
+
+    derived = next_step_for(completed_step, status)
     if derived is not None:
         return derived
     existing = task.get("next_step")
@@ -288,7 +285,7 @@ def main() -> int:
                 next_step = completed_step
             else:
                 next_step = next_step_for(
-                    completed_step, {"task": {"slug": slug}, "artifacts": {}}, None
+                    completed_step, {"task": {"slug": slug}, "artifacts": {}}
                 )
                 if next_step is None:
                     next_step = "describe" if completed_step == "start" else completed_step
@@ -327,10 +324,10 @@ def main() -> int:
         task["current_step"] = completed_step
         _set_artifact_pointer(status, completed_step, art)
         next_step = _derive_next_step(
-            worktree,
             status,
             completed_step,
             completed_status if isinstance(completed_status, str) else "complete",
+            summary,
         )
         task["next_step"] = next_step
     else:

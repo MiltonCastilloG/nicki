@@ -6,7 +6,7 @@ Path: `current-task/status.json` relative to task worktree root.
 
 **Write boundary:** only `current-task-update`. Readers use [status-read.md](status-read.md).
 
-Handoff JSON/Markdown bodies stay separate; status holds pointers and step position only.
+Document bodies live as separate files; status holds **position**, document **pointers**, and **open_questions**. Operational steps (execute / review / sync / integrate / close) do not use handoff files or status blobs — `task.next_step` is enough.
 
 ## Top-level fields
 
@@ -15,7 +15,7 @@ Handoff JSON/Markdown bodies stay separate; status holds pointers and step posit
 | `meta` | Yes | Schema identifier only |
 | `task` | Yes | Identity and step pointers |
 | `scope` | Yes | Worktree path |
-| `artifacts` | Yes | Paths to handoff files — see [scope](#artifacts) |
+| `artifacts` | Yes | Paths to **document** files |
 | `open_questions` | Yes | Blockers; empty array when unblocked |
 
 ## `meta`
@@ -35,25 +35,20 @@ Handoff JSON/Markdown bodies stay separate; status holds pointers and step posit
 | `original` | Yes | Short slug or one-line title after describe; start slug until then |
 | `type` | No | `feature`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf` |
 | `current_step` | Yes | Step Nicki is on or just completed |
-| `next_step` | Yes | Next step Nicki should propose |
-| `side_effects` | No | Append-only log of out-of-band runs — see below |
+| `next_step` | Yes | Next step Nicki should propose — **workflow source of truth** |
+| `side_effects` | No | Append-only log of adhoc/jump runs |
 
 Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`.
 
+Do **not** persist `completed_step` / `completed_steps` — consumers use `next_step`.
+
 ### `side_effects`
 
-An ad-hoc step (`update-status.py --mode adhoc`) runs without moving the task:
-`current_step` and `next_step` are left exactly as they were.
-The artifact pointer is still recorded, and one entry is appended here so the run
-is not invisible. A jump (`--mode jump`) also appends here: sets `next_step` to
-the target and leaves `current_step` untouched; `artifact` is always `null` on
-the jump log entry (jump carries no file). Position fields stay the source of
-truth for *where the task is*; this log is the source of truth for *what else
-happened*.
+Ad-hoc leaves position untouched and appends one entry. Jump sets `next_step` to the target, leaves `current_step`, logs `artifact: null`.
 
 ```json
 "side_effects": [
-  {"step": "sync", "mode": "adhoc", "at": "2026-07-29T08:14:02Z", "artifact": "current-task/syncs/foo.json"},
+  {"step": "sync", "mode": "adhoc", "at": "2026-07-29T08:14:02Z", "artifact": null},
   {"step": "review", "mode": "jump", "at": "2026-07-30T12:00:00Z", "artifact": null}
 ]
 ```
@@ -66,33 +61,20 @@ happened*.
 
 ## `artifacts`
 
-**Path scope.** Every pointer is **worktree-relative** (project repo under the
-feature worktree). That includes `archive`: `docs/archive/<slug>/` is written in
-the worktree, committed on the second sync, and lands on the target branch via
-integrate. Gates always resolve `worktree / artifacts.<key>` — never against the
-Nicki workspace root (historical mistake when Nicki was the only project).
+Worktree-relative pointers to **document** outputs only. Gates resolve `worktree / artifacts.<key>`.
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `story` | No | `current-task/story.md` |
 | `spec` | No | Spec JSON path |
 | `subtasks` | No | Subtask markdown path |
-| `review_validation` | No | Latest validation JSON — sole review gate pointer |
-| `review_input` | No | Latest review guidance JSON |
-| `next_steps` | No | Array of follow-up spec paths |
-| `sync` | No | Sync handoff path (`current-task/syncs/<slug>.json`) |
-| `integrate` | No | Integrate handoff path (`current-task/integrates/<slug>.json`) |
-| `archive` | No | `docs/archive/<slug>/report.json` — worktree-relative (dir also holds `report.md`, `story.md`) |
+| `archive` | No | `docs/archive/<slug>/report.json` |
+
+No `sync` / `integrate` / `review_validation` / `review_input` pointers.
 
 ## `open_questions`
 
-Empty when Nicki can continue:
-
-```json
-"open_questions": []
-```
-
-Blocked example:
+Empty when Nicki can continue. Blocked example:
 
 ```json
 "open_questions": [
@@ -104,30 +86,13 @@ Blocked example:
 ]
 ```
 
-## Readiness routing
+## Acceptance / fix / review outcomes
 
-After review, status-update sets `artifacts.review_validation` to latest validation JSON. Nicki + hooks read `readiness` from that file — **not** review markdown, **not** status history.
+Nicki sets `next_step` from chat and the sheep summary (e.g. after review → `acceptance` or `execute`). No readiness file on disk.
 
-| `readiness.status` | `task.next_step` typical | `sync-task` |
-|--------------------|--------------------------|-------------|
-| `ready_for_acceptance` | `acceptance` | blocked until user accepts |
-| `fix_required` | `execute` | blocked |
-| `rerun_review` | `review` | blocked |
-| `blocked` | `blocked` or ask user | blocked |
+## Spec `open_questions` gate
 
-### Validation pointer
-
-`artifacts.review_validation` → `current-task/review-validations/rN-validation.json`. Refresh on every review complete.
-
-### Acceptance
-
-Nicki-only step after `ready_for_acceptance`. On user accept, set `current_step` to
-`acceptance` and derive `next_step` to `sync` (still needs git confirm). On reject,
-update `open_questions` / blockers; route `execute` or `describe` per user.
-
-### Spec `open_questions` gate
-
-Spec-to-subtasks gate reads `open_questions` from the spec artifact file — not mirrored on status.
+Subtasks gate may read `open_questions` from the spec file when present.
 
 ## Example
 
@@ -153,11 +118,3 @@ Spec-to-subtasks gate reads `open_questions` from the spec artifact file — not
   "open_questions": []
 }
 ```
-
-## Handoff meta scopes
-
-| Root | Role |
-|------|------|
-| Workspace | `global-status.json` (Nicki orchestrator) |
-| Project / task worktree | git repo checkout: `worktrees/<project>-<slug>/`, `current-task/*`, `docs/archive/` |
-| Target branch | project checkout for integrate (`main` default) |

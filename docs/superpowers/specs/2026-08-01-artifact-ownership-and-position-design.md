@@ -1,7 +1,7 @@
 # Design: Artifact ownership and position-as-truth
 
 Date: 2026-08-01  
-Status: **draft**  
+Status: **implemented**  
 Related: [`docs/flexibility.md`](../../flexibility.md), [`2026-07-30-informal-jump-and-drop-execution-design.md`](./2026-07-30-informal-jump-and-drop-execution-design.md), [`2026-07-31-drop-sequence-and-override-design.md`](./2026-07-31-drop-sequence-and-override-design.md)
 
 ## Problem

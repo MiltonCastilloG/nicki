@@ -291,9 +291,9 @@ Partial review scope (when supplied via Nicki prompt / review-input) needs user 
 | Subtasks | `sheep-subtask.md` | `subtask-maker/SKILL.md` | `subtask-format.md` |
 | Execute | `sheep-execute.md` | `execute-plan/SKILL.md` | — (no execution JSON) |
 | Review | `sheep-review.md` | `review-execution/SKILL.md` | `review-format.md`, `validation/` |
-| Sync | `sheep-sync.md` | `sync-task/SKILL.md` | `sync-format.md` |
+| Sync | `sheep-sync.md` | `sync-task/SKILL.md` | (no handoff file) |
 | Archive | `sheep-archive.md` | `task-archive/SKILL.md` | `task-archive/archive-format.md` |
-| Integrate | `sheep-integrate.md` | `integrate-task/SKILL.md` | `integrate-format.md` |
+| Integrate | `sheep-integrate.md` | `integrate-task/SKILL.md` | (no handoff file) |
 | Close | `sheep-close.md` | `close-task/SKILL.md` | — |
 
 ### Close helpers (no sheep)

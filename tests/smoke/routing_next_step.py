@@ -23,8 +23,8 @@ def _load_resolver(root: Path):
     return next_step_for
 
 
-def _check(resolve, step: str, status: dict, expected: str | None, label: str, **kw) -> None:
-    got = resolve(step, status, **kw)
+def _check(resolve, step: str, status: dict, expected: str | None, label: str) -> None:
+    got = resolve(step, status)
     if got != expected:
         raise AssertionError(f"fail: {label} expected {expected!r}, got {got!r}")
     print(f"ok: {label}")
@@ -39,6 +39,7 @@ def _resolver_cases(root: Path) -> None:
     _check(resolve, "describe", empty, "spec", "describe → spec")
     _check(resolve, "spec", empty, "subtasks", "spec → subtasks")
     _check(resolve, "execute", empty, "review", "execute → review")
+    _check(resolve, "review", empty, "acceptance", "review → acceptance")
     _check(resolve, "acceptance", empty, "sync", "acceptance → sync")
     _check(resolve, "fix", empty, "execute", "fix → execute")
     _check(resolve, "archive", empty, "sync", "archive → sync (second pass)")
@@ -46,24 +47,6 @@ def _resolver_cases(root: Path) -> None:
 
     _check(resolve, "sync", empty, "archive", "first sync → archive")
     _check(resolve, "sync", archived, "integrate", "second sync → integrate")
-
-    _check(resolve, "review", empty, None, "review unresolved without readiness")
-    _check(
-        resolve,
-        "review",
-        empty,
-        "acceptance",
-        "review + ready_for_acceptance → acceptance",
-        readiness_status="ready_for_acceptance",
-    )
-    _check(
-        resolve,
-        "review",
-        empty,
-        "execute",
-        "review + fix_required → execute",
-        readiness_status="fix_required",
-    )
 
     _check(resolve, "done", empty, None, "done has no successor")
     _check(resolve, "nonsense", empty, None, "unknown step resolves to None")
@@ -75,9 +58,6 @@ def _gate_echo(root: Path) -> None:
         worktree = workspace / "worktrees" / SLUG
         status_path = worktree / "current-task/status.json"
         status_path.parent.mkdir(parents=True, exist_ok=True)
-        subtasks = worktree / f"current-task/subtasks/{SLUG}.md"
-        subtasks.parent.mkdir(parents=True, exist_ok=True)
-        subtasks.write_text("- [ ] work\n", encoding="utf-8")
         status_path.write_text(
             json.dumps(
                 {
@@ -88,7 +68,7 @@ def _gate_echo(root: Path) -> None:
                         "next_step": "execute",
                     },
                     "scope": {"worktree_path": str(worktree)},
-                    "artifacts": {"subtasks": f"current-task/subtasks/{SLUG}.md"},
+                    "artifacts": {},
                     "open_questions": [],
                 },
                 indent=2,
@@ -112,7 +92,7 @@ def _gate_echo(root: Path) -> None:
         print("ok: gate allow echoes null expected_artifact for execute")
 
         denied = json_line(
-            run_py(gate, "--worktree", str(worktree), "--step", "integrate", env=env).stdout
+            run_py(gate, "--worktree", str(worktree), "--step", "sync", env=env).stdout
         )
         if denied.get("allowed") is not False or "next_step" not in denied:
             raise AssertionError(f"fail: deny should carry next_step key, got {denied}")

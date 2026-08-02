@@ -34,9 +34,10 @@ Schemas:
 **Required:** none in the summary when Nicki passes `--step` (position comes from
 routing). Position-only writes (no completed step) still need `next_step`.
 
-**Optional:** `completed_step` (overridden by `--step`), `artifact`,
-`completed_status`, `open_questions`, `summary`. Summary `next_step` is ignored
-whenever a completed step is known — routing owns it.
+**Optional:** `completed_step` (overridden by `--step`), `artifact` (document
+steps), `completed_status`, `open_questions`, `summary`, `next_step` (Nicki
+override after review; otherwise routing supplies it when a step completed).
+Position-only writes still need `next_step`.
 
 **`completed_status` is a closed set:** `complete` or `blocked`. Any other value is an
 input error — nothing is written. `blocked` leaves `next_step` where it was.

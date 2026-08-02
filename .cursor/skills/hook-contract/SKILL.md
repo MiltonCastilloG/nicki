@@ -48,7 +48,7 @@ jq -r --arg id "$TASK_ID" '.tasks[$id] | "\(.project) \(.worktree_path)"' global
 
 - Hooks **read only** — never write `global-status.json` during sheep steps.
 - Task id must be explicit; do not infer from chat.
-- Readiness: follow `artifacts.review_validation` pointer when routing after review.
+- Workflow position: `task.next_step` (document `artifacts.*` when present).
 
 ## Example script
 

@@ -1,8 +1,9 @@
 """Per-step gate checks for Nicki pipeline routing.
 
-Every check returns a denial via `deny`. Denials are never waived. Consent is
-enforced in `check-gate.py` from `user_confirm_required` in routing before these
-run. Partial review confirm may depend on review-input scope rather than the step.
+Denials are never waived. Consent is enforced in `check-gate.py` from
+`user_confirm_required` in routing before these run. Operational progress is
+position (`current_step` / `next_step`); these gates only cover document/blocker
+checks that position alone cannot express.
 """
 
 from __future__ import annotations
@@ -10,15 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable
 
-from gate_utils import (
-    BLOCKED_READINESS,
-    ArtifactParseError,
-    artifact_path,
-    deny,
-    file_ok,
-    load_artifact,
-    readiness,
-)
+from gate_utils import ArtifactParseError, artifact_path, deny, load_artifact
 
 GateFn = Callable[[dict[str, Any], Path, bool], dict[str, Any] | None]
 
@@ -44,88 +37,7 @@ def gate_subtasks(status: dict, worktree: Path, _: bool) -> dict[str, Any] | Non
     return None
 
 
-def gate_review(status: dict, worktree: Path, user_confirmed: bool) -> dict[str, Any] | None:
-    # Partial scope only from review-input when present.
-    review_input = artifact_path(worktree, status, "review_input")
-    if not file_ok(review_input):
-        return None
-    try:
-        scope = load_artifact(review_input).get("review_scope") or {}
-    except ArtifactParseError as exc:
-        return deny(f"review gate: review_input parse error: {exc}")
-    if scope.get("mode") == "partial" and not user_confirmed:
-        return deny("review gate: partial review_scope needs user confirm")
-    return None
-
-
-def gate_acceptance(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    try:
-        rs = readiness(status, worktree)
-    except ArtifactParseError as exc:
-        return deny(f"acceptance gate: readiness parse error: {exc}")
-    if rs != "ready_for_acceptance":
-        return deny(f"acceptance gate: readiness is {rs or 'unset'}, need ready_for_acceptance")
-    return None
-
-
-def gate_fix(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    try:
-        rs = readiness(status, worktree)
-    except ArtifactParseError as exc:
-        return deny(f"fix gate: readiness parse error: {exc}")
-    if rs != "fix_required":
-        return deny("fix gate: readiness is not fix_required")
-    return None
-
-
-def gate_sync(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    try:
-        rs = readiness(status, worktree)
-    except ArtifactParseError as exc:
-        return deny(f"sync gate: readiness parse error: {exc}")
-    if rs in BLOCKED_READINESS:
-        return deny(f"sync gate: readiness is {rs}")
-    return None
-
-
-def gate_archive(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    sync_path = artifact_path(worktree, status, "sync")
-    if not file_ok(sync_path):
-        return deny("archive gate: sync artifact missing")
-    try:
-        ppm = (load_artifact(sync_path).get("pre_push_merge") or {}).get("status")
-    except ArtifactParseError as exc:
-        return deny(f"archive gate: sync parse error: {exc}")
-    # Back-compat: early sync handoffs used "not_needed" when the base branch
-    # was already up to date in the feature branch. Treat that as satisfying the
-    # archive gate, since the intent is "base incorporated before archiving".
-    if ppm not in {"merged", "not_needed"}:
-        return deny("archive gate: pre_push_merge not satisfied on sync handoff")
-    return None
-
-
-def gate_integrate(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    if not file_ok(artifact_path(worktree, status, "sync")):
-        return deny("integrate gate: sync artifact missing")
-    if not file_ok(artifact_path(worktree, status, "archive")):
-        return deny("integrate gate: archive artifact missing")
-    return None
-
-
-def gate_close(status: dict, worktree: Path, _: bool) -> dict[str, Any] | None:
-    if not file_ok(artifact_path(worktree, status, "integrate")):
-        return deny("close gate: integrate not recorded")
-    return None
-
-
 GATES: dict[str, GateFn] = {
     "describe": gate_describe,
     "subtasks": gate_subtasks,
-    "review": gate_review,
-    "acceptance": gate_acceptance,
-    "fix": gate_fix,
-    "sync": gate_sync,
-    "archive": gate_archive,
-    "integrate": gate_integrate,
-    "close": gate_close,
 }

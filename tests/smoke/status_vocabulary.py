@@ -86,7 +86,7 @@ def run(root: Path) -> None:
             if (wt / "current-task/status.json").exists():
                 raise AssertionError("fail: rejected write must not create status.json")
 
-        # --mode adhoc: artifact recorded, position untouched, side effect logged.
+        # --mode adhoc: position untouched, side effect logged; document pointer when keyed.
         wt = tmpdir / "adhoc"
         wt.mkdir()
         seed = _summary(
@@ -105,9 +105,9 @@ def run(root: Path) -> None:
         adhoc = _summary(
             wt,
             "adhoc.json",
-            {"artifact": "current-task/syncs/foo.json", "completed_status": "complete"},
+            {"artifact": "current-task/story.md", "completed_status": "complete"},
         )
-        proc, out = _write(update, root, wt, adhoc, "--step", "sync", "--mode", "adhoc")
+        proc, out = _write(update, root, wt, adhoc, "--step", "describe", "--mode", "adhoc")
         if proc.returncode != 0 or out.get("written") is not True:
             raise AssertionError(f"fail: adhoc write: {proc.stdout}{proc.stderr}")
         if out.get("mode") != "adhoc":
@@ -120,24 +120,24 @@ def run(root: Path) -> None:
         for field in ("current_step", "next_step"):
             if task_after.get(field) != task_before.get(field):
                 raise AssertionError(f"fail: adhoc changed task.{field}")
-        if "completed_steps" in task_after:
-            raise AssertionError("fail: adhoc must not revive completed_steps")
-        if (after.get("artifacts") or {}).get("sync") != "current-task/syncs/foo.json":
-            raise AssertionError("fail: adhoc should record artifact pointer")
+        if (after.get("artifacts") or {}).get("story") != "current-task/story.md":
+            raise AssertionError("fail: adhoc should record document artifact pointer")
         effects = task_after.get("side_effects") or []
         if len(effects) != 1:
             raise AssertionError(f"fail: expected one side effect: {effects}")
         effect = effects[0]
-        if effect.get("step") != "sync" or effect.get("mode") != "adhoc":
+        if effect.get("step") != "describe" or effect.get("mode") != "adhoc":
             raise AssertionError(f"fail: side effect fields: {effect}")
-        if not effect.get("at") or not effect.get("artifact"):
+        if not effect.get("at") or effect.get("artifact") != "current-task/story.md":
             raise AssertionError(f"fail: side effect needs at + artifact: {effect}")
 
-        # adhoc needs no next_step, and repeated runs append rather than replace.
-        again = _summary(wt, "again.json", {"artifact": "current-task/syncs/bar.json"})
-        proc, out = _write(update, root, wt, again, "--step", "sync", "--mode", "adhoc")
+        # Operational adhoc: no artifact_key — side effect may still log path; no pointer.
+        sync_adhoc = _summary(wt, "sync-adhoc.json", {"completed_status": "complete"})
+        proc, out = _write(update, root, wt, sync_adhoc, "--step", "sync", "--mode", "adhoc")
         if proc.returncode != 0:
-            raise AssertionError(f"fail: second adhoc write: {proc.stdout}{proc.stderr}")
+            raise AssertionError(f"fail: sync adhoc: {proc.stdout}{proc.stderr}")
+        if (_status(wt).get("artifacts") or {}).get("sync"):
+            raise AssertionError("fail: sync adhoc must not set artifacts.sync")
         effects = ((_status(wt).get("task")) or {}).get("side_effects") or []
         if len(effects) != 2:
             raise AssertionError(f"fail: side effects should append: {effects}")
@@ -145,8 +145,8 @@ def run(root: Path) -> None:
         # adhoc on a worktree with no status.json is an input error, not an init.
         fresh = tmpdir / "adhoc-fresh"
         fresh.mkdir()
-        s = _summary(fresh, "summary.json", {"artifact": "current-task/syncs/x.json"})
-        proc, out = _write(update, root, fresh, s, "--step", "sync", "--mode", "adhoc")
+        s = _summary(fresh, "summary.json", {"artifact": "current-task/story.md"})
+        proc, out = _write(update, root, fresh, s, "--step", "describe", "--mode", "adhoc")
         if proc.returncode != 1 or out.get("written") is not False:
             raise AssertionError("fail: adhoc on fresh worktree should fail")
         if (fresh / "current-task/status.json").exists():
@@ -158,7 +158,7 @@ def run(root: Path) -> None:
             "--worktree",
             str(wt),
             "--json-path",
-            str(again),
+            str(sync_adhoc),
             "--mode",
             "sideways",
             cwd=root,

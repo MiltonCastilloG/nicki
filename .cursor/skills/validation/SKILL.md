@@ -1,11 +1,9 @@
 ---
 name: validation
-description: "Parse review into validation JSON with readiness and optional out-of-scope next-steps."
+description: "Retired — review readiness files are no longer pipeline contracts."
 disable-model-invocation: true
 ---
 
-# Validation
+# Validation (retired)
 
-Post-review step inside `review-execution`. Single source: [validation-format.md](validation-format.md).
-
-Trust review prefixes. Do not re-read spec or subtasks for verdicts.
+Pipeline review no longer writes `review-validations/` or drives gates via readiness files. Nicki sets `next_step` from the review sheep summary. Keep [validation-format.md](validation-format.md) only as historical reference.

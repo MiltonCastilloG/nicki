@@ -4,10 +4,8 @@
 Usage:
   bootstrap-context.py --worktree worktrees/nicki-my-task
 
-Stdout JSON: active_task, status_path, current_step, next_step, readiness, sheep
-Optional on soft-fail: readiness_error (string). Exit 0 whenever this contract is
-printed — including when readiness cannot be parsed. Registry / status failures
-still exit 1 with stderr and empty stdout (harness failure).
+Stdout JSON: active_task, status_path, current_step, next_step, sheep
+Exit 0 on success. Registry / status failures exit 1 with stderr and empty stdout.
 """
 
 from __future__ import annotations
@@ -18,14 +16,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from gate_utils import (
-    ArtifactParseError,
-    load_routing,
-    load_status,
-    readiness,
-    resolve_worktree,
-    workspace_root,
-)
+from gate_utils import load_routing, load_status, resolve_worktree, workspace_root
 
 
 def load_global() -> dict[str, Any]:
@@ -78,26 +69,13 @@ def bootstrap(worktree_arg: str) -> dict[str, Any]:
 
     step_cfg = (load_routing().get("steps") or {}).get(next_step) or {}
 
-    readiness_status: str | None = None
-    readiness_error: str | None = None
-    try:
-        readiness_status = readiness(status, worktree)
-    except ArtifactParseError as exc:
-        # Soft-fail: keep position fields, leave readiness null, name the parse
-        # error. Exit 0 with this object — not a harness failure.
-        readiness_error = f"readiness parse error: {exc}"
-
-    out: dict[str, Any] = {
+    return {
         "active_task": active_task,
         "status_path": status_path,
         "current_step": task.get("current_step"),
         "next_step": next_step,
-        "readiness": readiness_status,
         "sheep": step_cfg.get("sheep"),
     }
-    if readiness_error is not None:
-        out["readiness_error"] = readiness_error
-    return out
 
 
 def main() -> int:

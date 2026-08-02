@@ -2,7 +2,7 @@
 
 Per-task `current-task/status.json`. Writer schema: [status-format.md](status-format.md).
 
-**Nicki bootstrap:** `bootstrap-context.py` stdout supplies `current_step`, `next_step`, and `readiness` — do not re-read status fields during bootstrap.
+**Nicki bootstrap:** `bootstrap-context.py` stdout supplies `current_step`, `next_step`, `sheep` — do not re-read status during bootstrap.
 
 ## Fields Nicki uses
 
@@ -10,10 +10,8 @@ Per-task `current-task/status.json`. Writer schema: [status-format.md](status-fo
 |---------|--------|
 | `task` | `slug`, `title`, `original`, `current_step`, `next_step` |
 | `scope` | `worktree_path` |
-| `artifacts` | Paths to story, spec, subtasks, `review_validation`, sync, integrate, archive |
-| `open_questions` | Blockers — empty array when pipeline can continue |
-
-Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`.
+| `artifacts` | Document paths: story, spec, subtasks, archive |
+| `open_questions` | Blockers |
 
 ## Minimal shape
 
@@ -26,12 +24,11 @@ Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`
     "next_step": "subtasks"
   },
   "scope": {
-    "worktree_path": "projects/foo/worktrees/hero-section"
+    "worktree_path": "worktrees/castlemill-landing-hero-section"
   },
   "artifacts": {
     "story": "current-task/story.md",
-    "spec": "current-task/specs/hero-section.json",
-    "review_validation": "current-task/review-validations/r1-validation.json"
+    "spec": "current-task/specs/hero-section.json"
   },
   "open_questions": []
 }

@@ -11,8 +11,6 @@ import yaml
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROUTING_PATH = SCRIPT_DIR.parent / "routing.json"
-BLOCKED_READINESS = frozenset({"fix_required", "blocked", "rerun_review"})
-
 MODES = ("normal", "adhoc", "jump")
 
 
@@ -99,23 +97,8 @@ def file_ok(path: Path | None) -> bool:
     return path is not None and path.is_file()
 
 
-def readiness(status: dict[str, Any], worktree: Path) -> str | None:
-    path = artifact_path(worktree, status, "review_validation")
-    if not file_ok(path):
-        return None
-    return (load_artifact(path).get("readiness") or {}).get("status")
-
-
-def next_step_for(
-    step: str,
-    status: dict[str, Any],
-    readiness_status: str | None = None,
-) -> str | None:
-    """Resolve the step that follows `step` from routing plus status.
-
-    Returns None when routing cannot decide yet — e.g. `review`, whose successor
-    depends on a readiness value that does not exist until the step has run.
-    """
+def next_step_for(step: str, status: dict[str, Any]) -> str | None:
+    """Resolve the step that follows `step` from routing plus status."""
     routing = load_routing()
     cfg = ((routing.get("steps") or {}).get(step)) or {}
     if not cfg:
@@ -123,11 +106,7 @@ def next_step_for(
     archived = cfg.get("next_step_when_archived")
     if archived and (status.get("artifacts") or {}).get("archive"):
         return archived
-    default = cfg.get("default_next_step")
-    if default:
-        return default
-    route = (routing.get("readiness_routing") or {}).get(readiness_status or "") or {}
-    return route.get("route_step")
+    return cfg.get("default_next_step")
 
 
 def expected_artifact_for(step: str, status: dict[str, Any]) -> str | None:
