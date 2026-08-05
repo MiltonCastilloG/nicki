@@ -134,7 +134,7 @@ Extend the existing fresh-install temp-clone check:
 3. Edit a canonical skill file under `.cursor/skills/…`; confirm the change is visible through the `.claude/skills/…` path **without** reinstall.
 4. Re-run `install-claude.py` → exit 0 (idempotent).
 5. Replace `.claude/agents` with a regular dir, re-run → link repaired (self-repair).
-6. `check-gate.py` / `bootstrap-context.py` invoked via `.cursor/skills/...` still resolve.
+6. `bootstrap-context.py` invoked via `.cursor/skills/...` still resolves.
 
 No automated CI smoke script (consistent with prior host-bootstrap tasks).
 

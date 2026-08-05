@@ -1,7 +1,9 @@
 # Design: JSON-native pipeline artifacts
 
 Date: 2026-07-28  
-Status: implemented in `.cursor/` (`.claude/` sync is automatic / out of scope here)
+Status: implemented in `.cursor/` (`.claude/` sync is automatic / out of scope here); **spawn gate retired 2026-08-05**
+
+> **2026-08-05:** `check-gate.py` / gate parse path removed. JSON artifacts remain; harness no longer denies at spawn on parse. See [`2026-08-05-retire-check-gate-design.md`](2026-08-05-retire-check-gate-design.md).
 
 ## Problem
 

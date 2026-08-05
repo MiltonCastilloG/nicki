@@ -10,7 +10,7 @@ This doc is the **trimming** deletion map — use when functioning and harness a
 
 ## When to use this doc
 
-After `check-gate.py` (and #10 gate fixtures) are proven on a real task. Then delete duplicated prose the harness already enforces. No per-step return validator — see [harness read/write design](superpowers/specs/2026-07-17-harness-read-write-types-design.md).
+After read/write smoke fixtures are green on a real task. Then delete duplicated prose the harness already covers. Spawn gate is retired — consent for execute/sync stays in `nicki.md`. See [retire-check-gate](superpowers/specs/2026-08-05-retire-check-gate-design.md).
 
 ---
 
@@ -19,58 +19,25 @@ After `check-gate.py` (and #10 gate fixtures) are proven on a real task. Then de
 | Signal | Measures |
 |--------|----------|
 | **LLM job removed** | Fewer files to read, fewer rules to interpret |
-| **Lines cut** | Smaller `nicki.md` + `status-read.md` load (Nicki ≈ 486 lines today) |
+| **Lines cut** | Smaller `nicki.md` + `status-read.md` load |
 
-Estimated cut after full trim: **~80–120 lines** from `nicki.md`, **~15** from `status-read.md`.
-
----
-
-## `nicki.md` deletion map
-
-| Delete | Lines | LLM job removed |
-|--------|------:|-----------------|
-| Numbered workflow | L41–51 | Remember step sequence |
-| Context load-for-gates | L91–92 | Decide what files to open for routing |
-| Session bootstrap gates | L105–106 | Re-derive sync blocks from readiness |
-| Readiness table | L107–115 | Map readiness → route |
-| Spec / partial review gates | L117–119 | Interpret gate prose |
-| Sheep map | L121–135 | Map step → `subagent_type` |
-
-**Add (~5 lines):** show card → user yes → `check-gate.py` → spawn `sheep` from output or show `reason`.
-
-**Hard rule:** keep any prose for rules the script does not enforce yet.
+Much of the original deletion map (readiness table, sheep map, gate prose) already shipped. Remaining trim is residual duplication only.
 
 ---
 
-## Duplication source
+## What leaves the LLM (current)
 
-Same logic in four places today:
-
-- `routing.yaml` — authoritative
-- `nicki.md` — copy for the model
-- `status-read.md` — copy for readers
-- `NICKI.md` — human doc
-
-P3 collapses the Nicki-facing copies after P2 script reads `routing.yaml`.
-
----
-
-## What leaves the LLM (after P2 + P3)
-
-| LLM work today | After harness + trim |
+| LLM work historically | After harness + trim |
 |----------------|----------------------|
-| Read + interpret `routing.yaml` gates | Run `check-gate.py`; read `reason` |
-| Readiness table (L107–113) | Script reads validation YAML |
-| Sheep map table (L121–133) | Script returns `sheep` |
-| Workflow list (L41–51) | `status.json` `next_step` + script |
-| Load spec/validation for routing | Script loads when needed |
+| Interpret routing gates | Gone — no spawn gate; sheep from bootstrap |
+| Readiness table | Gone — Nicki sets `next_step` after review |
+| Sheep map table | Bootstrap / `routing.json` returns `sheep` |
+| Workflow list | `status.json` `next_step` + bootstrap |
 
-**Nicki still does:** transition card, chat confirm, Gherkin `describe`, Task spawn, relay YAML.
+**Nicki still does:** transition card, chat confirm (execute + sync), Task spawn, relay sheep returns to sheep-status.
 
 ---
 
-## Defer (not trimming)
+## Hard rule
 
-Disk consent, CLI, `AgentDefinition` TS — no prompt reduction; not tier 1 or 2.
-
-**Actionable backlog:** [`tasks.md`](tasks.md).
+Keep consent prose for execute/sync — scripts do not enforce it.

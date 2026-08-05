@@ -1,8 +1,10 @@
 # Design: Drop sequence denials and `--override`
 
 Date: 2026-07-31  
-Status: **implemented** (plus follow-up dead-surface cleanup the same day)  
+Status: **implemented** (plus follow-up dead-surface cleanup the same day); **spawn gate later retired 2026-08-05**  
 Related: [`docs/flexibility.md`](../../flexibility.md), [`docs/flexibility_next_steps.md`](../../flexibility_next_steps.md), [`docs/harness-gate-bugs.md`](../../harness-gate-bugs.md)
+
+> **2026-08-05:** `check-gate.py` itself was deleted. Consent is Nicki chat only (execute + sync). See [`2026-08-05-retire-check-gate-design.md`](2026-08-05-retire-check-gate-design.md). Body below describes the drop-sequence world while the gate still existed.
 
 ## Problem
 

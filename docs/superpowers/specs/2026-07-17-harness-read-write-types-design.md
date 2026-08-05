@@ -1,12 +1,14 @@
 # Design: harness read vs write script types
 
 **Date:** 2026-07-17  
-**Status:** Decided and shipped (Jul 14); docs aligned Jul 17; **partially superseded 2026-07-29**  
+**Status:** Decided and shipped (Jul 14); docs aligned Jul 17; **partially superseded 2026-07-29**; **gate type retired 2026-08-05**  
 **Related:** [`docs/tasks.md`](../../tasks.md) (defer #9; keep #10), session [status drift / two-script types](fe3fc594-f391-4c7f-9bf2-b18aa825e950)
 
 > **Later changes:** `task.completed_steps` removed; write modes are
-> `--mode normal|adhoc|jump`; see [`flexibility.md`](../../flexibility.md) and
-> [`flexibility_next_steps.md`](../../flexibility_next_steps.md).
+> `--mode normal|adhoc|jump`; see [`flexibility.md`](../../flexibility.md).
+> **2026-08-05:** spawn `check-gate.py` deleted — harness is **read + write** only;
+> consent is Nicki chat (execute + sync). See
+> [`2026-08-05-retire-check-gate-design.md`](2026-08-05-retire-check-gate-design.md).
 
 ## Context
 

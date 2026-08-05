@@ -16,6 +16,7 @@ Related: [`2026-07-31-drop-sequence-and-override-design.md`](2026-07-31-drop-seq
 - **Harness** is read + write only: `bootstrap-context.py` → spawn → `update-status.py`.
 - Rename/thin former `gate_utils` to bootstrap-only helpers; move writer routing helpers under `current-task-update`.
 - Archive this task with `docs/archive/retire-check-gate/report.md` recording the removal commit id (no full Nicki pipeline).
+- Drop unused `expected_artifact` from `routing.json` (follow-up same day).
 
 ## Decision summary
 
@@ -48,7 +49,7 @@ status.json
 - `.cursor/skills/nicki/scripts/gates.py`
 - `tests/smoke/gates_matrix.py`, `tests/smoke/gate_paths.py` (and `test.py` registrations)
 - Permissions / harness_failure / Nicki agent references to check-gate
-- Routing: `gate`, `user_confirm`, `user_confirm_required`, `adhoc_allowed`, `gate_policy`, `status_update.skip_user_confirm`
+- Routing: `gate`, `user_confirm`, `user_confirm_required`, `adhoc_allowed`, `gate_policy`, `status_update.skip_user_confirm`, `expected_artifact`
 
 ## Keep / move
 

@@ -247,7 +247,7 @@ Full detail: [`NICKI.md`](NICKI.md).
 Tracked in [`tasks.md`](tasks.md). Priority: (1) workflow functioning, (2) harness/guardrails, (3) trimming.
 
 1. **Worktree setup** — `create-worktree.py`, root `worktrees/`, copy gitignored locals.
-2. **Guardrails** — `bootstrap-context.py`, `check-gate.py`, `update-status.py`, smoke fixtures (#10). No separate return validator (#9 deferred).
+2. **Guardrails** — `bootstrap-context.py`, `update-status.py`, smoke fixtures. Spawn gate retired 2026-08-05. No separate return validator (#9 deferred).
 3. **Trim orchestrator prompt** — after harness proven.
 4. **Minimal CLI** — later.
 

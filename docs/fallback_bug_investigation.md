@@ -1,5 +1,7 @@
 # sheep-fallback — bare notes
 
+> **Historical.** Spawn gate retired 2026-08-05; Finding 5 impact on check-gate no longer applies. See [`harness-gate-bugs.md`](harness-gate-bugs.md).
+
 Date: 2026-07-26. Detail folded into [`harness-gate-bugs.md`](harness-gate-bugs.md)
 Finding 5. Kept for recurrence evidence only.
 

@@ -3,63 +3,54 @@
     "start": {
       "sheep": "sheep-start",
       "artifact_key": null,
-      "expected_artifact": "current-task/status.json",
       "default_next_step": "describe",
       "prompt": "work items / slugs from user message"
     },
     "describe": {
       "sheep": "sheep-describe",
       "artifact_key": "story",
-      "expected_artifact": "current-task/story.md",
       "default_next_step": "spec",
       "prompt": "output path (Nicki-owned; usually worktree current-task/story.md), task id, chat"
     },
     "spec": {
       "sheep": "sheep-spec",
       "artifact_key": "spec",
-      "expected_artifact": "current-task/specs/<slug>.json",
       "default_next_step": "subtasks",
       "prompt": "output path (Nicki-owned; usually worktree specs/<slug>.json), task id, chat"
     },
     "subtasks": {
       "sheep": "sheep-subtask",
       "artifact_key": "subtasks",
-      "expected_artifact": "current-task/subtasks/<slug>.md",
       "default_next_step": "execute",
       "prompt": "output path (Nicki-owned; usually worktree subtasks/<slug>.md), task id, chat"
     },
     "execute": {
       "sheep": "sheep-execute",
       "artifact_key": null,
-      "expected_artifact": null,
       "default_next_step": "review",
       "prompt": "worktree path, task id, chat"
     },
     "review": {
       "sheep": "sheep-review",
       "artifact_key": null,
-      "expected_artifact": null,
       "default_next_step": "acceptance",
       "prompt": "worktree path, task id, chat"
     },
     "acceptance": {
       "sheep": null,
       "artifact_key": null,
-      "expected_artifact": null,
       "default_next_step": "sync",
       "prompt": null
     },
     "fix": {
       "sheep": null,
       "artifact_key": null,
-      "expected_artifact": null,
       "default_next_step": "execute",
       "prompt": null
     },
     "sync": {
       "sheep": "sheep-sync",
       "artifact_key": null,
-      "expected_artifact": null,
       "default_next_step": "archive",
       "next_step_when_archived": "integrate",
       "prompt": "worktree path, task id"
@@ -67,28 +58,24 @@
     "archive": {
       "sheep": "sheep-archive",
       "artifact_key": "archive",
-      "expected_artifact": "docs/archive/<slug>/report.json",
       "default_next_step": "sync",
       "prompt": "output path (Nicki-owned; usually worktree docs/archive/<slug>/), task id"
     },
     "integrate": {
       "sheep": "sheep-integrate",
       "artifact_key": null,
-      "expected_artifact": null,
       "default_next_step": "close",
       "prompt": "worktree path, task id"
     },
     "close": {
       "sheep": "sheep-close",
       "artifact_key": null,
-      "expected_artifact": null,
       "default_next_step": "done",
       "prompt": "worktree path, task id"
     },
     "done": {
       "sheep": null,
       "artifact_key": null,
-      "expected_artifact": null,
       "default_next_step": null,
       "prompt": null
     }

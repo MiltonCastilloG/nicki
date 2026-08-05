@@ -1,8 +1,10 @@
 # Design: Informal jump + drop execution artifact
 
 Date: 2026-07-30  
-Status: approved for implementation — **implemented** in harness / `.cursor`  
+Status: approved for implementation — **implemented** in harness / `.cursor`; **spawn gate retired 2026-08-05**  
 Related: [`docs/jump_blocker.md`](../../jump_blocker.md), [`docs/flexibility.md`](../../flexibility.md), [`docs/flexibility_next_steps.md`](../../flexibility_next_steps.md)
+
+> **2026-08-05:** No `check-gate.py`. Jump/adhoc are write modes only; consent is Nicki chat. See [`2026-08-05-retire-check-gate-design.md`](2026-08-05-retire-check-gate-design.md).
 
 ## Problem
 

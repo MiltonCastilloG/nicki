@@ -16,7 +16,7 @@ Shipped work moved out of [`tasks.md`](tasks.md) to keep the backlog lean. Task 
 | 6 | **Gherkin + spec mutual understanding** | Archive: [`archive/gherkin-spec-mutual-understanding/`](archive/gherkin-spec-mutual-understanding/). See below. |
 | 15 | `nicki.code-workspace` sync | `scripts/generate-code-workspace.sh` wired into `create-worktree.py` (start) and `close-scope` (close). Warn on regen failure; skip on `--dry-run`. Archive: [`archive/code-workspace-sync/`](archive/code-workspace-sync/). |
 | 16 | **Context handling** | Disk-first bootstrap in `nicki.md` + `nicki-default.mdc`. Archive: [`archive/context-handling/`](archive/context-handling/). |
-| 18 | **`bootstrap-context.py`** | Script sibling to `check-gate.py`; Nicki reads orchestration context from stdout. Archive: [`archive/bootstrap-script/`](archive/bootstrap-script/) — merge `55dca0a`. |
+| 18 | **`bootstrap-context.py`** | Nicki reads orchestration context from stdout. (Originally sibling to check-gate; gate retired 2026-08-05.) Archive: [`archive/bootstrap-script/`](archive/bootstrap-script/) — merge `55dca0a`. |
 | | **status.json YAGNI (v2)** | Simplify per-task status to task-status.v2: step pointers + `artifacts.*`, no verbose history. Originally shipped with `task.completed_steps`; that list was **removed 2026-07-29** (position is `current_step`/`next_step` only — see [`flexibility.md`](flexibility.md)). Archive: [`archive/status-json-yagni/`](archive/status-json-yagni/). |
 
 Projects on disk: `castlemill-landing`, `project-psychic-lemon`, `tetris-clone-frp` (one active worktree). Gitignored env is copied by script — not a layout problem.
@@ -56,10 +56,10 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 
 | # | Task | Notes |
 |---|------|-------|
-| 7 | `check-gate.py` | `.cursor/skills/nicki/scripts/check-gate.py` — `status.json` + `routing.yaml` (+ validation/spec when needed). Stdout: `allowed`, `sheep`, `reason`, `user_confirm`. All steps; git tail first. Archive: [`archive/check-gate-py/`](archive/check-gate-py/). |
-| 8 | Nicki **calls** gate script | Nicki runs gate before spawn; on fail shows `reason`, does not spawn. Archive: [`archive/nicki-gate-wiring/`](archive/nicki-gate-wiring/) — merge `0f57668`. |
-| 11 | Permissions | `.cursor/permissions.json` allows `check-gate.py`, `create-worktree.py`, `bootstrap-context.py`. |
-| | **`update-status.py`** | Authoritative write for `current-task/status.json` via `sheep-status`. Required summary field: `next_step` only; always writes `task.current_step`; `written: false` = input error (retry), not harness failure. Per-step `validate-sheep-return.py` deleted — see [harness ADR](superpowers/specs/2026-07-17-harness-read-write-types-design.md). |
+| 7 | `check-gate.py` | Shipped then **retired 2026-08-05** (`30c16b8`). Archives: [`archive/check-gate-py/`](archive/check-gate-py/), [`archive/retire-check-gate/`](archive/retire-check-gate/). |
+| 8 | Nicki **calls** gate script | Shipped then retired with #7. Archive: [`archive/nicki-gate-wiring/`](archive/nicki-gate-wiring/). |
+| 11 | Permissions | Bootstrap (and formerly check-gate) allowlisted; check-gate entry removed 2026-08-05. |
+| | **`update-status.py`** | Authoritative write for `current-task/status.json` via `sheep-status`. |
 
 | | **sheep-fallback** | Failure recording + harness-failure routing. Archive: [`archive/sheep-fallback/`](archive/sheep-fallback/). |
 
@@ -69,9 +69,8 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 
 | # | Task | Notes |
 |---|------|-------|
-| 12 | Trim `nicki.md` | Dropped numbered workflow, readiness table, sheep map, duplicated gate prose; kept Bootstrap, Transitions (`check-gate.py`), Describe/Spec relay, harness failure. ~168→117 lines. Brief: [`harness-alignment-subagents.md`](harness-alignment-subagents.md) step 4. |
-| 14 | Shorten `NICKI.md` | Shell allowlist for bootstrap/gate; harness read/gate/write table + ADR link; session vs disk bootstrap chain; cut duplicated readiness/transition prose. |
-
+| 12 | Trim `nicki.md` | Dropped numbered workflow, readiness table, sheep map, duplicated gate prose. Later: gate invocation removed; consent execute+sync only. |
+| 14 | Shorten `NICKI.md` | Shell allowlist for bootstrap; harness read/write table. |
 ---
 
 ## Host runtime (done)

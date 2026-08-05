@@ -9,7 +9,7 @@ Every change must respect **all three**. They are standing requirements, not pic
 | Goal | Always means |
 |------|----------------|
 | **Correct functioning** | Pipeline runs end-to-end; worktrees, paths, handoffs work |
-| **Harness and guardrails** | Read/write scripts + gates stay in place; smoke tests prove them; scripts enforce what prose used to |
+| **Harness and guardrails** | Read/write scripts + smoke tests stay in place; scripts enforce position; chat consent for execute/sync |
 | **Trimming** | Prompt and docs stay lean; cut duplication when safe |
 
 **When goals conflict**, higher tier wins:
@@ -18,9 +18,9 @@ Every change must respect **all three**. They are standing requirements, not pic
 2. Harness and guardrails  
 3. Trimming  
 
-Example: never trim `nicki.md` rules the harness does not enforce yet (trimming vs guardrails → keep prose). Never skip gate script to ship a smaller prompt (guardrails vs trimming → keep harness).
+Example: never trim `nicki.md` consent rules that scripts do not enforce (trimming vs guardrails → keep prose).
 
-When goals **align**, do all three — e.g. prove gate fixtures and trim duplicate prose in the same area once the script is proven.
+When goals **align**, do all three — e.g. prove smoke fixtures and trim duplicate prose in the same area once the script is proven.
 
 ---
 
@@ -28,11 +28,11 @@ When goals **align**, do all three — e.g. prove gate fixtures and trim duplica
 
 | # | Task | Notes |
 |---|------|-------|
-| ~~10~~ | ~~Smoke fixtures~~ — **done 2026-07-28** | Matrix shipped: `tests/smoke/gates_matrix.py`, 45 cases through `check-gate.py` — all 13 gates allow+deny, v2 happy paths, blocked `open_questions`, readiness routing, unparseable artifacts, legacy `task.story_artifact` + `history` fail fixture, missing `status.json`, unknown step. Plus `gate_paths.py` (artifact path scope) and `routing_next_step.py` (routing owns position). See [`harness-gate-bugs.md`](harness-gate-bugs.md) follow-up 2. Optional leftover: scaffold-only asserts in `create-worktree.py`. |
+| ~~10~~ | ~~Smoke fixtures~~ — **done** | Live suite: `python3 test.py` (bootstrap, status write, routing_next_step, jump, harness_failure, …). Gate matrix retired with check-gate 2026-08-05 — see [`archive/retire-check-gate/`](archive/retire-check-gate/). |
 
-**Validating status/schema changes (#10, not Nicki E2E):** Do **not** use a full Nicki pipeline run to verify schema or gate field names — too slow and easy to test the wrong branch (worktrees scaffold from `main`). Use **#10 fixtures** run against `check-gate.py` instead.
+**Validating status/schema changes:** Prefer smoke fixtures via `python3 test.py` — not a full Nicki pipeline E2E (worktrees scaffold from `main` and drift easily).
 
-Harness shape (shipped): **read** (`bootstrap-context.py`) · **gate** (`check-gate.py`) · **write** (`update-status.py`). No per-step return validator — see design doc.
+Harness shape (shipped): **read** (`bootstrap-context.py`) · **write** (`update-status.py`). Consent is Nicki chat (execute + sync). No per-step return validator — see [retire-check-gate design](superpowers/specs/2026-08-05-retire-check-gate-design.md).
 
 ---
 
@@ -42,9 +42,9 @@ See deletion map in [`investigation-complexity.md`](investigation-complexity.md)
 
 | # | Task | Notes |
 |---|------|-------|
-| 13 | Trim `status-read.md` | Drop remaining gate/readiness prose if any; field pointers + JSON example only. Gates/Readiness sections already removed in harness trim pass — confirm lean and close. |
+| 13 | Trim `status-read.md` | Drop remaining gate/readiness prose if any; field pointers + JSON example only. |
 
-**Hard rule:** if trim would remove a rule the script does not enforce yet, keep the prose.
+**Hard rule:** if trim would remove a consent rule Nicki still needs in chat, keep the prose.
 
 ---
 

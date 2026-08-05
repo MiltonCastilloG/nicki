@@ -89,7 +89,7 @@ These ship in the repo; install does not copy or merge them:
 | Invocation rule | `.cursor/rules/nicki-default.mdc` |
 | Permissions | `.cursor/permissions.json` |
 | Hooks | `.cursor/hooks.json`, `.cursor/hooks/agent-permissions.json`, `.cursor/hooks/enforce-agent-tools.sh` |
-| Gate scripts | `.cursor/skills/nicki/scripts/check-gate.py`, `gates.py`, `gate_utils.py` |
+| Harness scripts | `.cursor/skills/nicki/scripts/bootstrap-context.py`, `bootstrap_utils.py`; `.cursor/skills/current-task-update/scripts/update-status.py` |
 | Worktree scripts | `.cursor/skills/start-task/scripts/create-worktree.py`, `register-global-status.py` |
 
 ### `nicki-workspace.yaml` stub content

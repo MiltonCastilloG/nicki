@@ -11,7 +11,7 @@ Cursor workflow for structured agent-driven development. Nicki orchestrates the 
 | Component | Location | Role |
 | --------- | -------- | ---- |
 | Orchestrator | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.json` | Read-only conductor; routes from disk; sends sheep via Task in isolated context |
-| Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — load disk inputs, enforce gates, invoke skills (Nicki only) |
+| Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — load disk inputs, invoke skills (Nicki only) |
 | Skills | `.cursor/skills/<name>/` | Pure functionality — how to perform one job; artifact schemas |
 | Skill index | `.cursor/skills/README.md` | Skills vs agents rules and exceptions |
 

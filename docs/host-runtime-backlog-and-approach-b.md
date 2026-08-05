@@ -109,7 +109,7 @@ Checklist:
 - [ ] Edit a skill under `nicki-workflow/skills/…`; change visible in Cursor path **and** Claude path without reinstall
 - [ ] Re-run both installers → idempotent; no error
 - [ ] Break a host link (replace with a regular directory) → re-run installer → link repaired
-- [ ] `bootstrap-context.py` and `check-gate.py` invoked with documented paths still work
+- [ ] `bootstrap-context.py` invoked with documented paths still works
 - [ ] Cursor: `nicki start …` / `nicki continue` opt-in still works
 - [ ] Claude: same after `CLAUDE.md` present
 - [ ] Atomic-save warning: editing through the host symlink path must not replace the symlink (document; spot-check editor behavior)

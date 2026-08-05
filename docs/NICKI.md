@@ -331,7 +331,7 @@ Nicki sends `sheep-start`, then `sheep-status`, describe, and each sheep after c
 
 ## Compaction + mode picker
 
-Cursor compacts chats — disk wins via harness: `bootstrap-context.py` stdout, then artifacts as needed. Re-bootstrap on every Nicki activation; re-confirm git on sync/integrate. Nicki = subagent via Task today; custom mode picker future when Cursor supports repo-defined modes.
+Cursor compacts chats — disk wins via harness: `bootstrap-context.py` stdout, then artifacts as needed. Re-bootstrap on every Nicki activation; re-confirm before execute and sync. Nicki = subagent via Task today; custom mode picker future when Cursor supports repo-defined modes.
 
 ---
 

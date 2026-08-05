@@ -94,7 +94,7 @@ Related: [`docs/flexibility.md`](../../flexibility.md), [`2026-07-30-informal-ju
 ## Gates
 
 - **Remove / stop relying on:** checks that only re-read operational handoff files or readiness files to learn what `next_step` already encodes.
-- **Keep:** `user_confirm_required` (chat consent); document/archive file presence when a later step needs that file; input-error behavior on bad status writes.
+- **Keep:** chat consent for execute/sync; input-error behavior on bad status writes.
 - Acceptance before first sync remains **Nicki chat confirm** (already not a sequence gate).
 
 ## Sheep return contract

@@ -1,5 +1,7 @@
 # Investigation: "Your Agent Is Just a Markdown File"
 
+> **Update (2026-08-05):** Spawn `check-gate.py` retired. Live edges are bootstrap + `update-status`; consent is Nicki chat for execute/sync. See [`superpowers/specs/2026-08-05-retire-check-gate-design.md`](superpowers/specs/2026-08-05-retire-check-gate-design.md). Sections below that still describe a three-script gate remain historical analysis.
+
 Source: [Mohsen Nasiri, Medium, May 2026](https://medium.com/@mohsenny/your-agent-is-just-a-markdown-file-we-can-do-better-0a681cb78739)
 
 Scope: how the article's "agent as code" model applies to Nicki, and whether the trade-offs are worth it.
@@ -95,12 +97,11 @@ status.json + routing.yaml → gate (code) → spawn sheep
 | Boundary | Who |
 |----------|-----|
 | position / bootstrap | `bootstrap-context.py` (read) |
-| spawn veto | `check-gate.py` (gate) |
 | sheep → status.json | `update-status.py` (write) — required fields only; no separate return validator |
-| review → route | `readiness.status` enum (gate / bootstrap when needed) |
-| sync / integrate | artifact pointer + readiness gates in `check-gate.py` |
+| consent (execute / sync) | Nicki chat — see [retire-check-gate](superpowers/specs/2026-08-05-retire-check-gate-design.md) |
+| review → route | Nicki sets summary `next_step` from review sheep |
 
-Full artifact schema validation vs format docs remains deferred. See [harness read/write design](superpowers/specs/2026-07-17-harness-read-write-types-design.md).
+Full artifact schema validation vs format docs remains deferred. See [harness read/write design](superpowers/specs/2026-07-17-harness-read-write-types-design.md) (partially superseded: gate type retired).
 
 **Context + permissions:** Sheep auto-load task paths; runner would formalize injection. `permissions.json` + hooks depend on Cursor wiring; code runner enforces before spawn.
 
@@ -144,8 +145,8 @@ Nicki does not need the article's long-lived QA service. Path is **invoke-and-ex
 | Approach | When |
 |----------|------|
 | LLM Nicki + Task (today) | Each chat turn |
-| `bootstrap-context.py` | Position / card / relay hints |
-| `check-gate.py` / `nicki gate` | Before risky step |
+| `bootstrap-context.py` | Position / card / intended sheep |
+| Nicki chat confirm | Before execute and sync |
 | `update-status.py` via `sheep-status` | After each sheep (write) |
 | `nicki continue` CLI | One-shot read → decide → spawn |
 | Cursor hooks | On tool use |
@@ -161,17 +162,16 @@ flowchart TB
   end
   subgraph code_edges["Deterministic edges"]
     B[bootstrap-context.py]
-    G[check-gate.py]
     W[update-status.py]
   end
   subgraph workers["Unchanged workers"]
     SH[sheep + skills]
   end
   N --> B
-  N --> G -->|allowed| SH --> W -->|status.json| N
+  N -->|confirm execute/sync| SH --> W -->|status.json| N
 ```
 
-**Focus:** working pipeline first, guardrails second, trimming last. Scripts own read / gate / write; trim only after harness is proven. No per-step return validator ([ADR](superpowers/specs/2026-07-17-harness-read-write-types-design.md)).
+**Focus:** working pipeline first, guardrails second, trimming last. Scripts own read / write; chat owns consent for execute/sync. No per-step return validator ([ADR](superpowers/specs/2026-07-17-harness-read-write-types-design.md); gate type retired).
 
 Disk consent deferred.
 
@@ -185,21 +185,20 @@ See [`tasks.md`](tasks.md).
 
 ### What Nicki becomes (after P2 + P3)
 
-| Today | After P2 harness (+ P3 trim) |
+| Historically | Now |
 |-------|----------|
-| Read `routing.yaml`, interpret gates | Run `check-gate.py`; show script `reason` on fail |
-| Readiness table in prompt | Script reads validation YAML |
-| Sheep map table in prompt | Script returns `sheep` name |
-| Numbered workflow in prompt | `status.json` `next_step` + script |
-| Load spec/validation for gate checks | Script loads when needed |
+| Interpret routing gates in prose | Bootstrap returns `sheep`; no spawn gate |
+| Readiness table in prompt | Nicki sets `next_step` after review |
+| Sheep map table in prompt | Bootstrap / `routing.json` |
+| Numbered workflow in prompt | `status.json` `next_step` + bootstrap |
 
-Nicki keeps: persona, Gherkin `describe`, transition card, chat confirm, `sheep-status` relay.
+Nicki keeps: persona, Gherkin `describe`, transition card, chat confirm (execute + sync), `sheep-status` relay.
 
-**Tasks:** [`tasks.md`](tasks.md) — gate script, prompt trim, worktree script, defer list.
+**Tasks:** [`tasks.md`](tasks.md).
 
 ### One-line takeaway
 
-**Script routes and gates; Nicki talks.** See [`tasks.md`](tasks.md).
+**Scripts own position; Nicki talks and confirms execute/sync.** See [`tasks.md`](tasks.md).
 
 ---
 
