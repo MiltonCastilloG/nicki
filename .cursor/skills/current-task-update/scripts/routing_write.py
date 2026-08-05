@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-MODES = ("normal", "adhoc", "jump")
+MODES = ("normal", "jump")
 
 _ROUTING_PATH = (
     Path(__file__).resolve().parent.parent.parent / "nicki" / "routing.json"

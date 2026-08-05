@@ -36,7 +36,7 @@ Document bodies live as separate files; status holds **position**, document **po
 | `type` | No | `feature`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf` |
 | `current_step` | Yes | Step Nicki is on or just completed |
 | `next_step` | Yes | Next step Nicki should propose — **workflow source of truth** |
-| `side_effects` | No | Append-only log of adhoc/jump runs |
+| `side_effects` | No | Append-only log of jump runs |
 
 Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`.
 
@@ -44,11 +44,10 @@ Do **not** persist `completed_step` / `completed_steps` — consumers use `next_
 
 ### `side_effects`
 
-Ad-hoc leaves position untouched and appends one entry. Jump sets `next_step` to the target, leaves `current_step`, logs `artifact: null`.
+Jump sets `next_step` to the target, leaves `current_step`, logs `artifact: null`. Entries with `"mode": "adhoc"` appear in older files — ad-hoc is now a sheep invoked directly and writes nothing here.
 
 ```json
 "side_effects": [
-  {"step": "sync", "mode": "adhoc", "at": "2026-07-29T08:14:02Z", "artifact": null},
   {"step": "review", "mode": "jump", "at": "2026-07-30T12:00:00Z", "artifact": null}
 ]
 ```

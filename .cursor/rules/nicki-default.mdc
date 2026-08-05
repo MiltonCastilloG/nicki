@@ -25,6 +25,17 @@ After the first invocation, keep invoking a fresh Task on every Nicki-directed m
 
 Handle the message yourself. Do not run multi-step pipeline orchestration inline.
 
-- **Ad-hoc work:** attach or invoke **skills** (e.g. `spec-maker`, `execute-plan`) — not sheep.
 - **Full pipeline:** suggest invoking Nicki (`nicki start …`, `nicki continue`).
-- **Never Task-spawn sheep** (`sheep-spec`, `sheep-execute`, …) from the parent agent — only Nicki sends sheep.
+- **Ad-hoc work:** Task-spawn the sheep directly (see below), or attach the skill when you want the work in your own context.
+
+## Ad-hoc: invoke a sheep directly
+
+Ad-hoc needs no task, worktree, or `status.json` — only instructions. Task-spawn one sheep, relay its return JSON in chat, and stop. Never run `bootstrap-context.py`, never call `sheep-status`, never write pipeline state.
+
+Pack the prompt with the user's instructions plus:
+
+- **Document sheep** (`sheep-describe`, `sheep-spec`, `sheep-subtask`, `sheep-archive`) — an output path. Use the user's path when they name one, otherwise a sensible file under `docs/adhoc/`.
+- **Operational sheep** (`sheep-execute`, `sheep-review`) — the working directory. Ask once when it is unclear; do not guess.
+- **Git sheep** (`sheep-sync`, `sheep-integrate`) — get an explicit yes naming the side effect before spawning.
+
+**Nicki-only sheep:** `sheep-start`, `sheep-close`, and `sheep-status` own the worktree registry and per-task status. Never spawn them from the parent agent.

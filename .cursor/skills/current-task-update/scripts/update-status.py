@@ -9,11 +9,12 @@ Required inputs:
 
 Modes (--mode):
   normal — default; advances task.current_step / next_step from routing.
-  adhoc  — step ran out of band: position fields are left untouched, the artifact
-           pointer is still recorded, and one task.side_effects entry is appended
   jump   — skip ahead to --step: set next_step to the target; leave current_step
            untouched; no summary artifact required or materialized; log
            side_effects with artifact null. Nicki then runs that sheep.
+
+Both modes need a task. Ad-hoc work is a sheep invoked directly by the caller
+and never reaches this script.
 
 Optional summary fields (defaults applied):
   completed_step — overridden by --step; sets current_step / artifact pointer
@@ -233,7 +234,7 @@ def main() -> int:
         "--mode",
         default="normal",
         choices=MODES,
-        help="normal advances; adhoc leaves position; jump skips ahead to --step",
+        help="normal advances; jump skips ahead to --step",
     )
     args = parser.parse_args()
 
@@ -269,8 +270,8 @@ def main() -> int:
 
     status = _load_json(status_path)
     if status is None:
-        if args.mode in {"adhoc", "jump"}:
-            _fail([f"{args.mode} mode needs an existing status.json"])
+        if args.mode == "jump":
+            _fail(["jump mode needs an existing status.json"])
         # Derive before init when we already know the completed step.
         if completed_step is not None:
             if completed_status == "blocked":
@@ -300,12 +301,7 @@ def main() -> int:
 
     art = artifact if isinstance(artifact, str) else None
 
-    if args.mode == "adhoc":
-        # Out-of-band run: record what happened, leave pipeline position alone.
-        _set_artifact_pointer(status, completed_step or "", art)
-        _append_side_effect(status, completed_step, art, mode="adhoc")
-        next_step = task.get("next_step")
-    elif args.mode == "jump":
+    if args.mode == "jump":
         # Position-only: set next_step to target; leave current_step untouched;
         # never materialize or require a summary artifact.
         assert completed_step is not None  # validated above

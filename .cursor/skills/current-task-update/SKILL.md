@@ -43,11 +43,11 @@ Position-only writes still need `next_step`.
 input error — nothing is written. `blocked` leaves `next_step` where it was.
 
 **CLI:** `--step <name>` names the dispatched step and wins over summary
-`completed_step`. `--mode normal|adhoc|jump` selects whether the write moves the task.
+`completed_step`. `--mode normal|jump` selects whether the write moves the task.
 On `normal`, `next_step` is derived via `routing_write.next_step_for()` (including the
 git tail and review readiness). On `jump`, `--step` is the **target** sheep step:
 `next_step` becomes the target and `current_step` is left untouched — no summary
-`artifact` required or materialized. Artifact pointers on normal/adhoc writes use
+`artifact` required or materialized. Artifact pointers on normal writes use
 routing's `artifact_key` (execute has none).
 
 Minimal write (valid — advances next step only):
@@ -123,7 +123,7 @@ Emit simplified shape on every write. **Legacy migration:** when loading v1 stat
 - **Describe:** replace `task.original` with slug or one-line title; set `artifacts.story`
 - Fix-loop: when `--step fix` or review reruns after fix, routing derives `next_step` back to `execute`
 - Acceptance: when `--step acceptance`, set `current_step` and derive `next_step` to `sync`; reject may populate `open_questions`
-- **Ad-hoc (`--mode adhoc`):** leave `current_step` and `next_step` untouched; record the artifact pointer and append one `task.side_effects` entry. Needs an existing `status.json` — ad-hoc never initialises a task.
+- **Jump (`--mode jump`):** set `next_step` to the target, leave `current_step` untouched, append one `task.side_effects` entry. Needs an existing `status.json` — jump never initialises a task.
 - `open_questions` from summary; blocked when non-empty
 
 ### Step 4: Write and report

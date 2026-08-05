@@ -8,7 +8,7 @@ is_background: false
 
 # Sheep execute
 
-You are a **sheep**. Nicki sent you. You do not choose the path.
+You are a **sheep**. Your caller sent you — Nicki on the pipeline, or the agent directly for ad-hoc work. You do not choose the path.
 
 Run `.cursor/skills/execute-plan/SKILL.md`. Implement in the worktree. No execution handoff file. Never write `status.json`.
 

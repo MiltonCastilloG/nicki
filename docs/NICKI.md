@@ -50,7 +50,7 @@ See `.cursor/skills/README.md` for rules and workflow exceptions.
 
 **State writer** is `sheep-status`: sole writer for per-task `current-task/status.json`. **Registry writer** is `sheep-start` / `sheep-close` only for `global-status.json`. Nicki never writes either directly.
 
-**Users attach skills** for ad-hoc work; they do not Task-spawn sheep from the parent agent.
+**Ad-hoc work** spawns a sheep directly from the parent agent (or attaches the skill) — no task, no status write. `sheep-start`, `sheep-close`, and `sheep-status` stay Nicki-only.
 
 ---
 
@@ -170,7 +170,7 @@ open_questions: []
 summary: Spec captured requirements and acceptance criteria.
 ```
 
-Nicki passes `--step spec --mode normal` (or `adhoc` / `jump` for flexibility runs — see [`flexibility.md`](flexibility.md)).
+Nicki passes `--step spec --mode normal` (or `jump` to skip ahead — see [`flexibility.md`](flexibility.md)).
 
 Exception: **do not send `sheep-status` after sheep-close** — close deletes `current-task/`.
 
@@ -180,7 +180,7 @@ Exception: **do not send `sheep-status` after sheep-close** — close deletes `c
 
 Before each sheep (except `sheep-status`), Nicki shows a compact state card. **Explicit yes is required only for `execute` and `sync`.** Other steps spawn after the card without waiting for approval. Sheep name comes from bootstrap / `routing.json` — there is no spawn-gate script.
 
-`--mode adhoc` / `--mode jump` change how `update-status.py` moves position only.
+`--mode jump` changes how `update-status.py` moves position; `normal` and `jump` are the only modes, and both need a task. Ad-hoc work does not go through Nicki at all — the agent spawns the sheep directly (see [`flexibility.md`](flexibility.md)).
 
 ---
 
@@ -325,7 +325,7 @@ nicki hero-section
 nicki continue
 ```
 
-Nicki sends `sheep-start`, then `sheep-status`, describe, and each sheep after confirmation. Ad-hoc: attach a skill path; do not run the pipeline inline in the parent agent.
+Nicki sends `sheep-start`, then `sheep-status`, describe, and each sheep after confirmation. Ad-hoc: spawn one sheep directly with instructions and an output path; do not run the pipeline inline in the parent agent.
 
 ---
 
@@ -338,7 +338,7 @@ Cursor compacts chats — disk wins via harness: `bootstrap-context.py` stdout, 
 ## Further reading
 
 - Full contributor workflow: [`CONTRIBUTING.md`](../CONTRIBUTING.md) — agent workflow pipeline section
-- Flexibility (adhoc + jump): [`flexibility.md`](flexibility.md)
+- Flexibility (ad-hoc + jump): [`flexibility.md`](flexibility.md)
 - Nicki agent definition: [`.cursor/agents/nicki.md`](../.cursor/agents/nicki.md)
 - Harness read/write types: [`docs/superpowers/specs/2026-07-17-harness-read-write-types-design.md`](superpowers/specs/2026-07-17-harness-read-write-types-design.md)
 - Status schemas: [`.cursor/skills/current-task-update/status-format.md`](../.cursor/skills/current-task-update/status-format.md), [`.cursor/skills/current-task-update/global-status-format.md`](../.cursor/skills/current-task-update/global-status-format.md)

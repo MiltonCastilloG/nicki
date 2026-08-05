@@ -3,12 +3,13 @@
 Date: 2026-08-05 (gate retired). Earlier gate history: [`harness-gate-bugs.md`](harness-gate-bugs.md) (historical).
 Next steps / leftover backlog: [`flexibility_next_steps.md`](flexibility_next_steps.md).
 Spawn gate retired: [`2026-08-05-retire-check-gate-design.md`](superpowers/specs/2026-08-05-retire-check-gate-design.md).
+Ad-hoc is direct sheep invocation: [`2026-08-05-adhoc-direct-sheep-invocation-design.md`](superpowers/specs/2026-08-05-adhoc-direct-sheep-invocation-design.md).
 
 ## Goal
 
 Nicki is no longer a strict linear march. Two capabilities shipped:
 
-1. **Run a step out of band.** Sync mid-`execute`, without acceptance, without moving workflow position.
+1. **Run a sheep out of band.** Any sheep, any time, with no task — the agent spawns it directly and Nicki is not involved.
 2. **Jump ahead with informal input.** Set pipeline position to a target sheep; chat (and any path the user mentions) is enough — jump does not copy or materialize predecessor files. See [`2026-07-30-informal-jump-and-drop-execution-design.md`](superpowers/specs/2026-07-30-informal-jump-and-drop-execution-design.md).
 
 ## Constraints
@@ -18,17 +19,17 @@ Standing. Do not trade these for convenience.
 | Constraint | Means |
 |---|---|
 | Scripts stay authoritative for position | `update-status.py` and `bootstrap-context.py` own write/read of pipeline position. Consent is Nicki chat (execute + sync only). |
-| `status.json` stays source of truth for pipeline state | Position is `current_step` + `next_step` + artifact pointers. Ad-hoc runs log to `side_effects` without moving position; jump moves position deliberately. |
-| Modes own write shape | `--mode adhoc` / `--mode jump` change how `update-status.py` moves position. No spawn-gate script. |
+| `status.json` stays source of truth for pipeline state | Position is `current_step` + `next_step` + artifact pointers. Jump moves position deliberately; ad-hoc runs write nothing. |
+| Modes own write shape | `--mode jump` changes how `update-status.py` moves position. No spawn-gate script. |
+| Ad-hoc never touches pipeline state | No bootstrap, no `sheep-status`, no `side_effects` — a directly-invoked sheep only returns JSON. |
 
 ## Write modes
 
-`update-status.py` takes `--mode normal|adhoc|jump` (default `normal`). Nicki forwards the mode to `sheep-status`.
+`update-status.py` takes `--mode normal|jump` (default `normal`). Nicki forwards the mode to `sheep-status`. Both modes need a task; `--mode adhoc` no longer exists.
 
 | Mode | Write | Position after write |
 |---|---|---|
 | **normal** | Sets `current_step` from `--step`; derives `next_step` from routing via `next_step_for()` | Advances along the pipeline |
-| **adhoc** | Records artifact pointer; appends `task.side_effects[]`; leaves `current_step` and `next_step` untouched | Unchanged |
 | **jump** | Sets `next_step` to the target; leaves `current_step` untouched; no summary `artifact` required; appends `side_effects` with `artifact: null`; cannot target `start`, `close`, or `done` | Points at target sheep — Nicki runs it next |
 
 **Sheep return contract:** sheep return `artifact`, `completed_status`, `open_questions`, `summary` only — not `next_step` or `completed_step`. Execute **omits** `artifact` (no `executions/*.json`). Nicki forwards the return plus the `--step` and `--mode` she dispatched.
@@ -39,28 +40,31 @@ Standing. Do not trade these for convenience.
 
 **Bootstrap stdout** (`bootstrap-context.py`): `active_task`, `status_path`, `current_step`, `next_step`, `sheep` — no `completed_steps`, no `readiness`.
 
-## Capability A — out-of-band steps
+## Capability A — ad-hoc: invoke a sheep directly
 
 ### Behavior
 
-An ad-hoc run uses `--mode adhoc` on the status write after the sheep. Nicki may ask yes before sync (including mid-pipeline adhoc sync). Position fields stay byte-identical.
+Ad-hoc is not a Nicki mode. The agent Task-spawns one sheep with instructions, relays its return JSON in chat, and stops. No task, worktree, `status.json`, bootstrap, or `sheep-status`. Rule: `.cursor/rules/nicki-default.mdc`.
 
 | Layer | Behavior |
 |---|---|
-| Nicki | Spawn requested sheep; ask yes only when the step is `execute` or `sync` |
-| Sheep | Position-free return; no workflow knowledge in sheep files |
-| Write | `update-status.py --mode adhoc`: artifact pointer recorded, one `task.side_effects` entry appended, position untouched |
+| Agent | Picks the sheep; packs instructions plus an output path for document sheep (user's path, else under `docs/adhoc/`); asks yes before git sheep |
+| Sheep | Same file as on the pipeline — one skill, path from the prompt, position-free return |
+| Write | None. Pipeline state is untouched because nothing writes it |
+
+**Nicki-only sheep:** `sheep-start`, `sheep-close`, `sheep-status` own the registry and per-task status; they are never invoked ad-hoc.
 
 ### Side-effect trail
 
-`task.side_effects[]` is append-only — one entry per ad-hoc or jump write, with `step`, `mode`, UTC `at`, and `artifact` (may be null). Documented in `status-format.md`.
+`task.side_effects[]` is append-only — one entry per jump write, with `step`, `mode`, UTC `at`, and `artifact` (may be null). Documented in `status-format.md`. Entries with `"mode": "adhoc"` exist in files written before 2026-08-05.
 
 Archive `process` is handoff rows plus one row per side-effect entry (including null artifacts) — see `archive-format.md`.
 
 ### Acceptance checks
 
-- Ad-hoc sync during `execute`: sheep runs, `current_step`/`next_step` byte-identical before and after; Nicki asked yes because it is sync.
-- Artifact pointer for the ad-hoc sync is recorded; side effect appears in the log and in the archive report (`process` row).
+- A sheep spawned with instructions alone, in a repo with no registered task, runs and returns.
+- `--mode adhoc` is rejected by `update-status.py`; no `adhoc` in `MODES`.
+- Document sheep invoked ad-hoc with no path given write under `docs/adhoc/`.
 - Jump/write still rejects targeting `start` / `close` / `done` on jump mode.
 - Acceptance before first sync is Nicki’s chat confirm (ask before sync).
 - Archive format contract asserts `side_effects` → `process` (including null artifact rows).
@@ -77,7 +81,7 @@ Typical flow (Nicki):
 2. Write with `--mode jump --step <target>` — position only; no summary `artifact`; no copy into `current-task/`; no suffix match. Logs `side_effects` with `artifact: null`.
 3. Spawn that step's sheep with chat as primary input (ask yes first if target is `execute` or `sync`). On-disk `current-task/` files are optional when present. After return, `sheep-status` with `--mode normal --step <target>` as usual (execute omits `artifact`).
 
-No “ensure X exists” / convert prelude before jump. Sync remains **adhoc**, not jump. `start`, `close`, and `done` are not jump targets (`update-status` denies).
+No “ensure X exists” / convert prelude before jump. `start`, `close`, and `done` are not jump targets (`update-status` denies). A sync outside the pipeline is a directly-invoked `sheep-sync`, not a jump.
 
 ### Resolved items
 
@@ -103,8 +107,9 @@ Sequenced flexibility through informal jump, drop-sequence / override, and retir
 
 | Order | Work | Status |
 |---|---|---|
-| 1–12 | Ad-hoc, jump, drop sequence/`--override`, etc. | **Done** (see earlier rows in git history / designs) |
+| 1–12 | Ad-hoc write mode, jump, drop sequence/`--override`, etc. | **Done** (see earlier rows in git history / designs) |
 | 13 | Retire `check-gate.py`; chat consent execute+sync only | **Done** 2026-08-05 |
+| 14 | Ad-hoc becomes direct sheep invocation; `--mode adhoc` removed | **Done** 2026-08-05 |
 
 ## Decisions
 
@@ -113,19 +118,20 @@ Sequenced flexibility through informal jump, drop-sequence / override, and retir
 - Sheep return handoff only: artifact, `completed_status`, blockers — **not** `next_step` or `completed_step`.
 - On normal completion, `update-status.py` sets `task.next_step` from `routing.json` via `next_step_for()` for the completed step (`--step`).
 - Git-tail nuance (first sync → `archive`, second sync → `integrate` when `artifacts.archive` is set) lives in the script/routing, not sheep prose.
-- Ad-hoc: write mode does **not** apply `default_next_step`; position fields stay byte-identical.
 - Jump: write mode sets `next_step` to the target and leaves `current_step` untouched; Nicki then runs the target sheep.
+- Ad-hoc writes nothing, so routing never applies to it.
 
 ### 2. How flexibility is spelled — **`--mode` enum**
 
 - Nicki forwards `--mode` to `sheep-status`; `update-status.py` applies routing's `default_next_step` only when mode is `normal`.
-- One axis: ad-hoc and jump share the same `--mode` flag.
 - **Amended 2026-07-31:** drop `--override` and the sequence-waiver class.
 - **Amended 2026-08-05:** spawn-gate script removed; modes are write-only.
+- **Amended 2026-08-05:** `adhoc` removed from the enum — ad-hoc is a directly-invoked sheep, not a write. Modes are `normal` and `jump`.
 
 ### 3. Consent — **Nicki chat**
 
-- Explicit yes required only before **execute** and **sync** (including adhoc sync).
+- Explicit yes required only before **execute** and **sync**.
+- Ad-hoc git sheep (`sheep-sync`, `sheep-integrate`) need the same explicit yes from the agent that spawns them.
 - No `user_confirm_required` / spawn-gate script.
 
 ### 4. Sheep hold no workflow knowledge

@@ -4,16 +4,16 @@ Skills are **pure functionality** — portable operation manuals with no knowled
 
 | Layer | Owns | Who uses it |
 |-------|------|-------------|
-| **Skill** (`SKILL.md` + `*-format.md`) | How to perform one job: algorithms, schemas, safety, default output shape | **Users** attach or invoke skills for ad-hoc work |
-| **Sheep** (`.cursor/agents/sheep-*.md`) | Workflow binding: disk paths to load, gates, handoffs | **Nicki only** — Task `subagent_type: sheep-*` |
+| **Skill** (`SKILL.md` + `*-format.md`) | How to perform one job: algorithms, schemas, safety, default output shape | Attach to do the job in your own context |
+| **Sheep** (`.cursor/agents/sheep-*.md`) | Workflow binding: run one skill in isolated context, return JSON | Nicki on the pipeline; direct Task spawn for ad-hoc |
 | **Nicki** (`.cursor/agents/nicki.md`) | Full pipeline, transitions, user confirmations | User says `nicki …` |
 
 Pipeline leaf skills: `story-maker`, `spec-maker`, `subtask-maker`, `execute-plan`, `review-execution`, …
 
 ## Invocation policy
 
-1. **Users use skills** — pipeline skills (`story-maker`, `spec-maker`, `execute-plan`, …) have model invocation enabled; attach the skill for one-off work outside the full pipeline.
-2. **Users do not send sheep** — parent agent must not Task-spawn `sheep-*`; only Nicki sends sheep.
+1. **Ad-hoc work** — Task-spawn the sheep directly (instructions + output path, default `docs/adhoc/`), or attach the skill when you want the work in your own context. No task or status write either way.
+2. **Nicki-only sheep** — `sheep-start`, `sheep-close`, `sheep-status` own the registry and per-task status; never spawn them ad-hoc.
 3. **Nicki sends sheep** — full current-task workflow goes through Nicki (`nicki fetch`, `nicki continue`, …).
 4. **Workflow-only skills stay internal** — `current-task-update`, `close-task`, `close-scope`, `task-archive`, `hook-contract`, `validation` keep `disable-model-invocation: true`.
 
@@ -22,7 +22,7 @@ Pipeline leaf skills: `story-maker`, `spec-maker`, `subtask-maker`, `execute-pla
 1. Leaf skills do **not** reference `status.json`, `global-status.json`, pipeline step names, or “send sheep next”.
 2. Leaf skills accept **inputs from the sheep prompt** (paths, inline JSON, story text) — no implicit disk discovery.
 3. Format files document **one artifact type** each — no multi-agent directory maps.
-4. Sheep load skills and pass concrete inputs; sheep own auto-load paths and Nicki summary expectations.
+4. Sheep load skills and pass concrete inputs; sheep own auto-load paths and caller summary expectations.
 
 ## Exceptions (workflow skills)
 

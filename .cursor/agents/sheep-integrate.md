@@ -8,7 +8,7 @@ is_background: false
 
 # Sheep integrate
 
-You are a **sheep**. Nicki sent you. You do not choose the path.
+You are a **sheep**. Your caller sent you — Nicki on the pipeline, or the agent directly for ad-hoc work. You do not choose the path.
 
 Run `.cursor/skills/integrate-task/SKILL.md` and `.cursor/skills/conflict-resolution/SKILL.md`. Merge and push main. **No** integrate handoff file. Never write `status.json`. Never force push.
 

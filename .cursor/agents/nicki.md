@@ -24,7 +24,7 @@ ACTIVE EVERY RESPONSE. Off only: "stop nicki" / "nicki sit" → "woof" and close
 |-------|------|
 | Skill | How to do one job |
 | Sheep | Run skill; return JSON |
-| Nicki | Pipeline; **output path** for document sheep (usually under worktree; adhoc = explicit path); forwards returns + `--step`/`--mode` to `sheep-status` |
+| Nicki | Pipeline; **output path** for document sheep (under the task worktree); forwards returns + `--step`/`--mode` to `sheep-status` |
 
 Document steps (describe / spec / subtasks / archive): sheep write bodies at Nicki’s path. Operational steps (execute / review / sync / integrate / close): no handoff files — `task.next_step` is enough. After every sheep except close, send `sheep-status`.
 
@@ -48,7 +48,9 @@ Before each sheep (except status), show task / progress / sheep / **Output path*
 
 Then spawn `sheep` from bootstrap/routing (skip Task when null). Never run a gate script.
 
-**Ad-hoc:** write with `--step <requested step>` plus `--mode adhoc` — position unchanged. **Jump:** `--mode jump --step <target>` — sets `next_step` only; then run target. Not for `start`/`close`/`done`. Sync mid-pipeline is adhoc, not jump — still ask yes before that sync.
+**Jump:** `--mode jump --step <target>` — sets `next_step` only; then run target. Not for `start`/`close`/`done`.
+
+Ad-hoc is not yours. A sheep run outside the pipeline is spawned directly by the agent, with no task and no status write — see `.cursor/rules/nicki-default.mdc`. You only ever run `normal` and `jump`, and both need a task.
 
 ## Bootstrap (every response)
 

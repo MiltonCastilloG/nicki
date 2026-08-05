@@ -1,4 +1,4 @@
-"""completed_status enum + --mode adhoc no-advance write (flexibility step 4)."""
+"""completed_status enum + write-mode surface (normal / jump only)."""
 
 from __future__ import annotations
 
@@ -86,8 +86,7 @@ def run(root: Path) -> None:
             if (wt / "current-task/status.json").exists():
                 raise AssertionError("fail: rejected write must not create status.json")
 
-        # --mode adhoc: position untouched, side effect logged; document pointer when keyed.
-        wt = tmpdir / "adhoc"
+        wt = tmpdir / "modes"
         wt.mkdir()
         seed = _summary(
             wt,
@@ -100,71 +99,28 @@ def run(root: Path) -> None:
         proc, _ = _write(update, root, wt, seed)
         if proc.returncode != 0:
             raise AssertionError(f"fail: seed write: {proc.stderr}")
-        before = _status(wt)
 
-        adhoc = _summary(
-            wt,
-            "adhoc.json",
-            {"artifact": "current-task/story.md", "completed_status": "complete"},
-        )
-        proc, out = _write(update, root, wt, adhoc, "--step", "describe", "--mode", "adhoc")
-        if proc.returncode != 0 or out.get("written") is not True:
-            raise AssertionError(f"fail: adhoc write: {proc.stdout}{proc.stderr}")
-        if out.get("mode") != "adhoc":
-            raise AssertionError("fail: stdout should echo mode")
-        if out.get("next_step") != "review":
-            raise AssertionError(f"fail: adhoc must echo unchanged next_step: {out}")
+        # Ad-hoc is a directly-invoked sheep, not a write mode — the CLI must refuse it.
+        # Unknown modes go the same way: argparse rejects before anything is written.
+        thin = _summary(wt, "thin.json", {"completed_status": "complete"})
+        for mode in ("adhoc", "sideways"):
+            proc = run_py(
+                update,
+                "--worktree",
+                str(wt),
+                "--json-path",
+                str(thin),
+                "--step",
+                "describe",
+                "--mode",
+                mode,
+                cwd=root,
+            )
+            if proc.returncode == 0:
+                raise AssertionError(f"fail: --mode {mode} should be rejected")
 
-        after = _status(wt)
-        task_before, task_after = before.get("task") or {}, after.get("task") or {}
-        for field in ("current_step", "next_step"):
-            if task_after.get(field) != task_before.get(field):
-                raise AssertionError(f"fail: adhoc changed task.{field}")
-        if (after.get("artifacts") or {}).get("story") != "current-task/story.md":
-            raise AssertionError("fail: adhoc should record document artifact pointer")
-        effects = task_after.get("side_effects") or []
-        if len(effects) != 1:
-            raise AssertionError(f"fail: expected one side effect: {effects}")
-        effect = effects[0]
-        if effect.get("step") != "describe" or effect.get("mode") != "adhoc":
-            raise AssertionError(f"fail: side effect fields: {effect}")
-        if not effect.get("at") or effect.get("artifact") != "current-task/story.md":
-            raise AssertionError(f"fail: side effect needs at + artifact: {effect}")
-
-        # Operational adhoc: no artifact_key — side effect may still log path; no pointer.
-        sync_adhoc = _summary(wt, "sync-adhoc.json", {"completed_status": "complete"})
-        proc, out = _write(update, root, wt, sync_adhoc, "--step", "sync", "--mode", "adhoc")
-        if proc.returncode != 0:
-            raise AssertionError(f"fail: sync adhoc: {proc.stdout}{proc.stderr}")
-        if (_status(wt).get("artifacts") or {}).get("sync"):
-            raise AssertionError("fail: sync adhoc must not set artifacts.sync")
-        effects = ((_status(wt).get("task")) or {}).get("side_effects") or []
-        if len(effects) != 2:
-            raise AssertionError(f"fail: side effects should append: {effects}")
-
-        # adhoc on a worktree with no status.json is an input error, not an init.
-        fresh = tmpdir / "adhoc-fresh"
-        fresh.mkdir()
-        s = _summary(fresh, "summary.json", {"artifact": "current-task/story.md"})
-        proc, out = _write(update, root, fresh, s, "--step", "describe", "--mode", "adhoc")
-        if proc.returncode != 1 or out.get("written") is not False:
-            raise AssertionError("fail: adhoc on fresh worktree should fail")
-        if (fresh / "current-task/status.json").exists():
-            raise AssertionError("fail: adhoc must not initialise status.json")
-
-        # Unknown --mode is rejected by argparse before anything is written.
-        proc = run_py(
-            update,
-            "--worktree",
-            str(wt),
-            "--json-path",
-            str(sync_adhoc),
-            "--mode",
-            "sideways",
-            cwd=root,
-        )
-        if proc.returncode == 0:
-            raise AssertionError("fail: unknown mode should be rejected")
+        if ((_status(wt).get("task")) or {}).get("side_effects"):
+            raise AssertionError("fail: rejected modes must not log side effects")
 
         # With a completed step, next_step comes from routing — summary may omit it.
         s = _summary(wt, "no-next.json", {"completed_step": "spec", "artifact": "current-task/specs/x.json"})

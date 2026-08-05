@@ -12,12 +12,11 @@ NICKI = ".cursor/agents/nicki.md"
 # Sheep only points at the skill; side_effects language lives in skill + format.
 NEEDLES = (
     (FORMAT, "task.side_effects"),
-    (FORMAT, "Ad-hoc <step> at <at>"),
+    (FORMAT, "<mode> <step> at <at>"),
     (FORMAT, "no artifact"),
     (FORMAT, "append one `process` row per"),
     (SKILL, "side_effects"),
-    (NICKI, "--step <requested step>"),
-    (NICKI, "--mode adhoc"),
+    (NICKI, "--mode jump --step <target>"),
 )
 
 

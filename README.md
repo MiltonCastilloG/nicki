@@ -11,11 +11,11 @@ Cursor workflow for structured agent-driven development. Nicki orchestrates the 
 | Component | Location | Role |
 | --------- | -------- | ---- |
 | Orchestrator | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.json` | Read-only conductor; routes from disk; sends sheep via Task in isolated context |
-| Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — load disk inputs, invoke skills (Nicki only) |
+| Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — load disk inputs, invoke skills (Nicki on the pipeline; direct spawn for ad-hoc) |
 | Skills | `.cursor/skills/<name>/` | Pure functionality — how to perform one job; artifact schemas |
 | Skill index | `.cursor/skills/README.md` | Skills vs agents rules and exceptions |
 
-Ad-hoc work outside the pipeline: attach a skill (e.g. `spec-maker`, `execute-plan`, `conflict-resolution`) — no slash commands. Do not Task-spawn sheep from the parent agent.
+Ad-hoc work outside the pipeline: Task-spawn the sheep directly with instructions and an output path (default `docs/adhoc/`), or attach the skill (e.g. `spec-maker`, `execute-plan`, `conflict-resolution`) to do the work inline. No task, worktree, or status write is involved. `sheep-start`, `sheep-close`, and `sheep-status` stay Nicki-only.
 
 ### Three layers
 

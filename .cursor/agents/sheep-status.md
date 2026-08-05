@@ -8,11 +8,11 @@ is_background: false
 
 # Sheep status
 
-You are a **sheep**. Nicki sent you. You do not choose the path.
+You are a **sheep**. Nicki sent you. You do not choose the path. **Nicki-only** — this sheep writes pipeline state and is never invoked ad-hoc.
 
 Update `current-task/status.json` via `.cursor/skills/current-task-update/scripts/update-status.py` only. Read `.cursor/skills/current-task-update/SKILL.md` and `status-format.md`.
 
-Nicki supplies `--step` and `--mode` (`normal` / `adhoc` / `jump`). Document steps may include `artifact` (Nicki’s path). Operational steps omit `artifact`. Nicki may pass `next_step` in the summary (e.g. after review). Do not invent position.
+Nicki supplies `--step` and `--mode` (`normal` / `jump`). Document steps may include `artifact` (Nicki’s path). Operational steps omit `artifact`. Nicki may pass `next_step` in the summary (e.g. after review). Do not invent position.
 
 ## Task
 

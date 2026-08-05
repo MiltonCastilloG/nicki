@@ -20,7 +20,7 @@ Read via `current-task/status.json` — [status-format.md](../current-task-updat
 **Process sourcing:** build `report.json` `process` in two passes. Do **not** invent history from `completed_steps`.
 
 1. **Handoffs** — for each step with an artifact pointer, load the handoff and take a one-line summary from its `meta` or top-level summary fields.
-2. **Side effects** — append one `process` row per `task.side_effects[]` entry (log order). Always include the row, even when `artifact` is null — a null still means the out-of-band run happened. Summary shape: `Ad-hoc <step> at <at> — <artifact|no artifact>`.
+2. **Side effects** — append one `process` row per `task.side_effects[]` entry (log order). Always include the row, even when `artifact` is null — a null still means the out-of-band run happened. Summary shape: `<mode> <step> at <at> — <artifact|no artifact>`.
 
 | Step | Artifact pointer | Summary source |
 |------|------------------|----------------|
@@ -36,8 +36,7 @@ Read via `current-task/status.json` — [status-format.md](../current-task-updat
 "process": [
   {"step": "execute", "summary": "Subtasks in progress."},
   {"step": "sync", "summary": "Feature branch pushed."},
-  {"step": "sync", "summary": "Ad-hoc sync at 2026-07-29T08:14:02Z — current-task/syncs/foo.json"},
-  {"step": "sync", "summary": "Ad-hoc sync at 2026-07-29T09:01:00Z — no artifact"}
+  {"step": "review", "summary": "jump review at 2026-07-30T12:00:00Z — no artifact"}
 ]
 ```
 

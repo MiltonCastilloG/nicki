@@ -5,8 +5,9 @@ Gate history (historical): [`harness-gate-bugs.md`](harness-gate-bugs.md).
 Spawn gate retired: [`superpowers/specs/2026-08-05-retire-check-gate-design.md`](superpowers/specs/2026-08-05-retire-check-gate-design.md).
 
 Sequenced flexibility work (ad-hoc, jump, drop `completed_steps`, informal jump,
-drop execution artifact, drop sequence / `--override`, retire check-gate) is
-**done**. This file is the backlog for what remains.
+drop execution artifact, drop sequence / `--override`, retire check-gate,
+ad-hoc as direct sheep invocation) is **done**. This file is the backlog for
+what remains.
 
 ---
 
@@ -31,7 +32,15 @@ Spawn veto deleted. Consent is Nicki chat for execute + sync only. `expected_art
 
 ---
 
-## 4. Finding 5 — quoting / format hygiene (optional)
+## 4. Ad-hoc is direct sheep invocation — **done** 2026-08-05
+
+**Design:** [`superpowers/specs/2026-08-05-adhoc-direct-sheep-invocation-design.md`](superpowers/specs/2026-08-05-adhoc-direct-sheep-invocation-design.md).
+
+`--mode adhoc` removed. Ad-hoc needs no task: the agent spawns the sheep directly and relays its return. Nicki keeps `normal` and `jump`.
+
+---
+
+## 5. Finding 5 — quoting / format hygiene (optional)
 
 **Source:** [`harness-gate-bugs.md`](harness-gate-bugs.md) Finding 5 (historical; gate no longer parses sheep artifacts at spawn).
 
@@ -40,7 +49,7 @@ files. Polish only.
 
 ---
 
-## 5. CI for smoke suite (hygiene)
+## 6. CI for smoke suite (hygiene)
 
 `python3 test.py` is the entrypoint; nothing runs it automatically.
 
@@ -48,14 +57,14 @@ files. Polish only.
 
 ---
 
-## 6. Dogfood (validation)
+## 7. Dogfood (validation)
 
 Manual pass on a real task:
 
-- Ad-hoc sync mid-`execute` (position unchanged, `side_effects` + archive row; Nicki asks yes)
+- Ad-hoc sheep invoked directly with no task (runs, returns, writes no pipeline state)
 - Informal jump (e.g. chat / design `.md` → `subtasks` or `review`)
 
-Confirms Nicki prose (`nicki.md` Ad-hoc / Jump) matches operator expectations.
+Confirms the rule prose (`nicki-default.mdc` ad-hoc, `nicki.md` jump) matches operator expectations.
 
 ---
 
