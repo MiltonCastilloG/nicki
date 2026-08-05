@@ -13,7 +13,7 @@ Modes (--mode):
            pointer is still recorded, and one task.side_effects entry is appended
   jump   — skip ahead to --step: set next_step to the target; leave current_step
            untouched; no summary artifact required or materialized; log
-           side_effects with artifact null. Nicki then gates and runs that sheep.
+           side_effects with artifact null. Nicki then runs that sheep.
 
 Optional summary fields (defaults applied):
   completed_step — overridden by --step; sets current_step / artifact pointer
@@ -40,15 +40,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-_NICKI_SCRIPTS = Path(__file__).resolve().parent.parent.parent / "nicki" / "scripts"
-if str(_NICKI_SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(_NICKI_SCRIPTS))
-
-from gate_utils import (  # noqa: E402
-    MODES,
-    load_routing,
-    next_step_for,
-)
+from routing_write import MODES, load_routing, next_step_for
 
 # Closed set. Sheep outcome only — does not drive a history list.
 COMPLETED_STATUSES = ("complete", "blocked")

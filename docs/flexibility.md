@@ -17,22 +17,19 @@ Standing. Do not trade these for convenience.
 
 | Constraint | Means |
 |---|---|
-| Scripts stay authoritative | `check-gate.py`, `update-status.py`, `bootstrap-context.py` keep the veto. No decision moves back into prose. |
+| Scripts stay authoritative for position | `update-status.py` and `bootstrap-context.py` own write/read of pipeline position. Consent is Nicki chat (execute + sync only) — see [retire-check-gate](superpowers/specs/2026-08-05-retire-check-gate-design.md). |
 | `status.json` stays source of truth for pipeline state | Position is `current_step` + `next_step` + artifact pointers. Ad-hoc runs log to `side_effects` without moving position; jump moves position deliberately. |
-| Gate denials never waive | Consent, readiness blocks, missing inputs, and every other gate deny are final. No `--override`. No `deny_sequence` / sequence class. See [`2026-07-31-drop-sequence-and-override-design.md`](superpowers/specs/2026-07-31-drop-sequence-and-override-design.md). |
-| Modes own write shape, not waivers | `--mode adhoc` / `--mode jump` change how `update-status.py` moves position. They are not flags to bypass the gate. |
+| Modes own write shape | `--mode adhoc` / `--mode jump` change how `update-status.py` moves position. No spawn-gate script. |
 
 ## Write modes
 
-Both `check-gate.py` and `update-status.py` take `--mode normal|adhoc|jump` (default `normal`). The gate echoes the resolved mode in stdout; Nicki forwards the same mode to `sheep-status`.
+`update-status.py` takes `--mode normal|adhoc|jump` (default `normal`). Nicki forwards the mode to `sheep-status`.
 
-| Mode | Gate | Write | Position after write |
-|---|---|---|---|
-| **normal** | Safety + consent (+ policy bookends) | Sets `current_step` from `--step`; derives `next_step` from routing via `next_step_for()` | Advances along the pipeline |
-| **adhoc** | Same denials as normal; step must be `adhoc_allowed` | Records artifact pointer; appends `task.side_effects[]`; leaves `current_step` and `next_step` untouched | Unchanged |
-| **jump** | Same denials as normal; cannot target `start`, `close`, or `done` | Sets `next_step` to the target; leaves `current_step` untouched; no summary `artifact` required; appends `side_effects` with `artifact: null` | Points at target sheep — Nicki gates and runs it next |
-
-**Ad-hoc policy:** every step sets `adhoc_allowed` in `routing.json` except `start`, `close`, and `done`.
+| Mode | Write | Position after write |
+|---|---|---|
+| **normal** | Sets `current_step` from `--step`; derives `next_step` from routing via `next_step_for()` | Advances along the pipeline |
+| **adhoc** | Records artifact pointer; appends `task.side_effects[]`; leaves `current_step` and `next_step` untouched | Unchanged |
+| **jump** | Sets `next_step` to the target; leaves `current_step` untouched; no summary `artifact` required; appends `side_effects` with `artifact: null`; cannot target `start`, `close`, or `done` | Points at target sheep — Nicki runs it next |
 
 **Sheep return contract:** sheep return `artifact`, `completed_status`, `open_questions`, `summary` only — not `next_step` or `completed_step`. Execute **omits** `artifact` (no `executions/*.json`). Nicki forwards the return plus the `--step` and `--mode` she dispatched.
 

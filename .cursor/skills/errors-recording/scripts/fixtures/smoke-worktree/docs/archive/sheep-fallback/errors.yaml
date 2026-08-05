@@ -4,7 +4,7 @@ meta:
 failures:
 - id: '2026-07-02T13:37:09Z'
   recorded_at: '2026-07-02T13:37:09Z'
-  script_route: .cursor/skills/nicki/scripts/check-gate.py
+  script_route: .cursor/skills/nicki/scripts/bootstrap-context.py
   input:
     argv:
     - --worktree

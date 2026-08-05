@@ -40,7 +40,7 @@ Append-only diagnostic artifact — separate from task requirements spec and sub
     {
       "id": "2026-07-02T15:30:00Z",
       "recorded_at": "2026-07-02T15:30:00Z",
-      "script_route": ".cursor/skills/nicki/scripts/check-gate.py",
+      "script_route": ".cursor/skills/nicki/scripts/bootstrap-context.py",
       "input": {
         "argv": [
           "--worktree",

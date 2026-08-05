@@ -22,7 +22,7 @@ def _append(append: Path, root: Path, worktree: Path, *, route: str, stdout: str
         "--input",
         '{"argv":["--worktree","worktrees/demo","--step","execute"]}',
         "--expected-output",
-        '{"required_fields":["allowed","sheep","reason"]}',
+        '{"required_fields":["active_task","status_path","current_step","next_step","sheep"]}',
         "--exit-code",
         "1",
         "--stdout",
@@ -47,9 +47,9 @@ def run(root: Path) -> None:
             append,
             root,
             worktree,
-            route=".cursor/skills/nicki/scripts/check-gate.py",
-            stdout='{"allowed":false}',
-            errors='["missing field: reason"]',
+            route=".cursor/skills/nicki/scripts/bootstrap-context.py",
+            stdout='{"active_task":"t-demo"}',
+            errors='["missing field: next_step"]',
         )
         if not errors.is_file():
             raise AssertionError("fail: errors.json missing after first append")

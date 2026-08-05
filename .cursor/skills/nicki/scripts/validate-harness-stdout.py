@@ -2,7 +2,7 @@
 """Validate harness script stdout against routing.json harness_failure contracts.
 
 Usage:
-  validate-harness-stdout.py --script check-gate.py [--stdout JSON] [--exit-code N]
+  validate-harness-stdout.py --script bootstrap-context.py [--stdout JSON] [--exit-code N]
 
 Stdout JSON: valid (bool), errors (list[str])
 Exit 0 when valid, 1 when invalid.
@@ -15,7 +15,7 @@ import json
 import sys
 from typing import Any
 
-from gate_utils import load_routing
+from bootstrap_utils import load_routing
 
 
 def contract_for(script_key: str) -> dict[str, Any] | None:

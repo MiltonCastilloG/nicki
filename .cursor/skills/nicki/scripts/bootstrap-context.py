@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from gate_utils import load_routing, load_status, resolve_worktree, workspace_root
+from bootstrap_utils import load_routing, load_status, resolve_worktree, workspace_root
 
 
 def load_global() -> dict[str, Any]:

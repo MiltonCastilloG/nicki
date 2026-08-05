@@ -13,36 +13,23 @@ def run(root: Path) -> None:
 
 
 def _run(root: Path, worktree: Path) -> None:
-    gate = script(root, ".cursor/skills/nicki/scripts/check-gate.py")
     validate = script(root, ".cursor/skills/nicki/scripts/validate-harness-stdout.py")
     append = script(root, ".cursor/skills/errors-recording/scripts/append-error.py")
-    step = "acceptance"
-    script_route = ".cursor/skills/nicki/scripts/check-gate.py"
+    update = script(root, ".cursor/skills/current-task-update/scripts/update-status.py")
+    script_route = ".cursor/skills/nicki/scripts/bootstrap-context.py"
     (worktree / "current-task/specs").mkdir(parents=True)
     errors_json = worktree / "current-task/specs/errors.json"
 
-    gate_proc = run_py(
-        gate,
-        "--smoke-contract-fail",
-        "--worktree",
-        ".",
-        "--step",
-        step,
-        cwd=root,
-    )
-    if gate_proc.returncode != 1:
-        raise AssertionError("fail: expected check-gate exit 1")
-    if not gate_proc.stdout.strip():
-        raise AssertionError("fail: empty stdout")
-
+    # Synthetic contract-invalid bootstrap stdout (missing required fields).
+    bad_stdout = '{"active_task": "t-demo"}'
     val_proc = run_py(
         validate,
         "--script",
-        "check-gate.py",
+        "bootstrap-context.py",
         "--stdout",
-        gate_proc.stdout.strip(),
+        bad_stdout,
         "--exit-code",
-        str(gate_proc.returncode),
+        "0",
         cwd=root,
     )
     if val_proc.returncode != 1:
@@ -53,21 +40,45 @@ def _run(root: Path, worktree: Path) -> None:
         raise AssertionError(f"fail: expected contract-invalid, got {val_json}")
     print("contract-invalid:", val_json["errors"])
 
+    # Real update-status input error: valid written:false contract.
+    status_path = worktree / "current-task/status.json"
+    status_path.write_text(
+        json.dumps(
+            {
+                "meta": {"schema": "task-status.v2"},
+                "task": {
+                    "slug": "harness-fail",
+                    "current_step": "describe",
+                    "next_step": "spec",
+                },
+                "scope": {"worktree_path": str(worktree)},
+                "artifacts": {},
+                "open_questions": [],
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    summary = worktree / "summary.json"
+    summary.write_text("{}\n", encoding="utf-8")
     deny_proc = run_py(
-        gate,
+        update,
         "--worktree",
-        "/nonexistent-wt",
-        "--step",
-        step,
+        str(worktree),
+        "--json-path",
+        str(summary),
+        "--mode",
+        "normal",
         cwd=root,
     )
     if deny_proc.returncode != 1:
-        raise AssertionError("fail: expected gate deny exit 1")
+        raise AssertionError("fail: expected update-status input error exit 1")
 
     deny_val = run_py(
         validate,
         "--script",
-        "check-gate.py",
+        "update-status.py",
         "--stdout",
         deny_proc.stdout.strip(),
         "--exit-code",
@@ -76,17 +87,14 @@ def _run(root: Path, worktree: Path) -> None:
     )
     deny_json = json_line(deny_val.stdout)
     if deny_json.get("valid") is not True:
-        raise AssertionError("fail: gate-deny should have valid contract")
-    print("gate-deny-valid-contract: ok")
+        raise AssertionError(f"fail: written:false should have valid contract, got {deny_json}")
+    print("update-status-input-error-valid-contract: ok")
 
     input_json = json.dumps(
         {
             "argv": [
                 "--worktree",
                 "worktrees/nicki-sheep-fallback",
-                "--step",
-                step,
-                "--smoke-contract-fail",
             ]
         }
     )
@@ -101,11 +109,11 @@ def _run(root: Path, worktree: Path) -> None:
         "--input",
         input_json,
         "--expected-output",
-        '{"required_fields":["allowed","sheep","reason"]}',
+        '{"required_fields":["active_task","status_path","current_step","next_step","sheep"]}',
         "--exit-code",
-        str(gate_proc.returncode),
+        "0",
         "--stdout",
-        gate_proc.stdout.strip(),
+        bad_stdout,
         "--validation-errors",
         validation_json,
         cwd=root,
@@ -121,7 +129,6 @@ def _run(root: Path, worktree: Path) -> None:
     assert len(data["failures"]) >= 1
     last = data["failures"][-1]
     assert last["script_route"] == script_route
-    assert last["actual"]["exit_code"] == 1
     assert "missing field" in " ".join(last["actual"]["validation_errors"] or [])
     print("errors.json harness entry: ok")
     print("smoke-harness-failure: ok")

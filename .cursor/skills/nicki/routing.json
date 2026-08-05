@@ -5,7 +5,6 @@
       "artifact_key": null,
       "expected_artifact": "current-task/status.json",
       "default_next_step": "describe",
-      "gate": "no worktree yet; user requested start",
       "prompt": "work items / slugs from user message"
     },
     "describe": {
@@ -13,8 +12,6 @@
       "artifact_key": "story",
       "expected_artifact": "current-task/story.md",
       "default_next_step": "spec",
-      "gate": "task.original present",
-      "adhoc_allowed": true,
       "prompt": "output path (Nicki-owned; usually worktree current-task/story.md), task id, chat"
     },
     "spec": {
@@ -22,8 +19,6 @@
       "artifact_key": "spec",
       "expected_artifact": "current-task/specs/<slug>.json",
       "default_next_step": "subtasks",
-      "gate": "chat or optional on-disk context",
-      "adhoc_allowed": true,
       "prompt": "output path (Nicki-owned; usually worktree specs/<slug>.json), task id, chat"
     },
     "subtasks": {
@@ -31,8 +26,6 @@
       "artifact_key": "subtasks",
       "expected_artifact": "current-task/subtasks/<slug>.md",
       "default_next_step": "execute",
-      "gate": "status open_questions empty; if spec present, its open_questions empty",
-      "adhoc_allowed": true,
       "prompt": "output path (Nicki-owned; usually worktree subtasks/<slug>.md), task id, chat"
     },
     "execute": {
@@ -40,8 +33,6 @@
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "review",
-      "gate": "position / chat",
-      "adhoc_allowed": true,
       "prompt": "worktree path, task id, chat"
     },
     "review": {
@@ -49,8 +40,6 @@
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "acceptance",
-      "gate": "diff + available current-task files; Nicki may pass next_step override (acceptance|execute|review)",
-      "adhoc_allowed": true,
       "prompt": "worktree path, task id, chat"
     },
     "acceptance": {
@@ -58,8 +47,6 @@
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "sync",
-      "gate": "user accepts in chat",
-      "adhoc_allowed": true,
       "prompt": null
     },
     "fix": {
@@ -67,8 +54,6 @@
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "execute",
-      "gate": "Nicki set next_step to fix",
-      "adhoc_allowed": true,
       "prompt": null
     },
     "sync": {
@@ -77,10 +62,6 @@
       "expected_artifact": null,
       "default_next_step": "archive",
       "next_step_when_archived": "integrate",
-      "gate": "user confirmed",
-      "user_confirm": "local commit, merge main into feature branch, push feature branch",
-      "user_confirm_required": true,
-      "adhoc_allowed": true,
       "prompt": "worktree path, task id"
     },
     "archive": {
@@ -88,10 +69,6 @@
       "artifact_key": "archive",
       "expected_artifact": "docs/archive/<slug>/report.json",
       "default_next_step": "sync",
-      "gate": "user confirmed",
-      "user_confirm": "write task archive to docs/archive",
-      "user_confirm_required": true,
-      "adhoc_allowed": true,
       "prompt": "output path (Nicki-owned; usually worktree docs/archive/<slug>/), task id"
     },
     "integrate": {
@@ -99,10 +76,6 @@
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "close",
-      "gate": "user confirmed merge into main and push main",
-      "user_confirm": "merge feature into main and push main to remote",
-      "user_confirm_required": true,
-      "adhoc_allowed": true,
       "prompt": "worktree path, task id"
     },
     "close": {
@@ -110,9 +83,6 @@
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": "done",
-      "gate": "user confirmed close",
-      "user_confirm": "delete worktree",
-      "user_confirm_required": true,
       "prompt": "worktree path, task id"
     },
     "done": {
@@ -120,16 +90,11 @@
       "artifact_key": null,
       "expected_artifact": null,
       "default_next_step": null,
-      "gate": "close completed",
       "prompt": null
     }
   },
   "status_update": {
-    "sheep": "sheep-status",
-    "skip_user_confirm": true
-  },
-  "gate_policy": {
-    "description": "Read by check-gate.py. Per-step flags: user_confirm_required (deny without --user-confirmed), adhoc_allowed. Denials are never waived; --mode adhoc/jump only change update-status write semantics and policy bookends.\n"
+    "sheep": "sheep-status"
   },
   "sheep_return_contract": {
     "description": "Every sheep ends with compact JSON. Nicki forwards the return plus --step/--mode to sheep-status. Sheep do not name pipeline position — update-status derives next_step from routing, or from summary next_step when Nicki supplies one (e.g. after review).\n",
@@ -153,16 +118,6 @@
     "artifact": "current-task/specs/errors.json",
     "prompt": "worktree path, failed script route, script input, expected output contract, actual failure context, blocked pipeline step",
     "scripts": {
-      "check-gate.py": {
-        "route": ".cursor/skills/nicki/scripts/check-gate.py",
-        "expected_stdout": {
-          "required_fields": [
-            "allowed",
-            "sheep",
-            "reason"
-          ]
-        }
-      },
       "bootstrap-context.py": {
         "route": ".cursor/skills/nicki/scripts/bootstrap-context.py",
         "expected_stdout": {

@@ -44,7 +44,7 @@ input error — nothing is written. `blocked` leaves `next_step` where it was.
 
 **CLI:** `--step <name>` names the dispatched step and wins over summary
 `completed_step`. `--mode normal|adhoc|jump` selects whether the write moves the task.
-On `normal`, `next_step` is derived via `gate_utils.next_step_for()` (including the
+On `normal`, `next_step` is derived via `routing_write.next_step_for()` (including the
 git tail and review readiness). On `jump`, `--step` is the **target** sheep step:
 `next_step` becomes the target and `current_step` is left untouched — no summary
 `artifact` required or materialized. Artifact pointers on normal/adhoc writes use
