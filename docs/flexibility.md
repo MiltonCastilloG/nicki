@@ -48,7 +48,7 @@ Ad-hoc is not a Nicki mode. The agent Task-spawns one sheep with instructions, r
 
 | Layer | Behavior |
 |---|---|
-| Agent | Picks the sheep; packs instructions plus an output path for document sheep (user's path, else under `docs/adhoc/`); asks yes before git sheep |
+| Agent | Picks the sheep; packs instructions plus an output path for document sheep (user's path, else under `docs/adhoc/`; archive always `<prefix>/docs/archive/<slug>/`); asks yes before git sheep |
 | Sheep | Same file as on the pipeline — one skill, path from the prompt, position-free return |
 | Write | None. Pipeline state is untouched because nothing writes it |
 
@@ -64,7 +64,7 @@ Archive `process` is handoff rows plus one row per side-effect entry (including 
 
 - A sheep spawned with instructions alone, in a repo with no registered task, runs and returns.
 - `--mode adhoc` is rejected by `update-status.py`; no `adhoc` in `MODES`.
-- Document sheep invoked ad-hoc with no path given write under `docs/adhoc/`.
+- Document sheep invoked ad-hoc with no path given write under `docs/adhoc/` (except archive — always `<prefix>/docs/archive/<slug>/`).
 - Jump/write still rejects targeting `start` / `close` / `done` on jump mode.
 - Acceptance before first sync is Nicki’s chat confirm (ask before sync).
 - Archive format contract asserts `side_effects` → `process` (including null artifact rows).

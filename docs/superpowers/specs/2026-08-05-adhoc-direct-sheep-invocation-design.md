@@ -29,7 +29,7 @@ Framed correctly, ad-hoc is not a mode at all. It is **invoking a sheep directly
 | Preroute | The existing "Nicki or not" rule; ad-hoc is the not-Nicki branch, upgraded from "attach a skill" to "spawn the sheep" |
 | Pipeline state on ad-hoc | None written — no bootstrap, no `sheep-status`, no `side_effects` |
 | Consent | Card-free spawn, except an explicit yes before git sheep (`sheep-sync`, `sheep-integrate`) |
-| Document output path | User's path when given, else under `docs/adhoc/` |
+| Document output path | User's path when given, else under `docs/adhoc/`; **archive** always `<prefix>/docs/archive/<slug>/` (caller passes `prefix` + `slug`) |
     30|| Nicki modes | `normal`, `jump` only |
 | `--mode adhoc` | **Removed** from `MODES` and `update-status.py` |
 | `task.side_effects[]` | Kept — jump still logs there; historical ad-hoc rows stay readable |

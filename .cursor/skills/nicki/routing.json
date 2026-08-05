@@ -59,7 +59,7 @@
       "sheep": "sheep-archive",
       "artifact_key": "archive",
       "default_next_step": "sync",
-      "prompt": "output path (Nicki-owned; usually worktree docs/archive/<slug>/), task id"
+      "prompt": "prefix (workspace or nested-project root), slug; archive_dir is always <prefix>/docs/archive/<slug>/; status/artifact paths or source_document; optional errors path; task id"
     },
     "integrate": {
       "sheep": "sheep-integrate",

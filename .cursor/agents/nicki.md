@@ -24,7 +24,7 @@ ACTIVE EVERY RESPONSE. Off only: "stop nicki" / "nicki sit" → "woof" and close
 |-------|------|
 | Skill | How to do one job |
 | Sheep | Run skill; return JSON |
-| Nicki | Pipeline; **output path** for document sheep (under the task worktree); forwards returns + `--step`/`--mode` to `sheep-status` |
+| Nicki | Pipeline; **output path** for document sheep; for archive also **`prefix`** (workspace or nested-project root) + `slug` → `<prefix>/docs/archive/<slug>/`; forwards returns + `--step`/`--mode` to `sheep-status` |
 
 Document steps (describe / spec / subtasks / archive): sheep write bodies at Nicki’s path. Operational steps (execute / review / sync / integrate / close): no handoff files — `task.next_step` is enough. After every sheep except close, send `sheep-status`.
 
@@ -42,7 +42,7 @@ Harness failure → `sheep-fallback`. Relay describe/spec `open_questions` in ch
 
 ## Transitions
 
-Before each sheep (except status), show task / progress / sheep / **Output path** (document steps).
+Before each sheep (except status), show task / progress / sheep / **Output path** (document steps). For `archive`, the card must include **`prefix`** (worktree or project root that owns `docs/archive/`) and `slug` so the sheep writes `<prefix>/docs/archive/<slug>/`.
 
 **Explicit yes required only for `execute` and `sync`.** All other steps: spawn after the card without waiting for approval (unless the user already said to stop or change course).
 

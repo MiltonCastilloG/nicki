@@ -1,21 +1,21 @@
 # Task archive format
 
-`task-archive` writes under `docs/archive/<slug>/`.
+`task-archive` writes under `<prefix>/docs/archive/<slug>/`. The caller supplies `prefix` (workspace or nested-project root) and `slug`.
 
 ## Outputs
 
 ```
-docs/archive/<slug>/report.json
-docs/archive/<slug>/report.md
-docs/archive/<slug>/story.md      # copy from artifacts.story
-docs/archive/<slug>/errors.json   # verbatim copy when current-task/specs/errors.json exists
+<prefix>/docs/archive/<slug>/report.json
+<prefix>/docs/archive/<slug>/report.md
+<prefix>/docs/archive/<slug>/story.md      # copy from artifacts.story when present
+<prefix>/docs/archive/<slug>/errors.json   # verbatim copy when the caller named an errors path
 ```
 
 Spec and subtask paths from status are **not** archived — delete from worktree after copy (see [task-archive/SKILL.md](SKILL.md) step 7).
 
 ## Load inputs
 
-Read via `current-task/status.json` — [status-format.md](../current-task-update/status-format.md) `artifacts` + `open_questions`. Follow pointers; glob only if pointer missing.
+Caller packs the paths. Task archive: read `current-task/status.json` — [status-format.md](../current-task-update/status-format.md) `artifacts` + `open_questions`; follow pointers; glob only if pointer missing. Source-document archive: read the path the prompt named. No status and no source path → return blocked `open_questions`; do not invent inputs.
 
 **Process sourcing:** build `report.json` `process` in two passes. Do **not** invent history from `completed_steps`.
 
@@ -39,8 +39,6 @@ Read via `current-task/status.json` — [status-format.md](../current-task-updat
   {"step": "review", "summary": "jump review at 2026-07-30T12:00:00Z — no artifact"}
 ]
 ```
-
-No status.json → ask: archive from artifacts or stop.
 
 Summarize handoffs — never paste full bodies, logs, diffs, transcripts, secrets.
 
@@ -136,9 +134,10 @@ No raw diffs/logs. Clear prose for irreversible warnings.
 
 ## Harness errors reference
 
-When `docs/archive/<slug>/errors.json` was copied, `report.json` or `report.md` may include a short note that harness errors were recorded and point to the archived errors file — never paste full failure bodies.
+When `<prefix>/docs/archive/<slug>/errors.json` was copied from a caller-named path, `report.json` or `report.md` may include a short note that harness errors were recorded and point to the archived errors file — never paste full failure bodies.
 
 ## Rules
 
 - Compact — summarize, don't copy `current-task/` tree.
 - `report.json`, `report.md`, and `story.md` required before second sync (commit/push) and integrate.
+- Always write under `<prefix>/docs/archive/<slug>/` — never invent another archive root.

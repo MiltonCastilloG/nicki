@@ -1,6 +1,6 @@
 ---
 name: task-archive
-description: "Write docs/archive/<slug>/ (report.json, report.md, story.md); erase spec and subtasks."
+description: "Write <prefix>/docs/archive/<slug>/ (report.json, report.md, story.md); erase current-task spec and subtasks."
 disable-model-invocation: true
 ---
 
@@ -10,20 +10,27 @@ Draft + write archive. Format: [archive-format.md](archive-format.md).
 
 ## Inputs
 
+Caller-owned paths. You do not resolve a worktree via close-scope.
+
 | Input | Req |
 |-------|-----|
-| Worktree path | yes — from [close-scope](../close-scope/SKILL.md) resolve |
-| `current-task/status.json` | preferred |
+| `prefix` | yes — repo or project root that contains `docs/archive/` (workspace root or nested project) |
+| `slug` | yes |
+| `current-task/status.json` (and its artifact pointers) | when archiving a task |
+| `source_document` | when archiving from a named document instead of a task |
+| errors file path | optional — copy into the archive when the caller names one |
+
+`archive_dir` is always `<prefix>/docs/archive/<slug>/`. Write only there.
 
 ## Steps
 
-1. Resolve `slug`, `repo_root`, `archive_dir` = `docs/archive/<slug>/` under `repo_root` (close-scope §1 or inline).
-2. Load handoffs via status `artifacts` and `task.side_effects` — [status-format.md](../current-task-update/status-format.md).
+1. Resolve `archive_dir` = `<prefix>/docs/archive/<slug>/` from the prompt. Create it if needed.
+2. Load inputs — task: handoffs via status `artifacts` and `task.side_effects` ([status-format.md](../current-task-update/status-format.md)). Source document: the path the prompt named.
 3. Set `outcome.status: pending_integrate` — integrate has not run yet.
 4. Draft `report.json` — task, story, outcome, process (handoff rows, then one row per `side_effects` entry including null artifacts — see archive-format), decisions, open_questions, suggestions.
 5. Draft `report.md` — terse per caveman; mirror report.json.
-6. Write `report.json` and `report.md` under `docs/archive/<slug>/`.
-7. Copy `artifacts.story` → `docs/archive/<slug>/story.md`; when `current-task/specs/errors.json` exists, copy it verbatim → `docs/archive/<slug>/errors.json`; delete `artifacts.spec` and `artifacts.subtasks` from worktree when present.
-8. When archived `errors.json` exists, note harness errors were recorded in `report.json` / `report.md` and reference `docs/archive/<slug>/errors.json` — do not paste full failure bodies.
+6. Write `report.json` and `report.md` under `archive_dir`.
+7. Copy `artifacts.story` → `<archive_dir>/story.md` when present; when the caller named an errors file and it exists, copy it verbatim → `<archive_dir>/errors.json`; delete `artifacts.spec` and `artifacts.subtasks` from the worktree when present (cleanup — those pointed paths only).
+8. When archived `errors.json` exists, note harness errors were recorded in `report.json` / `report.md` and reference `<archive_dir>/errors.json` — do not paste full failure bodies.
 
-(Commit and push via next sync step.)
+(On the pipeline, commit and push via the next sync step.)
