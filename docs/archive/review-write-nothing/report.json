@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "schema": "task-archive.v1",
+    "generated_by": "task-archive",
+    "source_context": "8da7680"
+  },
+  "task": {
+    "slug": "review-write-nothing",
+    "title": "Review never mutates subtasks",
+    "original": "fix: review never mutates subtasks; Nicki + subtask apply fixes",
+    "type": "fix",
+    "branch": "main"
+  },
+  "story": "review write-nothing · suggested fixes in return · Nicki asks approval · sheep-subtask appends ## Fix · preserve [x] · no checklist mutate from review",
+  "outcome": {
+    "status": "pending_integrate",
+    "target": "main",
+    "pushed_branch": null,
+    "final_artifact": "docs/archive/review-write-nothing/report.json"
+  },
+  "process": [],
+  "decisions": [
+    {
+      "topic": "Review write policy",
+      "decision": "Review writes nothing — no handoffs, no ## Fix on subtasks, no status.json."
+    },
+    {
+      "topic": "Where suggested fixes live",
+      "decision": "In the sheep return only (summary / open_questions)."
+    },
+    {
+      "topic": "Who mutates the checklist",
+      "decision": "After user approval, Nicki sends sheep-subtask with the existing path plus approved lines; review never appends ## Fix."
+    },
+    {
+      "topic": "Subtask-maker fix mode",
+      "decision": "Apply-approved-review-fixes path appends/refreshes ## Fix and preserves existing - [x] / - [ ]; does not regenerate from the spec."
+    },
+    {
+      "topic": "fix_required routing",
+      "decision": "Nicki asks approval → sheep-subtask appends ## Fix → execute again."
+    }
+  ],
+  "open_questions": [],
+  "suggestions": [
+    {
+      "area": "orchestration",
+      "suggestion": "Smoke-test ad-hoc review then approved sheep-subtask ## Fix append on a throwaway checklist so the write-nothing + apply-fixes split stays exercised.",
+      "evidence": "Commit 8da7680 changes prose/routing only; live path is Nicki chat approval → sheep-subtask."
+    }
+  ]
+}
