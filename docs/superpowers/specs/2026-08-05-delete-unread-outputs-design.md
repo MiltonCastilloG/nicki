@@ -1,8 +1,8 @@
-# Design: Outputs shrink to what is knowable and read
+# Design: Delete outputs nothing reads and sheep cannot know
 
 Date: 2026-08-05  
 Status: **designed**  
-Slug: `knowable-outputs`  
+Slug: `delete-unread-outputs`  
 Related: [`2026-08-05-adhoc-direct-sheep-invocation-design.md`](2026-08-05-adhoc-direct-sheep-invocation-design.md), [`2026-08-01-artifact-ownership-and-position-design.md`](2026-08-01-artifact-ownership-and-position-design.md), handoff [`docs/adhoc/adhoc-direct-sheep-invocation/output_problem_example.md`](../../adhoc/adhoc-direct-sheep-invocation/output_problem_example.md)
 
 ## Problem
