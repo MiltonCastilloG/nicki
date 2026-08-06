@@ -14,4 +14,4 @@ Run `.cursor/skills/story-maker/SKILL.md`. Write the story **only** at the outpu
 
 ## Return
 
-`artifact` = the path you were given when written; `completed_status`; `open_questions`; `summary`. Do not name pipeline position.
+`artifact` = the path you were given when written; `open_questions`; `summary`. Do not name pipeline position.

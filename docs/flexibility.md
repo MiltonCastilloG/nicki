@@ -32,7 +32,7 @@ Standing. Do not trade these for convenience.
 | **normal** | Sets `current_step` from `--step`; derives `next_step` from routing via `next_step_for()` | Advances along the pipeline |
 | **jump** | Sets `next_step` to the target; leaves `current_step` untouched; no summary `artifact` required; appends `side_effects` with `artifact: null`; cannot target `start`, `close`, or `done` | Points at target sheep — Nicki runs it next |
 
-**Sheep return contract:** sheep return `artifact`, `completed_status`, `open_questions`, `summary` only — not `next_step` or `completed_step`. Execute **omits** `artifact` (no `executions/*.json`). Nicki forwards the return plus the `--step` and `--mode` she dispatched.
+**Sheep return contract:** sheep return `artifact`, `open_questions`, `summary` only — not `next_step` or `completed_step`. Execute **omits** `artifact` (no `executions/*.json`). Nicki forwards the return plus the `--step` and `--mode` she dispatched.
 
 ## Position model
 
@@ -91,7 +91,7 @@ No “ensure X exists” / convert prelude before jump. `start`, `close`, and `d
 | **B2 — jump without claiming a step** | Done. `--mode jump` is position-only: `next_step` = target, `current_step` untouched; no materialize. |
 | **B3 — brainstorm / informal input** | Done via informal jump. |
 | **B4 — materialize into worktree for archive** | Done 2026-07-29; **removed** 2026-07-30 by informal jump. |
-| **B5 — status vocabulary** | Done. Skip-ahead is `--mode jump`; `completed_status` stays `complete`/`blocked` only. |
+| **B5 — status vocabulary** | Done. Skip-ahead is `--mode jump`; `completed_status` deleted 2026-08-06 — non-empty `open_questions` holds position instead. |
 | **B6 — drop execution artifact** | Done. Execute omits `artifact`; review never requires or loads `executions/*.json`. |
 
 ### Acceptance checks
@@ -115,7 +115,7 @@ Sequenced flexibility through informal jump, drop-sequence / override, and retir
 
 ### 1. Who owns `next_step` — **routing**
 
-- Sheep return handoff only: artifact, `completed_status`, blockers — **not** `next_step` or `completed_step`.
+- Sheep return handoff only: artifact and `open_questions` — **not** `next_step` or `completed_step`.
 - On normal completion, `update-status.py` sets `task.next_step` from `routing.json` via `next_step_for()` for the completed step (`--step`).
 - Git-tail nuance (first sync → `archive`, second sync → `integrate` when `artifacts.archive` is set) lives in the script/routing, not sheep prose.
 - Jump: write mode sets `next_step` to the target and leaves `current_step` untouched; Nicki then runs the target sheep.
@@ -138,9 +138,9 @@ Sequenced flexibility through informal jump, drop-sequence / override, and retir
 
 Sheep do one job inside a scope root. Sequence, position, and transitions live in Nicki and the read/write scripts only.
 
-### 5. `completed_status` stays two-valued; mode carries the rest
+### 5. Blocked is not a field; mode carries the rest
 
-`completed_status` reports **what the sheep did** — `complete` or `blocked`. `--mode` reports **what the write should do to position**.
+A sheep that could not finish returns `open_questions`, and non-empty `open_questions` holds `next_step` where it was. `--mode` reports **what the write should do to position**.
 
 ### 6. No sequence class; no `--override`; no spawn gate
 

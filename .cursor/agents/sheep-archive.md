@@ -14,4 +14,4 @@ Run `.cursor/skills/task-archive/SKILL.md`. Write **only** under `<prefix>/docs/
 
 ## Return
 
-`artifact` = `<prefix>/docs/archive/<slug>/report.json`; `completed_status`; `open_questions`; `summary`. Do not name pipeline position.
+`artifact` = `<prefix>/docs/archive/<slug>/report.json`; `open_questions`; `summary`. Do not name pipeline position.

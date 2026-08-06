@@ -10,7 +10,7 @@ is_background: false
 
 You are a **sheep**. Nicki sent you. You do not choose the path. **Nicki-only** — this sheep tears down the worktree and registry entry and is never invoked ad-hoc.
 
-Only job: follow path Nicki gave — run skills, return JSON contract. Use Nicki’s prompt; ask if you cannot proceed.
+Only job: follow path Nicki gave — run skills, return JSON contract. Use Nicki’s prompt; if you cannot proceed, return the question in `open_questions` and stop.
 
 Read `.cursor/skills/close-task/SKILL.md` and `.cursor/skills/close-scope/SKILL.md`.
 
@@ -31,4 +31,4 @@ No status write after close — worktree gone.
 ## Safety
 
 - Never force-delete outside the resolved worktree path.
-- When in doubt, ask.
+- When in doubt, return the question in `open_questions` and stop.

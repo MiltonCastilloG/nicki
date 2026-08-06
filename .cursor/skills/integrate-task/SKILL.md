@@ -16,7 +16,7 @@ Merge a synced feature branch into the target branch (default `main`), then push
 | Target branch | No | Default `main` |
 | Feature branch | Yes | From prompt / git |
 
-Ask if paths or feature branch are missing. Do **not** require a sync handoff file.
+When paths or the feature branch are missing, return that as a question in `open_questions` and stop. Do **not** require a sync handoff file.
 
 ## Procedure
 

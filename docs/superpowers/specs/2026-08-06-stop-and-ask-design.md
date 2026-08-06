@@ -1,7 +1,7 @@
 # Design: Sheep stop and ask
 
 Date: 2026-08-06  
-Status: **designed**  
+Status: **implemented**  
 Slug: `stop-and-ask`  
 Related: [`2026-08-05-delete-unread-outputs-design.md`](2026-08-05-delete-unread-outputs-design.md), [`2026-08-05-adhoc-direct-sheep-invocation-design.md`](2026-08-05-adhoc-direct-sheep-invocation-design.md), [`2026-08-01-artifact-ownership-and-position-design.md`](2026-08-01-artifact-ownership-and-position-design.md)
 
@@ -43,7 +43,9 @@ This forces the central move, which is the right one anyway: **the sheep emits q
 
 A sheep that needs input returns it as a structured entry in `open_questions` and writes nothing. `update-status.py` already passes dict entries through untouched and wraps bare strings, so the carrier exists.
 
-An entry carries `question` (required), `options` (optional — short candidate answers, so the orchestrator can offer a choice rather than an essay prompt), and `context` (optional — what the sheep found that raised the question). Nothing parses these fields; the only consumer is the orchestrator, an LLM. Per the principle established in the companion spec, a vocabulary needs defining only where a script matches it exactly, so there is no schema and no validator here.
+An entry carries `question` (required), `options` (optional — short candidate answers, so the orchestrator can offer a choice rather than an essay prompt), `context` (optional — what the sheep found that raised the question), and the `step` that `status-format.md` already shows. Nothing parses these fields; the only consumer is the orchestrator, an LLM. Per the principle established in the companion spec, a vocabulary needs defining only where a script matches it exactly, so there is no schema and no validator here.
+
+The shape is written down in two places that already exist, with no third home invented: `routing.json` `sheep_return_contract`, which is where the return contract lives, and the `open_questions` section of [`status-format.md`](../../../.cursor/skills/current-task-update/status-format.md), which is where the stored field is defined. That section's example currently shows `blocks_next_step: true`; it comes out, because the companion spec makes every open question hold position, so the flag is a constant — the same reason `outcome.status` is being deleted. The `blockers` array in `update-status.py` stdout is a different thing and is left alone.
 
 The orchestrator renders the entry with whatever its host provides and re-spawns the sheep with the answers. Asking one question at a time is an orchestrator rendering choice, not a sheep concern — the sheep returns what it knows, and if the answers raise more, the next round returns more.
 
@@ -93,10 +95,9 @@ Nothing has written either directory since the artifact-ownership change, and th
 | [`current-task-update/SKILL.md`](../../../.cursor/skills/current-task-update/SKILL.md) line 122 | instructs setting `artifacts.review_validation` after review, while `tests/smoke/routing_write.py` line 104 asserts review must **not** set it |
 | [`archive-format.md`](../../../.cursor/skills/task-archive/archive-format.md) line 31 | builds a `process` row from `artifacts.review_validation`, which can never exist |
 | [`review-format.md`](../../../.cursor/skills/review-execution/review-format.md) line 5 | declares a default path `current-task/reviews/<slug>.json`, though review writes no file |
-| [`current-task-context-format.md`](../../../.cursor/skills/current-task-update/current-task-context-format.md) | the tree, both artifact table rows, and the JSON example |
 | [`README.md`](../../../README.md), [`docs/NICKI.md`](../../NICKI.md), [`docs/WORKFLOW-DIAGRAMS.md`](../../WORKFLOW-DIAGRAMS.md) | review artifact rows, diagram nodes, and the `current-task/` tree |
 
-`validation/SKILL.md` already marks itself and `validation-format.md` as historical reference; both stay as they are.
+`validation/SKILL.md` already marks itself and `validation-format.md` as historical reference; both stay as they are. `current-task-context-format.md` is likewise deprecated on its first line and describes the legacy `current-task-context.json`, which really did carry these paths — it is frozen, not corrected.
 
 ## Non-goals
 

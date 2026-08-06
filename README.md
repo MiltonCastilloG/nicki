@@ -97,7 +97,7 @@ nicki start my-task
 nicki continue
 ```
 
-The parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`). Nicki asks before each step and sends sheep (`sheep-start`, `sheep-describe`, `sheep-spec`, `sheep-execute`, …). After every sheep except close, Nicki sends `sheep-status` to update `current-task/status.json`.
+The parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`). Nicki asks before each step and sends sheep (`sheep-start`, `sheep-describe`, `sheep-spec`, `sheep-execute`, …). After every sheep except start and close, Nicki sends `sheep-status` to update `current-task/status.json`.
 
 Git steps (`sync`, `integrate`) need explicit confirmation. Archive and close need separate confirms. Close asks to confirm worktree delete only.
 
@@ -109,15 +109,15 @@ Git steps (`sync`, `integrate`) need explicit confirmation. Archive and close ne
 start → describe → spec → subtasks → execute → review → [fix] → acceptance → sync → archive → sync → integrate → close
 ```
 
-Post-review routing comes from validation YAML (`readiness.status`), not from review markdown:
+Post-review routing comes from the review sheep's return `summary`, not from a file on disk:
 
-| `readiness.status` | Next |
-| ------------------ | ---- |
-| `fix_required` | Nicki asks approval of review suggestions → `sheep-subtask` appends `## Fix` → `execute` again |
-| `ready_for_acceptance` | Nicki `acceptance` checkpoint — sync blocked until user accepts |
-| `blocked` | Nicki asks user |
+| Verdict | Next |
+| ------- | ---- |
+| fixes required | Nicki asks approval of the suggested fix lines → `sheep-subtask` appends `## Fix` → `execute` again |
+| ready | Nicki `acceptance` checkpoint — sync blocked until user accepts |
+| blocked | Nicki asks user |
 
-Nicki-only steps: `acceptance`, `fix`. Validation (readiness + deferred next-steps) runs inside `sheep-review`.
+Nicki-only steps: `acceptance`, `fix`.
 
 `sheep-start` / `sheep-close` own `global-status.json`; `sheep-status` owns per-task `status.json`.
 
@@ -128,9 +128,9 @@ Nicki-only steps: `acceptance`, `fix`. Validation (readiness + deferred next-ste
 | Spec | `sheep-spec` | status, story | `current-task/specs/<slug>.json` |
 | Subtasks | `sheep-subtask` | status, spec | `current-task/subtasks/<slug>.md` |
 | Execute | `sheep-execute` | status, subtasks, spec (optional) | code changes in worktree (no execution JSON) |
-| Review | `sheep-review` | worktree diff + available current-task files | `current-task/reviews/<slug>.json` + `current-task/review-validations/rN-validation.json` + optional `current-task/next-steps/*.json` |
-| Sync / archive / integrate | `sheep-sync`, `sheep-archive`, `sheep-integrate` | status, review validation | `current-task/syncs/<slug>.json`, `docs/archive/<slug>/`, `current-task/integrates/<slug>.json` |
-| Close | `sheep-close` | status, integrate handoff | worktree deleted; unregister `global-status.json` |
+| Review | `sheep-review` | worktree diff + available current-task files | no file — verdict in the return `summary` |
+| Sync / archive / integrate | `sheep-sync`, `sheep-archive`, `sheep-integrate` | status, worktree | git side effects; `docs/archive/<slug>/` from archive only |
+| Close | `sheep-close` | status | worktree deleted; unregister `global-status.json` |
 
 **Subtasks** map spec requirements to ordered one-line checklist items. Subtask-maker explores for existing coverage and prefers verify-before-build or refactor-to-share over default “build X” when the spec is already satisfied or logic can be reused.
 
@@ -147,12 +147,9 @@ worktrees/<path>/current-task/
   story.md
   specs/<slug>.json
   subtasks/<slug>.md
-  reviews/<slug>.json
-  review-validations/rN-validation.json
-  next-steps/*.json
-  syncs/<slug>.json
-  integrates/<slug>.json
 ```
+
+Operational steps write no handoff files. Position plus these document artifacts is the whole record.
 
 Writer schemas: `.cursor/skills/current-task-update/status-format.md`, `global-status-format.md`. Nicki and readers use slim `status-read.md` / `global-status-read.md`.
 

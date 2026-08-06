@@ -26,11 +26,10 @@ Caller-owned paths. You do not resolve a worktree via close-scope.
 
 1. Resolve `archive_dir` = `<prefix>/docs/archive/<slug>/` from the prompt. Create it if needed.
 2. Load inputs — task: handoffs via status `artifacts` and `task.side_effects` ([status-format.md](../current-task-update/status-format.md)). Source document: the path the prompt named.
-3. Set `outcome.status: pending_integrate` — integrate has not run yet.
-4. Draft `report.json` — task, story, outcome, process (handoff rows, then one row per `side_effects` entry including null artifacts — see archive-format), decisions, open_questions, suggestions.
-5. Draft `report.md` — terse per caveman; mirror report.json.
-6. Write `report.json` and `report.md` under `archive_dir`.
-7. Copy `artifacts.story` → `<archive_dir>/story.md` when present; when the caller named an errors file and it exists, copy it verbatim → `<archive_dir>/errors.json`; delete `artifacts.spec` and `artifacts.subtasks` from the worktree when present (cleanup — those pointed paths only).
-8. When archived `errors.json` exists, note harness errors were recorded in `report.json` / `report.md` and reference `<archive_dir>/errors.json` — do not paste full failure bodies.
+3. Draft `report.json` — task, story, outcome, process (handoff rows, then one row per `side_effects` entry including null artifacts — see archive-format), decisions, open_questions, suggestions.
+4. Draft `report.md` — terse per caveman; mirror report.json.
+5. Write `report.json` and `report.md` under `archive_dir`.
+6. Copy `artifacts.story` → `<archive_dir>/story.md` when present; when the caller named an errors file and it exists, copy it verbatim → `<archive_dir>/errors.json`; delete `artifacts.spec` and `artifacts.subtasks` from the worktree when present (cleanup — those pointed paths only).
+7. When archived `errors.json` exists, note harness errors were recorded in `report.json` / `report.md` and reference `<archive_dir>/errors.json` — do not paste full failure bodies.
 
 (On the pipeline, commit and push via the next sync step.)

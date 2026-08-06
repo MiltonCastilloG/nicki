@@ -52,7 +52,7 @@ Pick a prefix and kebab-case slug for each item:
 
 **Worktree path:** `worktrees/<project>-<slug>` — single hyphen between project and slug (e.g. `worktrees/nicki-create-worktree-py`, `worktrees/tetris-clone-frp-hero-section`). Never use double hyphens or legacy `projects/*/worktrees/<slug>`.
 
-If classification is ambiguous, ask before creating worktrees.
+If classification is ambiguous, return the candidates as a question in `open_questions` and stop before creating worktrees.
 
 ### Step 3: Run the script
 

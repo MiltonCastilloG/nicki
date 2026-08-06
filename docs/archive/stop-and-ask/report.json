@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "schema": "task-archive.v1",
+    "generated_by": "task-archive"
+  },
+  "task": {
+    "slug": "stop-and-ask",
+    "title": "Sheep stop and ask",
+    "original": "Sheep cannot reach the user but skills told them to ask; stop inventing answers — emit open_questions, orchestrator asks and re-spawns.",
+    "type": "fix",
+    "branch": "main"
+  },
+  "story": "sheep emit open_questions · orchestrator asks · fresh re-spawn · pause-context for spec/subtasks · describe escalates · conflicts stay with sheep · ask lines rewritten · reviews/ graveyard cleared",
+  "outcome": {
+    "target": "main",
+    "pushed_branch": null
+  },
+  "process": [],
+  "decisions": [
+    {
+      "topic": "Who asks the human",
+      "decision": "Orchestrator only — Nicki on the pipeline, parent agent ad-hoc. Never a sheep."
+    },
+    {
+      "topic": "How a question travels",
+      "decision": "Structured entries in the return's open_questions (question required; options and context optional). No schema, no validator."
+    },
+    {
+      "topic": "Host ask tool",
+      "decision": "Named only in nicki-default.mdc and CLAUDE.md — never in shared agent or skill files."
+    },
+    {
+      "topic": "Continuation",
+      "decision": "Fresh spawn carrying the answers; disk carries work state. No Cursor Task resume."
+    },
+    {
+      "topic": "pause-context",
+      "decision": "Caller-named path; write only when stopping with a question; read only when prompt says resume; delete on completion; never in status.artifacts."
+    },
+    {
+      "topic": "describe",
+      "decision": "Escalates — orchestrator runs Gherkin interview and approval; sheep-describe writes the approved story."
+    },
+    {
+      "topic": "Merge conflicts",
+      "decision": "Stay with the sheep — pause on conflicted tree, return inventory as questions, re-spawn applies resolutions verbatim."
+    },
+    {
+      "topic": "Skill ask lines",
+      "decision": "Rewritten to return the question in open_questions and stop, including missing-input cases."
+    },
+    {
+      "topic": "reviews/ and review-validations/",
+      "decision": "Deleted as live paths — no mkdir in create-worktree, no artifacts.review_validation, no live format/doc rows."
+    }
+  ],
+  "open_questions": [],
+  "suggestions": [
+    {
+      "area": "orchestration",
+      "suggestion": "Dogfood a live conflict pause round-trip (sync or integrate) so inventory → orchestrator AskQuestion → re-spawn apply stays exercised end-to-end.",
+      "evidence": "Subtasks confirmed conflict-resolution shape and hard gate; most steps were confirm-already rather than a live merge pause."
+    },
+    {
+      "area": "orchestration",
+      "suggestion": "Dogfood a paused spec sheep: resume from caller-named pause file, then confirm the file is gone on completion and ignored when not named.",
+      "evidence": "Acceptance and walkthrough subtask cover this; pause-context already exists — live proof still thin."
+    }
+  ]
+}

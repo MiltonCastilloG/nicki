@@ -14,7 +14,7 @@ Review implementation in a worktree against the git diff and whatever exists und
 | Worktree path | Yes | Absolute or repo-relative |
 | Review material | Yes* | Diff + optional story/spec/subtasks from prompt / disk |
 
-\*Ask when worktree is missing, or diff alone is unclear with no planning files.
+\*When the worktree is missing, or the diff alone is unclear with no planning files, return the question in `open_questions` and stop.
 
 ## Procedure
 
@@ -28,4 +28,4 @@ Review implementation in a worktree against the git diff and whatever exists und
 
 - Never edit application code or planning files.
 - Never force-push, reset hard, or delete worktrees without approval.
-- When in doubt, ask.
+- When in doubt, return the question in `open_questions` and stop. You judge the work; you do not judge what the work should have been.

@@ -21,7 +21,7 @@ Markdown checklist at `current-task/subtasks/<slug>.md`. Execute-plan **reads** 
 
 - Process **unchecked** lines top to bottom; mark `- [x]` before moving on.
 - Skip lines already `- [x]` (resume).
-- One sentence per line — stop and ask if vague or out of spec scope.
+- One sentence per line — when a line would be vague or out of spec scope, return the question in `open_questions` and stop.
 - Verification lines last (`Run npm run lint`, etc.) — run before marking complete.
 
 ## Minimal shape

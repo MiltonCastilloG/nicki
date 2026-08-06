@@ -4,7 +4,7 @@ JSON spec at `current-task/specs/<slug>.json`. Subtask-maker **reads** specs; fu
 
 ## Gate
 
-If `open_questions` is non-empty, **stop and ask** — do not write subtasks. Nicki blocks this step when questions remain.
+If the spec's `open_questions` is non-empty, **stop** — do not write subtasks. Return those questions as your own `open_questions` so the caller can get them answered.
 
 ## Fields to extract
 

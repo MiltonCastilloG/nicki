@@ -20,8 +20,7 @@ Optional summary fields (defaults applied):
   completed_step — overridden by --step; sets current_step / artifact pointer
   artifact — skip artifact pointer when absent or when the step has no
     routing artifact_key
-  completed_status — default "complete"; must be one of COMPLETED_STATUSES
-  open_questions — default []
+  open_questions — default []; non-empty holds position instead of advancing
   next_step — when set, overrides routing after a completed step (Nicki review
     outcomes); required for position-only writes with no completed step
   summary, task.* — ignored or derived
@@ -42,9 +41,6 @@ from pathlib import Path
 from typing import Any
 
 from routing_write import MODES, load_routing, next_step_for
-
-# Closed set. Sheep outcome only — does not drive a history list.
-COMPLETED_STATUSES = ("complete", "blocked")
 
 # Keys that are not status.artifacts pointers (status.json itself, etc.).
 NON_ARTIFACT_KEYS = frozenset({"status", ""})
@@ -89,9 +85,7 @@ def _init_status(
     summary: dict[str, Any],
     completed_step: str | None,
     next_step: str | None,
-    completed_status: str,
 ) -> dict[str, Any]:
-    del completed_status  # outcome is recorded on the write path, not in init history
     task = summary.get("task") if isinstance(summary.get("task"), dict) else {}
     return {
         "meta": {"schema": "task-status.v2"},
@@ -151,11 +145,6 @@ def _validate_required(
         errors.append("jump mode needs --step (target sheep step)")
     if mode == "jump" and completed_step in {"start", "close", "done"}:
         errors.append(f"jump mode cannot target {completed_step}")
-    status = summary.get("completed_status", "complete")
-    if status not in COMPLETED_STATUSES:
-        errors.append(
-            f"completed_status must be one of {list(COMPLETED_STATUSES)}: got {status!r}"
-        )
     if errors:
         _fail(errors)
 
@@ -195,24 +184,24 @@ def _optional_completed_step(summary: dict[str, Any]) -> str | None:
 def _derive_next_step(
     status: dict[str, Any],
     completed_step: str,
-    completed_status: str,
+    open_questions: list[Any],
     summary: dict[str, Any],
 ) -> str | None:
-    """Routing owns next_step; Nicki may override via summary next_step (e.g. review)."""
+    """Explicit next_step wins (Nicki's review verdict); open questions hold
+    position; otherwise routing advances."""
     task = status.get("task") or {}
-    if completed_status == "blocked":
-        existing = task.get("next_step")
-        return existing if isinstance(existing, str) and existing.strip() else completed_step
 
     explicit = summary.get("next_step")
     if isinstance(explicit, str) and explicit.strip():
         return explicit.strip()
 
-    derived = next_step_for(completed_step, status)
-    if derived is not None:
-        return derived
     existing = task.get("next_step")
-    return existing if isinstance(existing, str) and existing.strip() else completed_step
+    held = existing if isinstance(existing, str) and existing.strip() else completed_step
+    if open_questions:
+        return held
+
+    derived = next_step_for(completed_step, status)
+    return derived if derived is not None else held
 
 
 def main() -> int:
@@ -256,7 +245,6 @@ def main() -> int:
     completed_step = (args.step or "").strip() or _optional_completed_step(summary)
     _validate_required(summary, mode=args.mode, completed_step=completed_step)
 
-    completed_status = summary.get("completed_status", "complete")
     artifact = summary.get("artifact")
     open_questions = summary.get("open_questions", [])
 
@@ -274,7 +262,7 @@ def main() -> int:
             _fail(["jump mode needs an existing status.json"])
         # Derive before init when we already know the completed step.
         if completed_step is not None:
-            if completed_status == "blocked":
+            if open_questions:
                 next_step = completed_step
             else:
                 next_step = next_step_for(
@@ -288,7 +276,6 @@ def main() -> int:
             summary,
             completed_step,
             next_step,
-            completed_status if isinstance(completed_status, str) else "complete",
         )
 
     status["meta"] = {"schema": "task-status.v2"}
@@ -311,12 +298,7 @@ def main() -> int:
     elif completed_step is not None:
         task["current_step"] = completed_step
         _set_artifact_pointer(status, completed_step, art)
-        next_step = _derive_next_step(
-            status,
-            completed_step,
-            completed_status if isinstance(completed_status, str) else "complete",
-            summary,
-        )
+        next_step = _derive_next_step(status, completed_step, open_questions, summary)
         task["next_step"] = next_step
     else:
         # Position-only: summary next_step is the authority.

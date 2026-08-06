@@ -120,13 +120,13 @@ Each item in `requirements`:
 - Duplicate subtask-level or execution detail (commands, step order, create/modify actions)
 - Leave silent on constraints — default to `no-commit` and `no-new-deps` unless the task requires otherwise
 
-## Ambiguity → ask
+## Ambiguity → stop
 
-Ask before writing the spec when:
+You cannot reach a human. Write no spec file; return the question in `open_questions` and stop when:
 
 - The task has no measurable outcome
 - Scope is unclear and cannot be reasonably bounded
 - Multiple valid interpretations exist (e.g. which page, which component)
 - A design fork affects requirements (CTA destination, copy tone, etc.)
 
-Resolve questions first, then write with `open_questions: []`.
+Your caller puts the question to the user and re-spawns you with the answer. Then write with `open_questions: []`.

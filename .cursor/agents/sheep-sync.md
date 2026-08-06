@@ -14,4 +14,4 @@ Run `.cursor/skills/sync-task/SKILL.md` and `.cursor/skills/conflict-resolution/
 
 ## Return
 
-No `artifact`. `completed_status`; `open_questions`; `summary`. Do not name pipeline position.
+No `artifact`. `open_questions`; `summary`. Do not name pipeline position.

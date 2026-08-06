@@ -16,13 +16,13 @@
       "sheep": "sheep-spec",
       "artifact_key": "spec",
       "default_next_step": "subtasks",
-      "prompt": "output path (Nicki-owned; usually worktree specs/<slug>.json), task id, chat"
+      "prompt": "output path (Nicki-owned; usually worktree specs/<slug>.json), task id, chat, pause path (Nicki-owned; usually worktree current-task/specs/<slug>.pause.md); on re-spawn after questions, the same pause path plus the user's answers"
     },
     "subtasks": {
       "sheep": "sheep-subtask",
       "artifact_key": "subtasks",
       "default_next_step": "execute",
-      "prompt": "output path (Nicki-owned; usually worktree subtasks/<slug>.md), task id, chat; or existing checklist path + approved review fix lines to append ## Fix"
+      "prompt": "output path (Nicki-owned; usually worktree subtasks/<slug>.md), task id, chat, pause path (Nicki-owned; usually worktree current-task/subtasks/<slug>.pause.md); on re-spawn after questions, the same pause path plus the user's answers; or existing checklist path + approved review fix lines to append ## Fix"
     },
     "execute": {
       "sheep": "sheep-execute",
@@ -88,17 +88,19 @@
     "required_fields": [],
     "optional_fields": [
       "worktree",
-      "completed_status",
       "artifact",
       "open_questions",
       "summary",
       "next_step"
     ],
-    "completed_status_values": [
-      "complete",
-      "blocked"
-    ],
-    "on_blocked": "set completed_status to blocked; populate open_questions"
+    "open_question_entry": {
+      "description": "A sheep cannot reach a human. When it needs an answer it stops and returns one entry per question; the caller renders them with its host's tool and re-spawns with the answers. No schema, no validator.\n",
+      "question": "required — what the sheep needs answered",
+      "options": "optional — short candidate answers so the caller can offer a choice",
+      "context": "optional — what the sheep found that raised the question",
+      "step": "optional — the step that stopped"
+    },
+    "on_blocked": "populate open_questions; position holds"
   },
   "harness_failure": {
     "sheep": "sheep-fallback",

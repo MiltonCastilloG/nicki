@@ -21,6 +21,10 @@ Return the subagent's response as your primary reply.
 
 After the first invocation, keep invoking a fresh Task on every Nicki-directed message until the user says they want to stop (e.g. `stop nicki`, `talk to me directly`, `exit nicki`).
 
+## Stop and ask
+
+Sheep cannot reach the user; you and Nicki can. When a sheep return (or Nicki's relay of one) carries `open_questions`, put each question to the user with `AskQuestion` — offer the entry's `options` when present — then continue: re-spawn the same sheep with the answers (ad-hoc), or pass the answers back to Nicki so she re-spawns (pipeline). For `spec` / `subtasks`, keep the pause path in the prompt so the sheep resumes. Never answer for the user.
+
 ## Otherwise
 
 Handle the message yourself. Do not run multi-step pipeline orchestration inline.
@@ -34,9 +38,11 @@ Ad-hoc needs no task, worktree, or `status.json` — only instructions. Task-spa
 
 Pack the prompt with the user's instructions plus:
 
-- **Document sheep** (`sheep-describe`, `sheep-spec`, `sheep-subtask`) — an output path. Use the user's path when they name one, otherwise a sensible file under `docs/adhoc/`.
+- **Document sheep** (`sheep-describe`, `sheep-spec`, `sheep-subtask`) — an output path. Use the user's path when they name one, otherwise a sensible file under `docs/adhoc/`. For `sheep-spec` and `sheep-subtask`, also pack a pause path (e.g. under `docs/adhoc/`) so the sheep can stop mid-run without losing exploration.
 - **Archive sheep** (`sheep-archive`) — always `<prefix>/docs/archive/<slug>/`. Pass `prefix` (workspace or nested-project root) and `slug`; never `docs/adhoc/`. Also pass status/artifact paths or a `source_document`, and an errors path when one exists.
-- **Operational sheep** (`sheep-execute`, `sheep-review`) — the working directory. Ask once when it is unclear; do not guess.
+- **Operational sheep** (`sheep-execute`, `sheep-review`) — the working directory. If unclear, ask the user with `AskQuestion`; do not guess.
 - **Git sheep** (`sheep-sync`, `sheep-integrate`) — get an explicit yes naming the side effect before spawning.
+
+**When a sheep returns `open_questions`:** it has stopped, not failed. Put each question to the user with `AskQuestion` (offer the entry's `options` when present), then re-spawn the **same** sheep with the answers. For `spec` / `subtasks`, include the pause path so it resumes instead of re-exploring. Never answer for the user.
 
 **Nicki-only sheep:** `sheep-start`, `sheep-close`, and `sheep-status` own the worktree registry and per-task status. Never spawn them from the parent agent.

@@ -42,7 +42,7 @@ def run(root: Path) -> None:
         s = _summary(
             wt,
             "summary.json",
-            {"artifact": "current-task/specs/foo.json", "completed_status": "complete"},
+            {"artifact": "current-task/specs/foo.json"},
         )
         proc, out = _write(update, root, wt, s, "--step", "spec")
         if proc.returncode != 0 or out.get("written") is not True:
@@ -57,7 +57,6 @@ def run(root: Path) -> None:
             wt,
             "override.json",
             {
-                "completed_status": "complete",
                 "next_step": "execute",
                 "artifact": "current-task/subtasks/foo.md",
             },
@@ -69,12 +68,12 @@ def run(root: Path) -> None:
         # Git tail: first sync → archive; second sync (archive set) → integrate.
         wt2 = tmpdir / "git-tail"
         wt2.mkdir()
-        seed = _summary(wt2, "seed.json", {"completed_status": "complete"})
+        seed = _summary(wt2, "seed.json", {})
         proc, out = _write(update, root, wt2, seed, "--step", "acceptance")
         if proc.returncode != 0 or out.get("next_step") != "sync":
             raise AssertionError(f"fail: acceptance → sync: {out}")
 
-        first = _summary(wt2, "sync1.json", {"completed_status": "complete"})
+        first = _summary(wt2, "sync1.json", {})
         proc, out = _write(update, root, wt2, first, "--step", "sync")
         if out.get("next_step") != "archive":
             raise AssertionError(f"fail: first sync → archive: {out}")
@@ -87,7 +86,7 @@ def run(root: Path) -> None:
             json.dumps(status, indent=2) + "\n", encoding="utf-8"
         )
 
-        second = _summary(wt2, "sync2.json", {"completed_status": "complete"})
+        second = _summary(wt2, "sync2.json", {})
         proc, out = _write(update, root, wt2, second, "--step", "sync")
         if out.get("next_step") != "integrate":
             raise AssertionError(f"fail: second sync → integrate: {out}")
@@ -95,44 +94,51 @@ def run(root: Path) -> None:
         # Review defaults to acceptance; Nicki can override to execute.
         wt3 = tmpdir / "review"
         wt3.mkdir()
-        seed = _summary(wt3, "seed.json", {"completed_status": "complete"})
+        seed = _summary(wt3, "seed.json", {})
         _write(update, root, wt3, seed, "--step", "execute")
-        rev = _summary(wt3, "review.json", {"completed_status": "complete"})
+        rev = _summary(wt3, "review.json", {})
         proc, out = _write(update, root, wt3, rev, "--step", "review")
         if out.get("next_step") != "acceptance":
             raise AssertionError(f"fail: review → acceptance: {out}")
         if (_status(wt3).get("artifacts") or {}).get("review_validation"):
             raise AssertionError("fail: review must not set review_validation")
 
-        fix = _summary(
-            wt3, "fix.json", {"completed_status": "complete", "next_step": "execute"}
-        )
+        fix = _summary(wt3, "fix.json", {"next_step": "execute"})
         proc, out = _write(update, root, wt3, fix, "--step", "review")
         if out.get("next_step") != "execute":
             raise AssertionError(f"fail: Nicki next_step override after review: {out}")
 
-        # Blocked keeps position.
+        # Open questions keep position.
         wt4 = tmpdir / "blocked"
         wt4.mkdir()
         seed = _summary(
             wt4,
             "seed.json",
-            {"artifact": "current-task/specs/a.json", "completed_status": "complete"},
+            {"artifact": "current-task/specs/a.json"},
         )
         _write(update, root, wt4, seed, "--step", "spec")
         before = (_status(wt4).get("task") or {}).get("next_step")
         blocked = _summary(
             wt4,
             "blocked.json",
-            {
-                "completed_status": "blocked",
-                "open_questions": [{"question": "which CTA?"}],
-            },
+            {"open_questions": [{"question": "which CTA?"}]},
         )
         proc, out = _write(update, root, wt4, blocked, "--step", "subtasks")
         after = (_status(wt4).get("task") or {}).get("next_step")
         if after != before:
             raise AssertionError(f"fail: blocked must not advance next_step ({before} → {after})")
+
+        # Fallback runs under the blocked step's --step and returns no artifact.
+        # An errors-file artifact here would overwrite that step's pointer.
+        spec_pointer = (_status(wt4).get("artifacts") or {}).get("spec")
+        fallback = _summary(
+            wt4,
+            "fallback.json",
+            {"open_questions": [{"question": "retry sheep-spec or skip?"}]},
+        )
+        _write(update, root, wt4, fallback, "--step", "spec")
+        if (_status(wt4).get("artifacts") or {}).get("spec") != spec_pointer:
+            raise AssertionError("fail: artifact-less write must leave the step pointer alone")
 
         declared = {
             name: cfg.get("artifact_key")

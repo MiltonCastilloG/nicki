@@ -24,7 +24,7 @@ Output schema: [subtask-format.md](subtask-format.md). Spec input: [spec-input.m
 
 ### Apply approved review fixes (when the prompt says so)
 
-1. Output path is the existing checklist (caller-owned). Read it; if missing, ask.
+1. Output path is the existing checklist (caller-owned). Read it; if missing, return that as a question and stop.
 2. Take the approved fix lines from the prompt only — do not invent new scope.
 3. Append a `## Fix` section (or replace a prior `## Fix` block) with `- [ ]` lines for those approvals. Leave the original `# Subtasks` checklist untouched, including completed items.
 4. Write only that file. Report that fixes were applied, not a full regenerate.
@@ -38,7 +38,7 @@ Resolve path to absolute; confirm exists. Scope root = that path; `<slug>` = fin
 
 Load from path or inline JSON. Validate per [spec-input.md](spec-input.md). Extract `requirements`, `scope`, `constraints`, `acceptance`, `assumptions`. Map each requirement and acceptance item to subtask lines.
 
-If worktree path is missing, ask before starting. Use the prompt’s description or spec; ask when it is not enough to write a checklist.
+If the worktree path is missing, return that as a question and stop before starting. Use the prompt’s description or spec; when it is not enough to write a checklist, return the gap in `open_questions` and stop.
 
 ### 3. Explore
 
@@ -49,7 +49,7 @@ Look for:
 - Code or tests that **already satisfy** a spec requirement or acceptance item
 - **Duplicated or near-duplicated logic** that could be shared instead of rebuilt
 - Partial implementations worth **extending or wiring**, not replacing
-- Ask user when something is not CLEAR.
+- When something is not CLEAR, return it in `open_questions` and stop — you cannot reach a human, and your caller can. When your prompt gave you a pause path, save what you explored first (`.cursor/skills/pause-context/SKILL.md`) so the re-spawn does not repeat this exploration.
 
 Enough context for realistic one-line subtasks — no file paths or create/modify steps in checklist text.
 
@@ -71,4 +71,4 @@ Write only the subtask file. Report scope root, spec path, subtask path, line co
 
 ## Safety
 
-Never force-push, `reset --hard`, or delete worktrees/branches without explicit approval. Do not commit or push unless asked. When in doubt, ask.
+Never force-push, `reset --hard`, or delete worktrees/branches without explicit approval. Do not commit or push unless asked. When in doubt, return the question in `open_questions` and stop.

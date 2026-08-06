@@ -35,12 +35,13 @@ Schemas:
 routing). Position-only writes (no completed step) still need `next_step`.
 
 **Optional:** `completed_step` (overridden by `--step`), `artifact` (document
-steps), `completed_status`, `open_questions`, `summary`, `next_step` (Nicki
+steps), `open_questions`, `summary`, `next_step` (Nicki
 override after review; otherwise routing supplies it when a step completed).
 Position-only writes still need `next_step`.
 
-**`completed_status` is a closed set:** `complete` or `blocked`. Any other value is an
-input error — nothing is written. `blocked` leaves `next_step` where it was.
+**Blocked is not a field.** Non-empty `open_questions` holds `next_step` where it
+was. Precedence on a completed step: an explicit summary `next_step` wins (Nicki's
+review verdict), then non-empty `open_questions` holds, then routing advances.
 
 **CLI:** `--step <name>` names the dispatched step and wins over summary
 `completed_step`. `--mode normal|jump` selects whether the write moves the task.
@@ -64,7 +65,6 @@ Full write (when a step completed):
 {
   "worktree": "projects/foo/worktrees/hero-section",
   "completed_step": "spec",
-  "completed_status": "complete",
   "artifact": "current-task/specs/hero-section.json",
   "next_step": "subtasks",
   "open_questions": [],
@@ -111,7 +111,7 @@ Task Progress:
 - Validate against [status-format.md](status-format.md).
 - `scope.worktree_path` must match command worktree.
 - If missing: init from summary with `meta.schema: task-status.v2`.
-- Ask when summary conflicts with existing status.
+- When the summary conflicts with existing status, write nothing: return the conflict as a question and stop.
 
 ### Step 3: Apply update
 
@@ -119,7 +119,7 @@ Emit simplified shape on every write. **Legacy migration:** when loading v1 stat
 
 - `meta.schema: task-status.v2` only — do not write `meta.updated_by` or other ceremony fields
 - `task.current_step`, `task.next_step` — drop legacy `task.completed_steps` if present
-- Merge `artifacts`; after review set `artifacts.review_validation` to latest validation path from summary `artifact`
+- Merge `artifacts`; review writes no file and sets no pointer
 - **Describe:** replace `task.original` with slug or one-line title; set `artifacts.story`
 - Fix-loop: when `--step fix` or review reruns after fix, routing derives `next_step` back to `execute`
 - Acceptance: when `--step acceptance`, set `current_step` and derive `next_step` to `sync`; reject may populate `open_questions`

@@ -14,11 +14,11 @@ Paths + registry teardown + worktree delete. Run **after** integrate (archive al
 |-------|-----|
 | Worktree path | yes |
 
-Missing → ask. Stop.
+Missing → return the question in `open_questions` and stop.
 
 1. Path → absolute. Dir exist?
 2. `slug` = final folder name.
-3. `repo_root` — project git root: parent of `projects/<project>/worktrees/<slug>`, or parent of legacy `worktrees/<slug>`. Ambiguous → ask.
+3. `repo_root` — project git root: parent of `projects/<project>/worktrees/<slug>`, or parent of legacy `worktrees/<slug>`. Ambiguous → return the candidates as a question and stop.
 4. `workspace_root` — dir with `global-status.json`.
 5. `archive_dir` = `docs/archive/<slug>/` under `repo_root`.
 

@@ -11,7 +11,7 @@
 <prefix>/docs/archive/<slug>/errors.json   # verbatim copy when the caller named an errors path
 ```
 
-Spec and subtask paths from status are **not** archived — delete from worktree after copy (see [task-archive/SKILL.md](SKILL.md) step 7).
+Spec and subtask paths from status are **not** archived — delete from worktree after copy (see [task-archive/SKILL.md](SKILL.md) step 6).
 
 ## Load inputs
 
@@ -28,9 +28,9 @@ Caller packs the paths. Task archive: read `current-task/status.json` — [statu
 | `spec` | `artifacts.spec` | `meta.summary` or spec `title` |
 | `subtasks` | `artifacts.subtasks` | subtask frontmatter `title` |
 | `execute` | (none — execute omits artifact) | skip |
-| `review` | `artifacts.review_validation` | validation `readiness.status` |
-| `sync` | `artifacts.sync` | sync handoff `meta` |
-| `integrate` | `artifacts.integrate` | integrate handoff `meta` |
+| `review` | (none — review writes no file) | verdict as relayed in chat |
+| `sync` | (none) | branch pushed |
+| `integrate` | (none) | target branch merged |
 
 ```json
 "process": [
@@ -46,10 +46,10 @@ Summarize handoffs — never paste full bodies, logs, diffs, transcripts, secret
 
 | Field | Req |
 |-------|-----|
-| `meta` | yes — `task-archive.v1`, `generated_by: task-archive`, `source_context` |
+| `meta` | yes — `task-archive.v1`, `generated_by: task-archive` |
 | `task` | yes — slug, title, original, type, branch |
 | `story` | yes — keyword line of what shipped |
-| `outcome` | yes — merge/push/commit final |
+| `outcome` | yes — `target` and `pushed_branch`; both are facts by archive time |
 | `process` | yes — step + one-line summary |
 | `decisions` | yes — `[]` OK |
 | `open_questions` | yes — `[]` OK |
@@ -59,8 +59,7 @@ Summarize handoffs — never paste full bodies, logs, diffs, transcripts, secret
 {
   "meta": {
     "schema": "task-archive.v1",
-    "generated_by": "task-archive",
-    "source_context": "current-task/status.json"
+    "generated_by": "task-archive"
   },
   "task": {
     "slug": "hero-section",
@@ -71,10 +70,8 @@ Summarize handoffs — never paste full bodies, logs, diffs, transcripts, secret
   },
   "story": "headline · subcopy · CTA · responsive layout",
   "outcome": {
-    "status": "merged",
     "target": "main",
-    "pushed_branch": "feature/hero-section",
-    "final_artifact": "current-task/integrates/hero-section.json"
+    "pushed_branch": "feature/hero-section"
   },
   "process": [
     {
@@ -124,7 +121,7 @@ Sections:
 
 1. Task — slug, title, branch
 2. Story — same keyword line as `report.json`
-3. Outcome — merged/pushed; final handoff path
+3. Outcome — target branch and pushed branch
 4. Process — short paragraph per step
 5. Decisions — omit when none
 6. Open questions — omit when empty
@@ -139,5 +136,5 @@ When `<prefix>/docs/archive/<slug>/errors.json` was copied from a caller-named p
 ## Rules
 
 - Compact — summarize, don't copy `current-task/` tree.
-- `report.json`, `report.md`, and `story.md` required before second sync (commit/push) and integrate.
+- `report.json` and `report.md` required before second sync (commit/push) and integrate. `story.md` is a copy, never a requirement — see the Outputs list.
 - Always write under `<prefix>/docs/archive/<slug>/` — never invent another archive root.

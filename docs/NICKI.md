@@ -1,6 +1,6 @@
 # Nicki — workflow orchestrator context
 
-Nicki is the orchestrator for the CastleMill current-task pipeline. Nicki controls workflow order, not implementation. Nicki runs bootstrap for position, asks yes only before execute and sync, sends the correct sheep, and sends `sheep-status` after every step — except close, which deletes the task context folder.
+Nicki is the orchestrator for the CastleMill current-task pipeline. Nicki controls workflow order, not implementation. Nicki runs bootstrap for position, asks yes only before execute and sync, sends the correct sheep, and sends `sheep-status` after every step — except start, whose script already wrote the position, and close, which deletes the task context folder.
 
 Use this document as a rebuild guide: what Nicki is, what it controls, how the pieces fit together, and the key decisions that shaped the design.
 
@@ -14,7 +14,7 @@ Use this document as a rebuild guide: what Nicki is, what it controls, how the p
 | Send sheep via the Task tool | Search or edit application source |
 | Ask for confirmation before **execute** and **sync** | Improvise workflow transitions |
 | Pass worktree path, context, and prior artifacts to sheep | Spawn nested sheep from workers |
-| Send `sheep-status` automatically after each sheep (except close) | Skip execute/sync without explicit user confirmation |
+| Send `sheep-status` automatically after each sheep (except start and close) | Skip execute/sync without explicit user confirmation |
 | Track orchestration progress with todos | Re-derive sheep map from prose (scripts + `routing.json` own that) |
 
 Nicki = `.cursor/agents/nicki.md` subagent (`readonly: true`; shell only for bootstrap; `read`, `task`, `ask_question`, `todo_write`). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
@@ -56,12 +56,11 @@ See `.cursor/skills/README.md` for rules and workflow exceptions.
 
 ## Canonical workflow
 
-Step order and automatic `sheep-status` after each sheep (except close) are in the diagram below. Step→sheep mapping lives in `routing.json` + `bootstrap-context.py` — not duplicated here. Explicit chat confirmation is required before **execute** and **sync** only.
+Step order and automatic `sheep-status` after each sheep (except start and close) are in the diagram below. Step→sheep mapping lives in `routing.json` + `bootstrap-context.py` — not duplicated here. Explicit chat confirmation is required before **execute** and **sync** only.
 
 ```mermaid
 flowchart LR
-  A[sheep-start] --> B[sheep-status]
-  B --> C[describe]
+  A[sheep-start] --> C[describe]
   C --> D[sheep-status]
   D --> E[sheep-spec]
   E --> F[sheep-status]
@@ -99,23 +98,23 @@ Each sheep produces YAML handoff under `worktrees/<project>-<slug>/current-task/
 | Spec | `sheep-spec` | No | `current-task/specs/<slug>.json` |
 | Subtasks | `sheep-subtask` | No | `current-task/subtasks/<slug>.md` |
 | Execute | `sheep-execute` | Yes | Code changes + updated subtasks (no execution JSON) |
-| Review | `sheep-review` | No | `reviews/<slug>.json` + `review-validations/rN-validation.json` + optional `next-steps/*.json` |
-| Sync | `sheep-sync` | Yes (commit + pre-push merge + push feature) | `current-task/syncs/<slug>.json` |
+| Review | `sheep-review` | No | No file — verdict in the return `summary` |
+| Sync | `sheep-sync` | Yes (commit + pre-push merge + push feature) | Git side effects only |
 | Archive | `sheep-archive` | No (writes `docs/archive/`) | `docs/archive/<slug>/report.json` |
-| Integrate | `sheep-integrate` | Yes (merge into `main` + push `main`) | `current-task/integrates/<slug>.json` |
-| Close | `sheep-close` | Delete worktree | unregister + teardown; needs integrate |
+| Integrate | `sheep-integrate` | Yes (merge into `main` + push `main`) | Git side effects only |
+| Close | `sheep-close` | Delete worktree | unregister + teardown |
 
 ### Artifact handoff chain
 
 ```
-spec ──→ subtasks ──→ execute (code + checklist) ──→ review + validation (+ next-steps when deferred scope)
+spec ──→ subtasks ──→ execute (code + checklist) ──→ review (verdict in the return summary)
 sync ──→ archive ──→ sync ──→ integrate ──→ close
 ```
 
 - **Spec** defines *what* to build — requirements, scope, acceptance. No file paths.
 - **Subtask list** breaks spec into one-sentence build items with checkbox completion state (tests included).
 - **Execute-plan** implements unchecked subtasks in order and marks each `- [x]` in place. No `executions/*.json` handoff.
-- **Review** inspects the worktree diff plus available `current-task/` files; has `approved` and `content`. **Validation** skill emits readiness and out-of-scope next-steps in same spawn.
+- **Review** inspects the worktree diff plus available `current-task/` files and reports its verdict in the return `summary`. No review file, no readiness file — Nicki turns the verdict into `next_step`.
 - **Archive** — `report.yaml`, `report.md`, `story.md` under `docs/archive/`; committed on feature branch before integrate. `current-task/` is gitignored (worktree-local).
 - **Close** — unregister + delete whole worktree after integrate.
 
@@ -145,7 +144,7 @@ Nicki and sheep read both; sheep must not edit either. Legacy `current-task/curr
 | `meta` | Schema identifier only (`task-status.v2`) |
 | `task` | Identity + step pointers: `current_step`, `next_step`, optional `side_effects`, short `original` |
 | `scope` | `worktree_path` — hard scope boundary |
-| `artifacts` | Paths to handoff files (`story`, `spec`, `review_validation`, etc.) |
+| `artifacts` | Paths to document files (`story`, `spec`, `subtasks`, `archive`) |
 | `open_questions` | Blockers; empty list means Nicki can continue |
 
 ### What it deliberately omits
@@ -160,11 +159,10 @@ Schemas: `.cursor/skills/current-task-update/status-format.md`, `.cursor/skills/
 
 ### Nicki summary → context update
 
-After each sheep, Nicki sends `sheep-status` with a compact summary plus the `--step` and `--mode` she dispatched (no separate user confirmation needed). On normal completion, routing owns `next_step` — the summary does not need it.
+After each sheep except start and close, Nicki sends `sheep-status` with a compact summary plus the `--step` and `--mode` she dispatched (no separate user confirmation needed). On normal completion, routing owns `next_step` — the summary does not need it.
 
 ```yaml
 worktree: projects/castlemill-landing/worktrees/hero-section
-completed_status: complete
 artifact: current-task/specs/hero-section.json
 open_questions: []
 summary: Spec captured requirements and acceptance criteria.
@@ -172,7 +170,7 @@ summary: Spec captured requirements and acceptance criteria.
 
 Nicki passes `--step spec --mode normal` (or `jump` to skip ahead — see [`flexibility.md`](flexibility.md)).
 
-Exception: **do not send `sheep-status` after sheep-close** — close deletes `current-task/`.
+Exceptions: **do not send `sheep-status` after sheep-start** — `create-worktree.py` already wrote the opening position — **or after sheep-close** — close deletes `current-task/`.
 
 ---
 
@@ -228,13 +226,13 @@ Three chat confirms that matter for consent: **execute**, then **sync** (accepta
 
 sync-task and integrate-task both reference `.cursor/skills/conflict-resolution/SKILL.md`. Agents summarize conflicts but must ask the user for every resolution. No inferring, no strategy flags unless the user explicitly asks.
 
-### 9. Automatic context update after every step — except close
+### 9. Automatic context update after every step — except start and close
 
-sheep-status runs automatically after each sheep without asking. Exception: sheep-close removes the worktree — no context write after.
+sheep-status runs automatically after each sheep without asking. Two exceptions: sheep-start's script has already written the opening position, and sheep-close removes the worktree — no context write after either.
 
-### 10. Close: tail gate, teardown
+### 10. Close: teardown
 
-close-task checks integrate handoff, unregisters `global-status.json`, deletes whole worktree last. Archive runs earlier via `sheep-archive`.
+close-task unregisters `global-status.json` and deletes the whole worktree last. Archive runs earlier via `sheep-archive`. Nothing gates close on a file: routing reaches `close` only from integrate, and the status script refuses to jump there.
 
 ### 11. Spec/subtask/execute separation
 
@@ -325,7 +323,7 @@ nicki hero-section
 nicki continue
 ```
 
-Nicki sends `sheep-start`, then `sheep-status`, describe, and each sheep after confirmation. Ad-hoc: spawn one sheep directly with instructions and an output path; do not run the pipeline inline in the parent agent.
+Nicki sends `sheep-start` (no status write — the script already wrote position), then describe, and each sheep after confirmation with `sheep-status` after every sheep except start and close. Ad-hoc: spawn one sheep directly with instructions and an output path; do not run the pipeline inline in the parent agent.
 
 ---
 

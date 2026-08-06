@@ -236,7 +236,7 @@ When Cursor opens `projects/foo/worktrees/bar`, the workspace root is the worktr
 start → describe → spec → subtasks → execute → review → acceptance → sync → archive → sync → integrate → close
 ```
 
-With automatic `sheep-status` after each sheep except close. Validation (readiness + next-steps) runs inside `sheep-review`.
+With automatic `sheep-status` after each sheep except start and close. Review reports its verdict in the return `summary`; Nicki turns it into `next_step`.
 
 Full detail: [`NICKI.md`](NICKI.md).
 

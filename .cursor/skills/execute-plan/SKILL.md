@@ -18,7 +18,7 @@ Subtask input: [subtask-input.md](../subtask-maker/subtask-input.md).
 | Worktree path | Yes | Absolute or repo-relative (e.g. `worktrees/hero-section`) |
 | Plan | Yes* | Whatever the prompt supplies — checklist path/`@`/inline, or free text |
 
-\*Ask when the prompt does not yield a usable plan.
+\*When the prompt does not yield a usable plan, return that as a question in `open_questions` and stop.
 
 ## Procedure
 
@@ -26,7 +26,7 @@ Subtask input: [subtask-input.md](../subtask-maker/subtask-input.md).
 Task Progress:
 - [ ] Resolve and validate worktree scope
 - [ ] Parse plan from the prompt
-- [ ] Flag ambiguous or out-of-scope items (ask user)
+- [ ] Flag ambiguous or out-of-scope items (stop with a question)
 - [ ] Execute work in order, marking checklist items when a list exists
 - [ ] Report summary (omit `artifact`)
 ```
@@ -44,7 +44,7 @@ Task Progress:
 - Run shell commands with `working_directory` set to the scope root unless a subtask implies a subdirectory (still must stay under scope root).
 - Do **not** read sibling worktrees or the parent repo for the purpose of copying changes into other trees.
 - Do **not** modify `.cursor/`, parent-repo config, or paths outside the scope root — even if convenient.
-- If work would require changes outside the scope root, **stop and ask** — do not proceed.
+- If work would require changes outside the scope root, **stop** — return the question in `open_questions`; do not proceed.
 
 ### Step 2: Parse the plan
 
@@ -64,7 +64,9 @@ When only free text is present, derive an ordered work list from that text. Do n
 - `meta.worktree` / frontmatter `worktree` that does not match the worktree slug
 - No verification items when linked spec `acceptance` exists
 
-If anything is unclear, **stop and ask** with a specific question. Do not guess or fill gaps with your own design choices.
+If anything is unclear, **stop**: return a specific question in `open_questions` and end there. You cannot reach a human; your caller can, and will re-spawn you with the answer. Do not guess or fill gaps with your own design choices.
+
+You need no pause file — the checklist is one. Items you finished are marked `- [x]` on disk, so the re-spawn picks up at the first unchecked line.
 
 ### Step 3: Execute
 
@@ -107,4 +109,4 @@ Omit `artifact` from the sheep return.
 - May edit the subtask markdown file only to flip checklist completion state
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
 - Do not commit or push unless the user explicitly asks
-- When in doubt, ask — improvisation is a last resort, not a default
+- When in doubt, return the question in `open_questions` and stop — improvisation is a last resort, not a default

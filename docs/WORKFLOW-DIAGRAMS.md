@@ -86,12 +86,12 @@ flowchart TD
 
 ### Rules Nicki enforces
 
-- After every sheep **except** `sheep-close`, Nicki auto-sends `sheep-status`.
+- After every sheep **except** `sheep-start` and `sheep-close`, Nicki auto-sends `sheep-status`.
 - `sync`, `archive`, `integrate`, and `close` need explicit user confirmation.
-- Post-review routing from validation YAML (not review prose):
-  - `ready_for_acceptance` → acceptance (sync blocked until user accepts)
-  - `fix_required` → execute (`## Fix` appended to subtasks)
-  - `blocked` → ask user (sync blocked)
+- Post-review routing from the review sheep's return `summary`, not a file on disk:
+  - ready → acceptance (sync blocked until user accepts)
+  - fixes required → execute (`## Fix` appended to subtasks)
+  - blocked → ask user (sync blocked)
 
 ---
 
@@ -128,7 +128,6 @@ flowchart TB
         SubtaskMaker["subtask-maker"]
         ExecutePlan["execute-plan"]
         ReviewExec["review-execution"]
-        Validation["validation"]
         SyncTask["sync-task"]
         IntegrateTask["integrate-task"]
         CloseTask["close-task"]
@@ -144,10 +143,6 @@ flowchart TB
         Story["current-task/story.md"]
         SpecA["current-task/specs/slug.json"]
         SubA["current-task/subtasks/slug.md"]
-        RevA["current-task/reviews/slug.json"]
-        ValA["current-task/review-validations/rN-validation.json"]
-        SyncA["current-task/syncs/slug.json"]
-        IntA["current-task/integrates/slug.json"]
         Arch["docs/archive/slug/"]
     end
 
@@ -173,7 +168,6 @@ flowchart TB
     SSub --> SubtaskMaker
     SExec --> ExecutePlan
     SRev --> ReviewExec
-    SRev --> Validation
     SSync --> SyncTask
     SSync --> ConflictRes
     Sint --> IntegrateTask
@@ -189,10 +183,6 @@ flowchart TB
     SpecMaker --> SpecA
     SubtaskMaker --> SubA
     ExecutePlan -->|code + checklist ticks| SubA
-    ReviewExec --> RevA
-    Validation --> ValA
-    SyncTask --> SyncA
-    IntegrateTask --> IntA
     TaskArchive --> Arch
     CloseScope -->|unregister| GS
     CloseScope -->|rm -rf worktree| Arch
@@ -210,7 +200,6 @@ flowchart TB
 
     style Nicki fill:#e8f4fc,stroke:#2b6cb0
     style SStat fill:#fef3c7,stroke:#d97706
-    style Validation fill:#f3e8ff,stroke:#7c3aed
     style Hook fill:#f0fdf4,stroke:#16a34a
 ```
 
@@ -223,10 +212,10 @@ flowchart TB
 | **sheep-spec** | `spec-maker` | `current-task/specs/<slug>.json` |
 | **sheep-subtask** | `subtask-maker` | `current-task/subtasks/<slug>.md` |
 | **sheep-execute** | `execute-plan` | code changes + checklist ticks (no execution JSON) |
-| **sheep-review** | `review-execution`, `validation` | review + validation JSON, optional next-steps |
-| **sheep-sync** | `sync-task`, `conflict-resolution` | `current-task/syncs/<slug>.json` |
+| **sheep-review** | `review-execution` | no file — verdict in the return `summary` |
+| **sheep-sync** | `sync-task`, `conflict-resolution` | git side effects only |
 | **sheep-archive** | `task-archive` | `docs/archive/<slug>/` |
-| **sheep-integrate** | `integrate-task`, `conflict-resolution` | `current-task/integrates/<slug>.json` |
+| **sheep-integrate** | `integrate-task`, `conflict-resolution` | git side effects only |
 | **sheep-close** | `close-task` → `close-scope` | unregister; delete worktree |
 | **sheep-status** | `current-task-update` | `current-task/status.json` only |
 

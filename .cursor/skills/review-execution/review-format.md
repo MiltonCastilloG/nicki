@@ -2,7 +2,7 @@
 
 **JSON only** — output reviews have exactly two top-level keys: `approved` and `content`.
 
-Default path: `current-task/reviews/<slug>.json` under the worktree scope root.
+Review writes **no file**. This shape is what the review return `summary` conveys, so the caller can act on it.
 
 ## Top-level fields
 
@@ -53,7 +53,7 @@ List **blocking issues** only. Each bullet should be actionable — reference ID
 |--------|---------|
 | `[req-<id>]` | Spec requirement not met |
 | `[subtask:<index>]` | Checked subtask not done or done incorrectly |
-| `[scope]` | Change outside spec `scope.out` — **non-blocking**; validation skill may write `next-steps/*.json` |
+| `[scope]` | Change outside spec `scope.out` — **non-blocking**; name it in the summary as deferred work |
 | `[verify]` | Lint, test, build, or other check failure |
 | `[convention]` | CONTRIBUTING rule violation (tokens, i18n, deps) |
 
@@ -79,13 +79,13 @@ List **blocking issues** only. Each bullet should be actionable — reference ID
 - Include non-blocking nits unless strict review was requested
 - Add keys beyond `approved` and `content`
 
-## Ambiguity → ask
+## Ambiguity → stop
 
-Ask before writing the review when:
+You cannot reach a human. Return the question in `open_questions` and stop — no verdict — when:
 
 - Spec or subtask list is missing and partial review is insufficient
 - A requirement is subjective and pass/fail is unclear
 - Verify commands cannot run (missing deps, wrong branch base)
 - Git history makes change discovery unreliable
 
-Resolve or get user direction, then write the review file.
+Your caller puts the question to the user and re-spawns you with the answer.

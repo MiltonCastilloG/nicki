@@ -1,7 +1,7 @@
 # Design: Delete outputs nothing reads and sheep cannot know
 
 Date: 2026-08-05  
-Status: **designed**  
+Status: **implemented**  
 Slug: `delete-unread-outputs`  
 Related: [`2026-08-05-adhoc-direct-sheep-invocation-design.md`](2026-08-05-adhoc-direct-sheep-invocation-design.md), [`2026-08-01-artifact-ownership-and-position-design.md`](2026-08-01-artifact-ownership-and-position-design.md), handoff [`docs/adhoc/adhoc-direct-sheep-invocation/output_problem_example.md`](../../adhoc/adhoc-direct-sheep-invocation/output_problem_example.md)
 
@@ -112,7 +112,7 @@ Jump mode and position-only writes are untouched — neither reaches `_derive_ne
 
 `_init_status` is already unreachable on the pipeline, because `create-worktree.py` always writes `status.json` first. It stays for the smoke tests that exercise a fresh worktree; only its dead parameter goes.
 
-**Sheep files** — the Return section of all twelve `.cursor/agents/sheep-*.md` drops `completed_status`. What stays is what each sheep already says about `artifact` (a path, or none) plus `open_questions` and `summary`.
+**Sheep files** — ten of the twelve `.cursor/agents/sheep-*.md` carry `completed_status` in a Return section and drop it. `sheep-close` (prose teardown result) and `sheep-status` (passes through script stdout) have no Return field list and need no edit. What stays is what each sheep already says about `artifact` (a path, or none) plus `open_questions` and `summary`.
 
 ### `fallback` stops returning an artifact
 
@@ -140,16 +140,17 @@ That gate was the last consumer of a file the artifact-ownership change removed.
 |---|---|
 | [`README.md`](../../../README.md) | the sync/archive/integrate artifact row and the `current-task/` tree |
 | [`docs/NICKI.md`](../../NICKI.md) | the integrate row in the step table, and design note 10 ("close-task checks integrate handoff") |
-| [`docs/WORKFLOW-DIAGRAMS.md`](../../WORKFLOW-DIAGRAMS.md) | the `integrates/slug.json` diagram node and the sheep-integrate table row |
-| [`current-task-context-format.md`](../../../.cursor/skills/current-task-update/current-task-context-format.md) | the directory tree, the artifacts table row, and the JSON example |
+| [`docs/WORKFLOW-DIAGRAMS.md`](../../WORKFLOW-DIAGRAMS.md) | the `syncs/slug.json` and `integrates/slug.json` diagram nodes, and the sheep-sync and sheep-integrate table rows |
 
 Operational steps write no handoff files. Position plus the document artifacts is the whole record.
+
+`current-task-context-format.md` is **not** corrected. It opens with "Deprecated — do not write this file for new tasks" and describes the legacy `current-task-context.json`, which really did carry those paths. Editing it would falsify a historical record, the same reason `docs/archive/**` is left alone. It joins the frozen list.
 
 ## Docs and tests
 
 Remove the `completed_status` enum from the four live files that teach it: [`current-task-update/SKILL.md`](../../../.cursor/skills/current-task-update/SKILL.md) (the return field list, the closed-set paragraph, the JSON example), [`status-format.md`](../../../.cursor/skills/current-task-update/status-format.md), [`docs/flexibility.md`](../../flexibility.md), and [`docs/NICKI.md`](../../NICKI.md).
 
-Frozen records keep their history and are not rewritten: `docs/archive/**`, earlier specs in `docs/superpowers/specs/`, and the superseded write-ups (`docs/harness-alignment-subagents.md`, `docs/harness-gate-bugs.md`).
+Frozen records keep their history and are not rewritten: `docs/archive/**`, earlier specs in `docs/superpowers/specs/`, the superseded write-ups (`docs/harness-alignment-subagents.md`, `docs/harness-gate-bugs.md`), and the deprecated `current-task-context-format.md`.
 
 Tests:
 
@@ -180,7 +181,7 @@ Tests:
 - `sheep-fallback` returns its harness failure as an open question, returns no `artifact`, and position holds.
 - A fallback during `spec` leaves `artifacts.spec` pointing at the spec file.
 - `sheep-start` returns only `worktree`, `open_questions`, and `summary`, and no `sheep-status` runs after it; `bootstrap-context.py` still reports `next_step: describe`.
-- No live file presents `current-task/syncs/` or `current-task/integrates/` as a written output.
+- No live file presents `current-task/syncs/` or `current-task/integrates/` as a written output. The deprecated `current-task-context-format.md` is exempt — it documents the legacy file.
 - `close` runs without a tail gate and still refuses to run without Nicki's confirm.
 - `python3 test.py` passes.
 

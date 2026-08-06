@@ -21,25 +21,21 @@ disable-model-invocation: true
 | Worktree path | yes |
 | `current-task/status.json` | preferred |
 
-Missing path → ask.
-
-## Tail gate
-
-- `current-task/integrates/<slug>.json` exists (or `artifacts.integrate` resolves)
-
-Missing integrate handoff → **block**. Do not unregister or teardown.
+Missing path → return the question in `open_questions` and stop.
 
 ## Checklist
 
 ```
 - [ ] close-scope §1 — paths
-- [ ] Tail gate (integrate handoff on disk)
 - [ ] close-scope §2–3 — unregister + teardown
 - [ ] Report
 ```
 
+Ordering is guaranteed by routing, not by a file check: `next_step` reaches `close`
+only through integrate's `default_next_step`, and `update-status.py` refuses to jump
+to `close`.
+
 ## Safety
 
 - No close without Nicki confirm.
-- No teardown before integrate handoff.
 - No `task: true`.

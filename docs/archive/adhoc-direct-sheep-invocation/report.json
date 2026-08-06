@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "schema": "task-archive.v1",
+    "generated_by": "task-archive",
+    "source_context": "docs/superpowers/specs/2026-08-05-adhoc-direct-sheep-invocation-design.md"
+  },
+  "task": {
+    "slug": "adhoc-direct-sheep-invocation",
+    "title": "Ad-hoc is direct sheep invocation",
+    "original": "Ad-hoc must require nothing but instructions: no task, no worktree, no status.json. Move ad-hoc out of Nicki to the parent agent and delete --mode adhoc.",
+    "type": "refactor",
+    "branch": "main"
+  },
+  "story": "ad-hoc = direct sheep spawn · no task · no status write · parent agent dispatches · Nicki keeps normal + jump · --mode adhoc removed · archive always prefix/docs/archive/slug · start/close/status stay Nicki-only",
+  "outcome": {
+    "status": "pending_integrate",
+    "target": "main",
+    "pushed_branch": null,
+    "final_artifact": "docs/archive/adhoc-direct-sheep-invocation/report.json"
+  },
+  "process": [],
+  "decisions": [
+    {
+      "topic": "What ad-hoc means",
+      "decision": "Direct sheep invocation by the parent agent, not a write mode on the task path."
+    },
+    {
+      "topic": "Who dispatches",
+      "decision": "Parent agent. Nicki keeps only normal and jump."
+    },
+    {
+      "topic": "Pipeline state on ad-hoc",
+      "decision": "None written — no bootstrap, no sheep-status, no side_effects."
+    },
+    {
+      "topic": "--mode adhoc",
+      "decision": "Removed from MODES and update-status.py; argparse rejects it."
+    },
+    {
+      "topic": "Archive path",
+      "decision": "Always <prefix>/docs/archive/<slug>/. Caller passes prefix + slug; never docs/adhoc/ for archive."
+    },
+    {
+      "topic": "Nicki-only sheep",
+      "decision": "sheep-start, sheep-close, sheep-status stay Nicki-only."
+    },
+    {
+      "topic": "task.side_effects[]",
+      "decision": "Kept for jump; legacy adhoc rows stay readable."
+    }
+  ],
+  "open_questions": [
+    "Skill/format now match the ad-hoc prompt for path/input: prefix + slug, no close-scope, no no-status ask, errors copy only when named. This second live test writes under docs/archive/adhoc-direct-sheep-invocation/ as required.",
+    "Output-shape friction still hit (deferred to docs/adhoc/adhoc-direct-sheep-invocation/output_problem_example.md): outcome.status forced to pending_integrate though work landed on main with no integrate; no artifacts.story so story.md not written though format rules call it required; process stays [] — no handoffs or side_effects to source; meta.source_context holds the design path, not status.json."
+  ],
+  "suggestions": [
+    {
+      "area": "orchestration",
+      "suggestion": "Let the caller pass outcome.status (or waive pending_integrate) for ad-hoc / main-landed archives.",
+      "evidence": "SKILL.md step 3 always sets pending_integrate; change is already on main (52432f0, 755616b, 3f4e757), no integrate step."
+    },
+    {
+      "area": "orchestration",
+      "suggestion": "Make story.md optional when no artifacts.story / describe step; do not require a companion the caller cannot supply.",
+      "evidence": "archive-format.md: story.md copy when present vs rules saying required before sync/integrate; this run has source_document only."
+    },
+    {
+      "area": "orchestration",
+      "suggestion": "Add a sanctioned process source for source-document / ad-hoc archives (caller-supplied steps or empty-OK contract).",
+      "evidence": "archive-format.md builds process only from handoffs + side_effects; both absent here → process []."
+    }
+  ]
+}

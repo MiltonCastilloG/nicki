@@ -121,7 +121,7 @@ def run(root: Path) -> None:
         proc, _ = _write(update, root, wt2, seed2, "--step", "subtasks")
         if proc.returncode != 0:
             raise AssertionError(f"fail: seed2: {proc.stdout}{proc.stderr}")
-        exe = _summary(wt2, "exe.json", {"completed_status": "complete", "open_questions": []})
+        exe = _summary(wt2, "exe.json", {"open_questions": []})
         proc, out = _write(update, root, wt2, exe, "--step", "execute")
         if proc.returncode != 0 or out.get("written") is not True:
             raise AssertionError(f"fail: execute omit artifact: {proc.stdout}{proc.stderr}")

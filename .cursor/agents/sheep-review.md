@@ -14,4 +14,4 @@ Run `.cursor/skills/review-execution/SKILL.md`. Report findings in the return `s
 
 ## Return
 
-No `artifact`. `completed_status`; `open_questions`; `summary` (verdict your caller can turn into `next_step`: acceptance / execute / review; include suggested fix lines when fixes are needed). Do not name pipeline position.
+No `artifact`. `open_questions`; `summary` (verdict your caller can turn into `next_step`: acceptance / execute / review; include suggested fix lines when fixes are needed). Do not name pipeline position.

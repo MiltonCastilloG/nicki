@@ -15,7 +15,7 @@ Commit locally, merge base into the feature branch, push the feature branch. Con
 | Base branch | No | Default `main` |
 | Commit instruction | Optional | Message / include paths |
 
-Ask if worktree path is missing.
+When the worktree path is missing, return that as a question in `open_questions` and stop.
 
 ## Procedure
 

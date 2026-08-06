@@ -73,17 +73,22 @@ No `sync` / `integrate` / `review_validation` / `review_input` pointers.
 
 ## `open_questions`
 
-Empty when Nicki can continue. Blocked example:
+Empty when Nicki can continue. **Non-empty holds `next_step` where it was** — that is the whole blocked mechanism; there is no status field for it.
+
+A sheep cannot reach a human, so this is also how it asks. One entry per question. `question` is the only required key; `options` lets the caller offer a choice instead of an essay prompt, and `context` says what the sheep found that raised it. No schema, no validator — the reader is an LLM.
 
 ```json
 "open_questions": [
   {
     "step": "subtasks",
-    "question": "CTA link /contact or /demo?",
-    "blocks_next_step": true
+    "question": "Where should the hero CTA link?",
+    "options": ["/contact", "/demo"],
+    "context": "The spec names a CTA but no destination; both routes exist."
   }
 ]
 ```
+
+A plain string is accepted too, for questions that need no options.
 
 ## Acceptance / fix / review outcomes
 

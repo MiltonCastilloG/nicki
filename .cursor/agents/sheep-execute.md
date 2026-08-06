@@ -14,4 +14,4 @@ Run `.cursor/skills/execute-plan/SKILL.md`. Implement in the worktree. No execut
 
 ## Return
 
-No `artifact`. `completed_status`; `open_questions`; `summary`. Do not name pipeline position — advancing `next_step` is enough.
+No `artifact`. `open_questions`; `summary`. Do not name pipeline position — advancing `next_step` is enough.

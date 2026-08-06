@@ -18,14 +18,14 @@ Spec schema: [spec-format.md](spec-format.md) (single source of truth).
 | Output path | No | Default `current-task/specs/<slug>.json` under scope root; agent may override |
 | `meta.context` | No | Optional traceability path; set only when the agent passes one |
 
-\*Ask when the description is missing or too vague to list testable requirements.
+\*When the description is missing or too vague to list testable requirements, return the question in `open_questions` and stop.
 
 ## Procedure
 
 ```
 Task Progress:
 - [ ] Resolve and validate worktree scope
-- [ ] Parse task description (ask if vague)
+- [ ] Parse task description (stop with a question if vague)
 - [ ] Light context read (CONTRIBUTING if exists, project layout)
 - [ ] Draft JSON spec
 - [ ] Write spec file
@@ -51,14 +51,14 @@ Task Progress:
 
 When the input is Gherkin (`Feature:`, scenarios, **As a / I want / So that**), derive requirements and acceptance from it. Set `meta.task` to the full story text.
 
-Otherwise extract what the user wants built or fixed. Ask if:
+Otherwise extract what the user wants built or fixed. Stop with a question if:
 
 - The outcome is vague ("improve", "modernize", "clean up") with no measurable target
 - Scope is unclear (which page, which component, which behavior)
 - Multiple valid interpretations exist and the user has not chosen one
 - A design fork affects requirements (CTA link, copy, visual approach)
 
-**Ask-first:** Do not write the spec file while `open_questions` remain; list forks and stop or relay via Nicki until `open_questions: []`.
+**Stop, don't guess:** you cannot reach a human. Write no spec file while questions remain — return them in `open_questions`, naming the forks and their candidate answers, and stop. Your caller gets the answers and re-spawns you. When your prompt gave you a pause path, save what you explored first (`.cursor/skills/pause-context/SKILL.md`) so the re-spawn does not repeat the work. Write only once `open_questions` is `[]`.
 
 ### Step 3: Light context read
 
@@ -90,7 +90,7 @@ Include:
 - Name file paths or symbols
 - Include create/modify/delete/run/verify steps
 - Write implementation subtasks
-- Guess on design forks — ask first or list in `open_questions`
+- Guess on design forks — return them in `open_questions` and stop
 
 ### Step 5: Write the spec file
 
@@ -118,4 +118,4 @@ Summarize:
 - Never modify files outside the scope root
 - Never force-push, `reset --hard`, or delete worktrees/branches without explicit user approval
 - Do not commit or push unless the user explicitly asks
-- When in doubt, ask — do not guess
+- When in doubt, return the question in `open_questions` and stop — do not guess

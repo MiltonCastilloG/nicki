@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "schema": "task-archive.v1",
+    "generated_by": "task-archive"
+  },
+  "task": {
+    "slug": "delete-unread-outputs",
+    "title": "Delete outputs nothing reads",
+    "original": "Delete archive and sheep return fields nothing reads; hold position with open_questions; drop completed_status, unread start return fields, fallback artifact corruption, and the close integrate-handoff gate.",
+    "type": "refactor",
+    "branch": "main"
+  },
+  "story": "drop source_context · drop outcome.status/final_artifact · story.md optional · completed_status gone · open_questions holds next_step · fallback no artifact · start returns worktree only · no status after start · close tail gate deleted · phantom syncs/integrates prose fixed",
+  "outcome": {
+    "target": "main",
+    "pushed_branch": null
+  },
+  "process": [],
+  "decisions": [
+    {
+      "topic": "Caller-owned output contract",
+      "decision": "Not built — audit deleted the fields that would have needed one."
+    },
+    {
+      "topic": "Archive meta / outcome",
+      "decision": "Drop meta.source_context, outcome.status, outcome.final_artifact; keep outcome.target and outcome.pushed_branch."
+    },
+    {
+      "topic": "story.md",
+      "decision": "Optional — copy when artifacts.story exists, never required."
+    },
+    {
+      "topic": "completed_status",
+      "decision": "Removed from return contract and harness; non-empty open_questions holds next_step."
+    },
+    {
+      "topic": "_derive_next_step precedence",
+      "decision": "Explicit summary next_step → open_questions hold → routing advance."
+    },
+    {
+      "topic": "fallback artifact",
+      "decision": "Dropped — errors path named in summary and open question; leaves artifacts.spec untouched."
+    },
+    {
+      "topic": "sheep-start return",
+      "decision": "Trimmed to worktree, open_questions, summary; no sheep-status after start."
+    },
+    {
+      "topic": "close tail gate",
+      "decision": "Deleted — routing already makes close unreachable before integrate; Nicki confirm stays."
+    },
+    {
+      "topic": "Review verdict / sync outcome",
+      "decision": "Stay prose; no typed vocabularies."
+    },
+    {
+      "topic": "Validation",
+      "decision": "None added anywhere."
+    }
+  ],
+  "open_questions": [],
+  "suggestions": [
+    {
+      "area": "subtasking",
+      "suggestion": "When most checklist lines are confirm-already-matches, collapse them into one acceptance/smoke pass and keep only the real edit lines.",
+      "evidence": "docs/adhoc/delete-unread-outputs/subtasks.md: majority of items are confirm-and-change-nothing; few are fix/verify."
+    },
+    {
+      "area": "orchestration",
+      "suggestion": "Treat this archive shape as the live contract dogfood — new reports must omit source_context / outcome.status / final_artifact and skip story.md when no story path.",
+      "evidence": "Design Acceptance + Archive sections; this source-document run has no artifacts.story."
+    }
+  ]
+}
