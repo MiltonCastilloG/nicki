@@ -17,7 +17,7 @@ Use this document as a rebuild guide: what Nicki is, what it controls, how the p
 | Send `sheep-status` automatically after each sheep (except start and close) | Skip execute/sync without explicit user confirmation |
 | Track orchestration progress with todos | Re-derive sheep map from prose (scripts + `routing.json` own that) |
 
-Nicki = `.cursor/agents/nicki.md` subagent (`readonly: true`; shell only for bootstrap; `read`, `task`, `ask_question`, `todo_write`). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
+Nicki = `.cursor/agents/nicki.md` subagent (`readonly: false` — Cursor needs write to spawn sheep; shell only for bootstrap). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
 
 ### Harness scripts
 

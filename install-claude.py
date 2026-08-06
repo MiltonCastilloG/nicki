@@ -86,10 +86,8 @@ def generate_claude_md() -> None:
         "keep invoking a fresh `nicki` subagent on every",
     )
     body = body.replace("**Never Task-spawn sheep**", "**Never spawn sheep**")
-    body = body.replace(
-        "That selector is the *only* context you may forward, If",
-        "That selector is the *only* context you may forward. If",
-    )
+    # Host ask tool: Cursor AskQuestion ↔ Claude AskUserQuestion
+    body = body.replace("AskQuestion", "AskUserQuestion")
     CLAUDE_MD.write_text(body)
 
 
