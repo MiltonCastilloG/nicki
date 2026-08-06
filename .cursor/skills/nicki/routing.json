@@ -22,7 +22,7 @@
       "sheep": "sheep-subtask",
       "artifact_key": "subtasks",
       "default_next_step": "execute",
-      "prompt": "output path (Nicki-owned; usually worktree subtasks/<slug>.md), task id, chat"
+      "prompt": "output path (Nicki-owned; usually worktree subtasks/<slug>.md), task id, chat; or existing checklist path + approved review fix lines to append ## Fix"
     },
     "execute": {
       "sheep": "sheep-execute",

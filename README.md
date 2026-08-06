@@ -113,7 +113,7 @@ Post-review routing comes from validation YAML (`readiness.status`), not from re
 
 | `readiness.status` | Next |
 | ------------------ | ---- |
-| `fix_required` | `execute` again (`## Fix` appended to subtasks by review) |
+| `fix_required` | Nicki asks approval of review suggestions → `sheep-subtask` appends `## Fix` → `execute` again |
 | `ready_for_acceptance` | Nicki `acceptance` checkpoint — sync blocked until user accepts |
 | `blocked` | Nicki asks user |
 

@@ -5,7 +5,7 @@ description: "Review worktree changes against available current-task files and t
 
 # Review Execution
 
-Review implementation in a worktree against the git diff and whatever exists under `current-task/`. Put the verdict in the sheep return `summary` for Nicki/chat. Do **not** write review JSON, validation JSON, or next-steps handoff files.
+Review implementation in a worktree against the git diff and whatever exists under `current-task/`. Put the verdict in the sheep return `summary` for Nicki/chat. Do **not** write review JSON, validation JSON, next-steps handoffs, or mutate the subtask checklist.
 
 ## Inputs
 
@@ -18,15 +18,14 @@ Review implementation in a worktree against the git diff and whatever exists und
 
 ## Procedure
 
-1. Resolve worktree scope. Read under scope + CONTRIBUTING. Write only optional `## Fix` on subtasks when fixes are required. Never edit app code, specs, or `status.json`.
+1. Resolve worktree scope. Read under scope + CONTRIBUTING. **Write nothing.** Never edit app code, specs, subtasks, or `status.json`.
 2. Load prompt / `current-task/` context when present.
 3. Inspect `git diff` vs main (or working tree).
 4. Check requirements / subtasks / verify commands / CONTRIBUTING when material exists.
-5. Decide pass vs fix vs re-review. Put blocking findings in `summary` (and `open_questions` when blocked).
-6. If fixes are required and a subtask list exists, append a `## Fix` section.
+5. Decide pass vs fix vs re-review. Put blocking findings and suggested fix lines in `summary` (and `open_questions` when blocked). The caller (Nicki) gets user approval and, if needed, sends `sheep-subtask` to update the checklist — review never appends `## Fix` itself.
 
 ## Safety
 
-- Never edit application code (except optional `## Fix` on subtasks).
+- Never edit application code or planning files.
 - Never force-push, reset hard, or delete worktrees without approval.
 - When in doubt, ask.

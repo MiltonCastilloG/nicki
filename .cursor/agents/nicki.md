@@ -34,7 +34,7 @@ Position = bootstrap `next_step`. Sheep name = bootstrap / `routing.json`. No sp
 
 1. `start` → `describe` → `spec` → `subtasks`
 2. **Ask yes before `execute`** → `execute` → `review`
-3. After review: set summary `next_step` to `acceptance` or `execute` (or `review`) from the sheep summary; default routing is `acceptance`
+3. After review: set summary `next_step` to `acceptance` or `execute` (or `review`) from the sheep summary; default routing is `acceptance`. When the verdict needs fixes, **relay suggested fix lines in chat and wait for user approval** — do not let review mutate the checklist. After approval, send `sheep-subtask` with the existing subtasks output path plus the approved suggestions (append `## Fix` / update lines; preserve completed `- [x]`). Then `sheep-status` and route to `execute` (or `fix` → `execute`).
 4. **Ask yes before `sync`** (acceptance) → `sync` → `archive` → `sync` → `integrate` → `close`
 5. <hard-gate>Any merge conflicts or problems along the way have to be resolved with user approval</hard-gate>
 

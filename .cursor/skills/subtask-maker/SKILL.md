@@ -7,19 +7,27 @@ description: "Read a JSON spec and write a markdown subtask checklist. One sente
 
 Read a **JSON spec**, explore the worktree lightly, write a **markdown subtask checklist** — one sentence per `- [ ]` line.
 
+**Or**, when the prompt says to apply **approved review fixes**: load the existing checklist at the output path, append or refresh a `## Fix` section from the caller's approved suggestions, and preserve every existing `- [x]` / `- [ ]` line. Do not regenerate the whole list from the spec in that mode.
+
 Output schema: [subtask-format.md](subtask-format.md). Spec input: [spec-input.md](spec-input.md).
 
 ## Procedure
 
 ```
 - [ ] Resolve worktree scope
-- [ ] Load spec (stop on open_questions)
-- [ ] Explore
-- [ ] Draft ordered checklist from spec
+- [ ] Load spec (stop on open_questions) — skip when applying approved review fixes
+- [ ] Explore — skip when applying approved review fixes
+- [ ] Draft ordered checklist from spec — or merge approved fixes into existing file
 - [ ] Write subtask file
 - [ ] Report summary
 ```
 
+### Apply approved review fixes (when the prompt says so)
+
+1. Output path is the existing checklist (caller-owned). Read it; if missing, ask.
+2. Take the approved fix lines from the prompt only — do not invent new scope.
+3. Append a `## Fix` section (or replace a prior `## Fix` block) with `- [ ]` lines for those approvals. Leave the original `# Subtasks` checklist untouched, including completed items.
+4. Write only that file. Report that fixes were applied, not a full regenerate.
 ### 1. Resolve worktree scope
 
 Resolve path to absolute; confirm exists. Scope root = that path; `<slug>` = final folder name. Default output: `current-task/subtasks/<slug>.md`.

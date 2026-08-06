@@ -8,7 +8,12 @@ Default path: `current-task/subtasks/<slug>.md` under the worktree scope root.
 
 1. YAML frontmatter — scope and traceability.
 2. `# Subtasks` heading — required.
-3. Checklist body — ordered `- [ ]` lines.
+3. Checklist body — ordered `- [ ]` / `- [x]` lines.
+4. Optional `## Fix` — appended later by `subtask-maker` when Nicki sends **approved review suggestions** (review itself never writes this file).
+
+## `## Fix` (optional)
+
+After review, Nicki may re-invoke subtask-maker with approved fix lines. Those land under `## Fix` as new `- [ ]` items. Do not remove or rewrite prior checklist lines when applying fixes.
 
 ## Frontmatter fields
 
