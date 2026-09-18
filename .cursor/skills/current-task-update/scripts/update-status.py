@@ -269,7 +269,7 @@ def main() -> int:
                     completed_step, {"task": {"slug": slug}, "artifacts": {}}
                 )
                 if next_step is None:
-                    next_step = "describe" if completed_step == "start" else completed_step
+                    next_step = "spec" if completed_step == "start" else completed_step
         status = _init_status(
             str(Path(worktree_arg)),
             slug,

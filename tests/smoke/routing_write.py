@@ -145,7 +145,7 @@ def run(root: Path) -> None:
             for name, cfg in steps.items()
             if cfg.get("artifact_key")
         }
-        if set(declared) != {"describe", "spec", "subtasks", "archive"}:
+        if set(declared) != {"gherkin", "spec", "subtasks", "archive"}:
             raise AssertionError(f"fail: unexpected artifact_key map: {declared}")
         if declared.get("review") or declared.get("sync") or declared.get("integrate"):
             raise AssertionError("fail: operational steps must not declare artifact_key")

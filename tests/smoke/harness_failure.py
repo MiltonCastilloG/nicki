@@ -48,8 +48,8 @@ def _run(root: Path, worktree: Path) -> None:
                 "meta": {"schema": "task-status.v2"},
                 "task": {
                     "slug": "harness-fail",
-                    "current_step": "describe",
-                    "next_step": "spec",
+                    "current_step": "spec",
+                    "next_step": "gherkin",
                 },
                 "scope": {"worktree_path": str(worktree)},
                 "artifacts": {},

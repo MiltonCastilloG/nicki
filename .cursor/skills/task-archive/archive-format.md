@@ -24,7 +24,7 @@ Caller packs the paths. Task archive: read `current-task/status.json` — [statu
 
 | Step | Artifact pointer | Summary source |
 |------|------------------|----------------|
-| `describe` | `artifacts.story` | story exists → brief line from story title or slug |
+| `gherkin` | `artifacts.story` | story exists → brief line from story title or slug |
 | `spec` | `artifacts.spec` | `meta.summary` or spec `title` |
 | `subtasks` | `artifacts.subtasks` | subtask frontmatter `title` |
 | `execute` | (none — execute omits artifact) | skip |

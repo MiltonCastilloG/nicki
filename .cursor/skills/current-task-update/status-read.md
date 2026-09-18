@@ -20,7 +20,7 @@ Per-task `current-task/status.json`. Writer schema: [status-format.md](status-fo
   "task": {
     "slug": "hero-section",
     "original": "hero-section",
-    "current_step": "spec",
+    "current_step": "gherkin",
     "next_step": "subtasks"
   },
   "scope": {

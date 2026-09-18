@@ -446,7 +446,7 @@ def scaffold_current_task(
             "original": original or slug,
             "type": task_type,
             "current_step": "start",
-            "next_step": "describe",
+            "next_step": "spec",
         },
         "scope": {"worktree_path": wt_rel},
         "artifacts": {},

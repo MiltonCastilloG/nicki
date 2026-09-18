@@ -30,9 +30,9 @@ def run(root: Path) -> None:
     empty: dict = {"artifacts": {}}
     archived = {"artifacts": {"archive": f"docs/archive/{SLUG}/report.json"}}
 
-    _check(resolve, "start", {}, "describe", "start → describe")
-    _check(resolve, "describe", empty, "spec", "describe → spec")
-    _check(resolve, "spec", empty, "subtasks", "spec → subtasks")
+    _check(resolve, "start", {}, "spec", "start → spec")
+    _check(resolve, "spec", empty, "gherkin", "spec → gherkin")
+    _check(resolve, "gherkin", empty, "subtasks", "gherkin → subtasks")
     _check(resolve, "execute", empty, "review", "execute → review")
     _check(resolve, "review", empty, "acceptance", "review → acceptance")
     _check(resolve, "acceptance", empty, "sync", "acceptance → sync")

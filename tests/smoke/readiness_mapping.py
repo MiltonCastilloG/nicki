@@ -18,7 +18,7 @@ def run(root: Path) -> None:
         if (steps.get(name) or {}).get("artifact_key"):
             raise AssertionError(f"fail: {name} must not declare artifact_key")
 
-    for name in ("describe", "spec", "subtasks", "archive"):
+    for name in ("gherkin", "spec", "subtasks", "archive"):
         if not (steps.get(name) or {}).get("artifact_key"):
             raise AssertionError(f"fail: document step {name} needs artifact_key")
 

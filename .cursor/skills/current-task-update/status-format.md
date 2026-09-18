@@ -32,13 +32,13 @@ Document bodies live as separate files; status holds **position**, document **po
 | `slug` | Yes | Worktree folder slug |
 | `project` | No | Managed project name |
 | `title` | No | Short title |
-| `original` | Yes | Short slug or one-line title after describe; start slug until then |
+| `original` | Yes | Short slug or one-line title after gherkin; start slug until then |
 | `type` | No | `feature`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf` |
 | `current_step` | Yes | Step Nicki is on or just completed |
 | `next_step` | Yes | Next step Nicki should propose — **workflow source of truth** |
 | `side_effects` | No | Append-only log of jump runs |
 
-Step values: `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`.
+Step values: `start`, `spec`, `gherkin`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`.
 
 Do **not** persist `completed_step` / `completed_steps` — consumers use `next_step`.
 
@@ -109,7 +109,7 @@ Subtasks gate may read `open_questions` from the spec file when present.
     "project": "castlemill-landing",
     "original": "hero-section",
     "type": "feature",
-    "current_step": "spec",
+    "current_step": "gherkin",
     "next_step": "subtasks"
   },
   "scope": {

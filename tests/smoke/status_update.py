@@ -76,7 +76,7 @@ def run(root: Path) -> None:
         fresh.mkdir()
         json_next = fresh / "summary-next-only.json"
         json_next.write_text(
-            json.dumps({"next_step": "describe"}, indent=2) + "\n", encoding="utf-8"
+            json.dumps({"next_step": "spec"}, indent=2) + "\n", encoding="utf-8"
         )
         proc_next = run_py(
             update, "--worktree", str(fresh), "--json-path", str(json_next), cwd=root
@@ -86,7 +86,7 @@ def run(root: Path) -> None:
         out_next = json.loads(proc_next.stdout.strip())
         if out_next.get("written") is not True:
             raise AssertionError("fail: next_step only should write")
-        if out_next.get("next_step") != "describe":
+        if out_next.get("next_step") != "spec":
             raise AssertionError("fail: next_step only should update next_step")
         if out_next.get("completed_step") is not None:
             raise AssertionError("fail: next_step only completed_step should be null")
@@ -94,7 +94,7 @@ def run(root: Path) -> None:
             (fresh / "current-task/status.json").read_text(encoding="utf-8")
         )
         task_next = status_next.get("task") or {}
-        if task_next.get("next_step") != "describe":
+        if task_next.get("next_step") != "spec":
             raise AssertionError("fail: status next_step not updated")
         if task_next.get("current_step") != "start":
             raise AssertionError("fail: fresh next_step-only current_step should be start")

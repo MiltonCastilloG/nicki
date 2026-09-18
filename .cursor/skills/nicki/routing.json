@@ -3,20 +3,20 @@
     "start": {
       "sheep": "sheep-start",
       "artifact_key": null,
-      "default_next_step": "describe",
-      "prompt": "work items / slugs from user message"
-    },
-    "describe": {
-      "sheep": "sheep-describe",
-      "artifact_key": "story",
       "default_next_step": "spec",
-      "prompt": "output path (Nicki-owned; usually worktree current-task/story.md), task id, chat"
+      "prompt": "work items / slugs from user message"
     },
     "spec": {
       "sheep": "sheep-spec",
       "artifact_key": "spec",
+      "default_next_step": "gherkin",
+      "prompt": "output path (Nicki-owned; usually worktree specs/<slug>.json), task id, free text / task.original, pause path (Nicki-owned; usually worktree current-task/specs/<slug>.pause.md); on re-spawn after questions, the same pause path plus the user's answers"
+    },
+    "gherkin": {
+      "sheep": "gherkin-sheep",
+      "artifact_key": "story",
       "default_next_step": "subtasks",
-      "prompt": "output path (Nicki-owned; usually worktree specs/<slug>.json), task id, chat, pause path (Nicki-owned; usually worktree current-task/specs/<slug>.pause.md); on re-spawn after questions, the same pause path plus the user's answers"
+      "prompt": "spec path (Nicki-owned; usually worktree specs/<slug>.json), story output path (Nicki-owned; usually worktree current-task/story.md); not chat / interview"
     },
     "subtasks": {
       "sheep": "sheep-subtask",

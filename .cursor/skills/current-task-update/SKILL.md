@@ -18,7 +18,7 @@ Schemas:
 
 ## When to use
 
-- Nicki completed `start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `acceptance`, `sync`, `integrate`, or fix-loop routing.
+- Nicki completed `start`, `spec`, `gherkin`, `subtasks`, `execute`, `review`, `acceptance`, `sync`, `integrate`, or fix-loop routing.
 - Nicki needs next step, artifact pointers, or open questions persisted.
 - Worktree exists; need init missing `current-task/status.json`.
 
@@ -55,7 +55,7 @@ Minimal write (valid — advances next step only):
 
 ```json
 {
-  "next_step": "describe"
+  "next_step": "spec"
 }
 ```
 
@@ -66,7 +66,7 @@ Full write (when a step completed):
   "worktree": "projects/foo/worktrees/hero-section",
   "completed_step": "spec",
   "artifact": "current-task/specs/hero-section.json",
-  "next_step": "subtasks",
+  "next_step": "gherkin",
   "open_questions": [],
   "summary": "Spec captured requirements and acceptance."
 }
@@ -79,7 +79,7 @@ when absent, only advances `next_step` but **always writes `task.current_step`**
 
 Also optional: `task` (slug, title, original, type), `git`, `artifacts`.
 
-For describe: set `artifacts.story: current-task/story.md` and write story body terse per caveman skill when summary includes full story text — otherwise Nicki passes story for a dedicated write step.
+For gherkin: set `artifacts.story` from the summary `artifact` (usually `current-task/story.md`).
 
 ## Workflow
 

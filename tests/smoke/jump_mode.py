@@ -45,12 +45,12 @@ def run(root: Path) -> None:
             wt,
             "seed.json",
             {
-                "completed_step": "describe",
+                "completed_step": "gherkin",
                 "artifact": "current-task/story.md",
                 "task": {"original": "demo", "slug": "demo"},
             },
         )
-        proc, _ = _write(update, root, wt, seed, "--step", "describe")
+        proc, _ = _write(update, root, wt, seed, "--step", "gherkin")
         if proc.returncode != 0:
             raise AssertionError(f"fail: seed: {proc.stdout}{proc.stderr}")
 

@@ -48,7 +48,7 @@ def run(root: Path) -> None:
         # Empty open_questions advances by routing; non-empty holds the position
         # at the step that just ran. Both on a fresh worktree with no status yet.
         for name, questions, want_next in (
-            ("clear", [], "subtasks"),
+            ("clear", [], "gherkin"),
             ("held-string", ["CTA link /contact or /demo?"], "spec"),
             ("held-entry", [{"question": "CTA link?", "options": ["/contact", "/demo"]}], "spec"),
         ):
@@ -126,7 +126,7 @@ def run(root: Path) -> None:
                 "--json-path",
                 str(thin),
                 "--step",
-                "describe",
+                "gherkin",
                 "--mode",
                 mode,
                 cwd=root,
@@ -140,7 +140,7 @@ def run(root: Path) -> None:
         # With a completed step, next_step comes from routing — summary may omit it.
         s = _summary(wt, "no-next.json", {"completed_step": "spec", "artifact": "current-task/specs/x.json"})
         proc, out = _write(update, root, wt, s)
-        if proc.returncode != 0 or out.get("next_step") != "subtasks":
+        if proc.returncode != 0 or out.get("next_step") != "gherkin":
             raise AssertionError(
                 f"fail: completed step should derive next_step from routing: {out}"
             )
