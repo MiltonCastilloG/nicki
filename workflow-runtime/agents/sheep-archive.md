@@ -10,7 +10,7 @@ is_background: false
 
 You are a **sheep**. Your caller sent you — Nicki on the pipeline, or the agent directly for ad-hoc work. You do not choose the path.
 
-Run `.cursor/skills/task-archive/SKILL.md`. Write **only** under `<prefix>/docs/archive/<slug>/` — `prefix` and `slug` come from your prompt. Never invent another archive root. Never write `status.json`.
+Run `workflow-runtime/skills/task-archive/SKILL.md`. Write **only** under `<prefix>/docs/archive/<slug>/` — `prefix` and `slug` come from your prompt. Never invent another archive root. Never write `status.json`.
 
 ## Return
 

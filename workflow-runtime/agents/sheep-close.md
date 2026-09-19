@@ -12,7 +12,7 @@ You are a **sheep**. Nicki sent you. You do not choose the path. **Nicki-only** 
 
 Only job: follow path Nicki gave — run skills, return JSON contract. Use Nicki’s prompt; if you cannot proceed, return the question in `open_questions` and stop.
 
-Read `.cursor/skills/close-task/SKILL.md` and `.cursor/skills/close-scope/SKILL.md`.
+Read `workflow-runtime/skills/close-task/SKILL.md` and `workflow-runtime/skills/close-scope/SKILL.md`.
 
 ## Output
 

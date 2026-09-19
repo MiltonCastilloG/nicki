@@ -24,17 +24,12 @@ Options, trade-offs, and rationale: [`2026-09-19-runtime-extract-and-delivery-op
 
 | # | Job | After | Notes |
 |---|-----|-------|-------|
-| **20c** | **Prose rewrite to neutral paths** | 20b ✓ | `.cursor/skills/…` → `workflow-runtime/skills/…` in the 13 agents and skill bodies. Mechanical sed + review. `.cursor/` in sheep bodies is the hidden fork coupling `OWNERSHIP.md` names — clean it before the tag. |
-| **21** | **Discovery-contract smoke** | 20b ✓ | New `tests/smoke/` module: agent `name:` ↔ filename, skills exactly one level deep, host links resolve, `CLAUDE.md` / `.mdc` regenerate byte-identically, every path string points at a real file, routing graph terminates at `done`. The cheap proxy for host discovery — CI cannot run Cursor or Claude. |
-| **22** | **PR-gated integrate** | 20c | `sync` opens/updates the PR; `integrate` waits on checks, then merges; `close` pulls `main`. Degrade to the current local merge when there is no remote or no `gh`. Touches `integrate-task/SKILL.md`, `sheep-integrate.md`, `permissions.json`, `close-task`. Conflicts stay local and human-approved; the consent model does not change. **Decision: land pre-fork so both products inherit it, or defer and let each repo adopt independently.** |
+| **22** | **PR-gated integrate** | 20c ✓ | `sync` opens/updates the PR; `integrate` waits on checks, then merges; `close` pulls `main`. Degrade to the current local merge when there is no remote or no `gh`. Touches `integrate-task/SKILL.md`, `sheep-integrate.md`, `permissions.json`, `close-task`. Conflicts stay local and human-approved; the consent model does not change. **Decision: land pre-fork so both products inherit it, or defer and let each repo adopt independently.** |
 
-**Done:** **20a** Cursor symlink spike PASS · **20b** extract to `workflow-runtime/` (Track 1 committed Cursor links) — see [`tasks-done.md`](tasks-done.md).
+**Done:** **20a** · **20b** · **20c** prose paths → `workflow-runtime/` · **21** path_resolution + rule_drift — see [`tasks-done.md`](tasks-done.md).
 
 ### Order and parallelism
 
-- **After 20b: `20c ∥ 21` run in parallel.** Disjoint files — 20c rewrites prose in agents and skills, 21 adds a new smoke module plus its `test.py` registration.
-- **`22 ∥ 21` also parallel-safe.** 21 touches no runtime file.
-- **22 must follow 20c, not run beside it** — both edit `sheep-integrate.md` and `integrate-task/SKILL.md`.
 - **Then the line:** tag the Nicki baseline → clone with history into sibling `shinobu/` → swap `origin`. Sequence: [`SHINOBU_NEXT_STEPS.md`](../SHINOBU_NEXT_STEPS.md) · ownership: [`OWNERSHIP.md`](../OWNERSHIP.md).
 
 ---

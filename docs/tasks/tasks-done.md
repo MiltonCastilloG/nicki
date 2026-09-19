@@ -86,7 +86,7 @@ Historical deletion map: [`archive/investigation-complexity/report.md`](archive/
 
 Nicki pipeline head is `start → spec → gherkin → subtasks → execute → …`. Gherkin is a transform of the spec (`sheep-gherkin` + `story-maker`), not an interview. SoT: `routing.json`, `nicki.md`. Destination notes: [`SHINOBU_NEXT_STEPS.md`](../SHINOBU_NEXT_STEPS.md) · [`OWNERSHIP.md`](../OWNERSHIP.md).
 
-Remaining Stage 1 extract work after Approach A: **#20c** (prose rewrite) and follow-ons in [`tasks.md`](tasks.md). **#20a–20b** shipped — see Host runtime below.
+Remaining Stage 1 extract work after Approach A: complete (**#20a–20c**, **#21**). Next pre-fork item: **#22** in [`tasks.md`](tasks.md).
 
 ---
 
@@ -99,3 +99,5 @@ Remaining Stage 1 extract work after Approach A: **#20c** (prose rewrite) and fo
 | | **Approach A: host-runtime symlink** | `RUNTIME_ROOT = .cursor`, `link_dir`, symlink `.claude/agents` + `.claude/skills`, generate `CLAUDE.md`. Archive: [`archive/host-runtime-symlink/`](archive/host-runtime-symlink/) — merge `302772d`. Design: [`archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md`](archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md). |
 | **20a** | **Cursor symlink spike** | PASS 2026-09-19: Cursor and Claude follow host `{agents,skills}` → `../workflow-runtime/...`. Gates Track 1. |
 | **20b** | **Extract to `workflow-runtime/`** | Canonical agents/skills/rules under `workflow-runtime/`; committed `.cursor/` symlinks; `install_common.py`; both installers; machine-read path flips; smoke.yml runs installers before `test.py`. Design: [`2026-09-19-runtime-extract-and-delivery-options.md`](2026-09-19-runtime-extract-and-delivery-options.md). |
+| **21** | **Path-resolution + rule-drift smokes** | `path_resolution` asserts runtime path strings resolve on disk; `rule_drift` asserts committed `.mdc` / installed `CLAUDE.md` match `install_common` renderers. (Scoped down from the wider discovery-contract row.) |
+| **20c** | **Prose rewrite to neutral paths** | Agents, skills, `NICKI.md`, `PLAN.md`: `.cursor/{agents,skills,rules}` → `workflow-runtime/…`. Hooks / host-adapter dirs left as `.cursor/`. |

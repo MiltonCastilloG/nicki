@@ -17,7 +17,7 @@ Use this document as a rebuild guide: what Nicki is, what it controls, how the p
 | Send `sheep-status` automatically after each sheep (except start and close) | Skip execute/sync without explicit user confirmation |
 | Pack the **spec path** into `sheep-gherkin` (plus story output path) | Re-derive sheep map from prose (scripts + `routing.json` own that) |
 
-Nicki = `.cursor/agents/nicki.md` subagent (`readonly: false` — Cursor needs write to spawn sheep; shell only for bootstrap). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
+Nicki = `workflow-runtime/agents/nicki.md` subagent (`readonly: false` — Cursor needs write to spawn sheep; shell only for bootstrap). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
 
 ### Harness scripts
 
@@ -42,11 +42,11 @@ Harness crash / bad stdout → `sheep-fallback` (not on `written: false` input e
 
 | Layer | Path | Role |
 | ----- | ---- | ---- |
-| Nicki | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.json` | Pipeline, transitions, status-update summaries, output paths |
-| Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — disk inputs, handoffs; loaded in **child** Task context only (Nicki sends) |
-| Skill | `.cursor/skills/<name>/` | Pure functionality — procedures and artifact schemas; no pipeline knowledge |
+| Nicki | `workflow-runtime/agents/nicki.md` + `workflow-runtime/skills/nicki/routing.json` | Pipeline, transitions, status-update summaries, output paths |
+| Sheep | `workflow-runtime/agents/sheep-*.md` | Workflow binding — disk inputs, handoffs; loaded in **child** Task context only (Nicki sends) |
+| Skill | `workflow-runtime/skills/<name>/` | Pure functionality — procedures and artifact schemas; no pipeline knowledge |
 
-See `.cursor/skills/README.md` for rules and workflow exceptions.
+See `workflow-runtime/skills/README.md` for rules and workflow exceptions.
 
 **Frontmatter parsing:** Cursor uses a simplified YAML parser. Use single-line quoted `description: "..."` strings — do not use block scalars (`>-`, `>`, `|`) or the description may truncate to the first line only.
 
@@ -54,7 +54,7 @@ See `.cursor/skills/README.md` for rules and workflow exceptions.
 
 **State writer** is `sheep-status`: sole writer for per-task `current-task/status.json`. **Registry writer** is `sheep-start` / `sheep-close` only for `global-status.json`. Nicki never writes either directly.
 
-**Ad-hoc work** spawns a sheep directly from the parent agent (or attaches the skill) — no task, no status write. `sheep-start`, `sheep-close`, and `sheep-status` stay Nicki-only. Rule: `.cursor/rules/nicki-default.mdc`.
+**Ad-hoc work** spawns a sheep directly from the parent agent (or attaches the skill) — no task, no status write. `sheep-start`, `sheep-close`, and `sheep-status` stay Nicki-only. Rule: `workflow-runtime/rules/nicki-default.md`.
 
 ---
 
@@ -156,7 +156,7 @@ No verbose `history[]`, no `completed_steps`, no `last_completed_step`, no dupli
 
 `start`, `spec`, `gherkin`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`
 
-Schemas: `.cursor/skills/current-task-update/status-format.md`, `.cursor/skills/current-task-update/global-status-format.md`, `.cursor/skills/hook-contract/SKILL.md`
+Schemas: `workflow-runtime/skills/current-task-update/status-format.md`, `workflow-runtime/skills/current-task-update/global-status-format.md`, `workflow-runtime/skills/hook-contract/SKILL.md`
 
 ### Nicki summary → context update
 
@@ -225,7 +225,7 @@ Chat confirms for consent: **execute**, then **sync** (acceptance). Archive / in
 
 ### 8. Shared conflict-resolution protocol
 
-sync-task and integrate-task both reference `.cursor/skills/conflict-resolution/SKILL.md`. Agents summarize conflicts but must ask the user for every resolution. No inferring, no strategy flags unless the user explicitly asks.
+sync-task and integrate-task both reference `workflow-runtime/skills/conflict-resolution/SKILL.md`. Agents summarize conflicts but must ask the user for every resolution. No inferring, no strategy flags unless the user explicitly asks.
 
 ### 9. Automatic context update after every step — except start and close
 
@@ -270,20 +270,20 @@ Partial review scope (when supplied via Nicki prompt) is conversation-scoped. Re
 
 | File | Role |
 | ---- | ---- |
-| `.cursor/agents/nicki.md` | Nicki subagent definition |
-| `.cursor/skills/nicki/routing.json` | Step → sheep, prompts, harness_failure |
-| `.cursor/skills/nicki/scripts/bootstrap-context.py` | Read harness |
+| `workflow-runtime/agents/nicki.md` | Nicki subagent definition |
+| `workflow-runtime/skills/nicki/routing.json` | Step → sheep, prompts, harness_failure |
+| `workflow-runtime/skills/nicki/scripts/bootstrap-context.py` | Read harness |
 | `docs/NICKI.md` | This context overview |
 
 ### State
 
 | File | Role |
 | ---- | ---- |
-| `.cursor/agents/sheep-status.md` | State writer sheep |
-| `.cursor/skills/current-task-update/SKILL.md` | State writer workflow |
-| `.cursor/skills/current-task-update/scripts/update-status.py` | Write harness |
-| `.cursor/skills/current-task-update/status-format.md` | Per-task status schema |
-| `.cursor/skills/current-task-update/global-status-format.md` | Workspace registry schema |
+| `workflow-runtime/agents/sheep-status.md` | State writer sheep |
+| `workflow-runtime/skills/current-task-update/SKILL.md` | State writer workflow |
+| `workflow-runtime/skills/current-task-update/scripts/update-status.py` | Write harness |
+| `workflow-runtime/skills/current-task-update/status-format.md` | Per-task status schema |
+| `workflow-runtime/skills/current-task-update/global-status-format.md` | Workspace registry schema |
 
 ### Sheep (agent + skill + format)
 
@@ -312,16 +312,16 @@ Partial review scope (when supplied via Nicki prompt) is conversation-scoped. Re
 
 | File | Role |
 | ---- | ---- |
-| `.cursor/skills/conflict-resolution/SKILL.md` | Shared merge conflict protocol for sync and integrate |
-| `.cursor/skills/validation/` | **Retired** — historical readiness format only |
-| `.cursor/rules/nicki-default.mdc` | Opt-in Nicki routing + ad-hoc sheep rules |
-| `.cursor/skills/hook-contract/SKILL.md` | Hook / permissions contract |
+| `workflow-runtime/skills/conflict-resolution/SKILL.md` | Shared merge conflict protocol for sync and integrate |
+| `workflow-runtime/skills/validation/` | **Retired** — historical readiness format only |
+| `workflow-runtime/rules/nicki-default.md` | Opt-in Nicki routing + ad-hoc sheep rules |
+| `workflow-runtime/skills/hook-contract/SKILL.md` | Hook / permissions contract |
 
 ---
 
 ## Tool permissions
 
-Enforced by `.cursor/hooks/enforce-agent-tools.sh` from `.cursor/hooks/agent-permissions.json`. See `.cursor/skills/hook-contract/SKILL.md`.
+Enforced by `.cursor/hooks/enforce-agent-tools.sh` from `.cursor/hooks/agent-permissions.json`. See `workflow-runtime/skills/hook-contract/SKILL.md`.
 
 ---
 
@@ -344,11 +344,11 @@ Cursor compacts chats — disk wins via harness: `bootstrap-context.py` stdout, 
 
 ## Further reading
 
-- Nicki agent definition: [`.cursor/agents/nicki.md`](../.cursor/agents/nicki.md)
+- Nicki agent definition: [`workflow-runtime/agents/nicki.md`](../workflow-runtime/agents/nicki.md)
 - Flexibility (shipped + optional quoting polish): [`tasks/flexibility.md`](tasks/flexibility.md) → [`archive/flexibility/report.md`](archive/flexibility/report.md)
 - Harness read/write ADR: [`archive/bootstrap-script/2026-07-17-harness-read-write-types-design.md`](archive/bootstrap-script/2026-07-17-harness-read-write-types-design.md)
 - Retire check-gate: [`archive/retire-check-gate/report.md`](archive/retire-check-gate/report.md)
-- Status schemas: [`.cursor/skills/current-task-update/status-format.md`](../.cursor/skills/current-task-update/status-format.md), [`.cursor/skills/current-task-update/global-status-format.md`](../.cursor/skills/current-task-update/global-status-format.md)
-- Archive format: [`.cursor/skills/task-archive/archive-format.md`](../.cursor/skills/task-archive/archive-format.md)
+- Status schemas: [`workflow-runtime/skills/current-task-update/status-format.md`](../workflow-runtime/skills/current-task-update/status-format.md), [`workflow-runtime/skills/current-task-update/global-status-format.md`](../workflow-runtime/skills/current-task-update/global-status-format.md)
+- Archive format: [`workflow-runtime/skills/task-archive/archive-format.md`](../workflow-runtime/skills/task-archive/archive-format.md)
 - Backlog: [`tasks/tasks.md`](tasks/tasks.md) · Done: [`tasks/tasks-done.md`](tasks/tasks-done.md) · PLAN: [`PLAN.md`](PLAN.md)
 - Shinobu (separate repo forked from Nicki after Stage 1 + #20): [`SHINOBU.md`](SHINOBU.md) · next steps: [`SHINOBU_NEXT_STEPS.md`](SHINOBU_NEXT_STEPS.md)

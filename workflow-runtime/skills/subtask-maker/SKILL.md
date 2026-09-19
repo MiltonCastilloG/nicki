@@ -49,7 +49,7 @@ Look for:
 - Code or tests that **already satisfy** a spec requirement or acceptance item
 - **Duplicated or near-duplicated logic** that could be shared instead of rebuilt
 - Partial implementations worth **extending or wiring**, not replacing
-- When something is not CLEAR, return it in `open_questions` and stop — you cannot reach a human, and your caller can. When your prompt gave you a pause path, save what you explored first (`.cursor/skills/pause-context/SKILL.md`) so the re-spawn does not repeat this exploration.
+- When something is not CLEAR, return it in `open_questions` and stop — you cannot reach a human, and your caller can. When your prompt gave you a pause path, save what you explored first (`workflow-runtime/skills/pause-context/SKILL.md`) so the re-spawn does not repeat this exploration.
 
 Enough context for realistic one-line subtasks — no file paths or create/modify steps in checklist text.
 
