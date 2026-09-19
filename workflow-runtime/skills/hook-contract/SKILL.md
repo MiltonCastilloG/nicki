@@ -50,10 +50,6 @@ jq -r --arg id "$TASK_ID" '.tasks[$id] | "\(.project) \(.worktree_path)"' global
 - Task id must be explicit; do not infer from chat.
 - Workflow position: `task.next_step` (document `artifacts.*` when present).
 
-## Example script
-
-See `.cursor/hooks/examples/resolve-task-status.sh`.
-
 ## Agent tool permissions
 
 | File | Role |

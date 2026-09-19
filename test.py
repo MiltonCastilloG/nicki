@@ -20,6 +20,7 @@ from tests.smoke import (  # noqa: E402
     git_tail,
     harness_failure,
     jump_mode,
+    path_resolution,
     readiness_mapping,
     routing_next_step,
     routing_write,
@@ -44,6 +45,7 @@ MODULES = [
     ("archive_side_effects", archive_side_effects),
     ("jump_mode", jump_mode),
     ("rule_drift", rule_drift),
+    ("path_resolution", path_resolution),
 ]
 
 
