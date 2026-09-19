@@ -184,7 +184,6 @@ nicki/
 │   ├── NICKI.md
 │   ├── WORKFLOW-DIAGRAMS.md
 │   ├── PLAN.md
-│   ├── OWNERSHIP.md
 │   ├── tasks/                 # backlog + designs
 │   └── archive/<slug>/
 ├── .cursor/                   # Cursor host adapter
@@ -198,4 +197,4 @@ nicki/
     └── skills -> ../workflow-runtime/skills
 ```
 
-Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Diagrams: [`docs/WORKFLOW-DIAGRAMS.md`](docs/WORKFLOW-DIAGRAMS.md). Multi-project workspace: [`docs/PLAN.md`](docs/PLAN.md). Backlog: [`docs/tasks/tasks.md`](docs/tasks/tasks.md). Ownership / fork map: [`docs/OWNERSHIP.md`](docs/OWNERSHIP.md).
+Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Diagrams: [`docs/WORKFLOW-DIAGRAMS.md`](docs/WORKFLOW-DIAGRAMS.md). Multi-project workspace: [`docs/PLAN.md`](docs/PLAN.md). Backlog: [`docs/tasks/tasks.md`](docs/tasks/tasks.md).

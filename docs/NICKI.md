@@ -351,4 +351,3 @@ Cursor compacts chats — disk wins via harness: `bootstrap-context.py` stdout, 
 - Status schemas: [`workflow-runtime/skills/current-task-update/status-format.md`](../workflow-runtime/skills/current-task-update/status-format.md), [`workflow-runtime/skills/current-task-update/global-status-format.md`](../workflow-runtime/skills/current-task-update/global-status-format.md)
 - Archive format: [`workflow-runtime/skills/task-archive/archive-format.md`](../workflow-runtime/skills/task-archive/archive-format.md)
 - Backlog: [`tasks/tasks.md`](tasks/tasks.md) · Done: [`tasks/tasks-done.md`](tasks/tasks-done.md) · PLAN: [`PLAN.md`](PLAN.md)
-- Shinobu (separate repo forked from Nicki after Stage 1 + #20): [`SHINOBU.md`](SHINOBU.md) · next steps: [`SHINOBU_NEXT_STEPS.md`](SHINOBU_NEXT_STEPS.md)
