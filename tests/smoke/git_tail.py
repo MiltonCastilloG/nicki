@@ -53,7 +53,7 @@ def run(root: Path) -> None:
 
     # Decision 4: sheep hold no workflow knowledge — no Gate: prose, no next_step.
     banned = ("**Gate:**", "next_step:", '"next_step"', "completed_step:")
-    for path in sorted((root / ".cursor/agents").glob("sheep-*.md")):
+    for path in sorted((root / "workflow-runtime/agents").glob("sheep-*.md")):
         if path.name == "sheep-status.md":
             continue  # documents the write CLI, may mention the fields by name
         text = path.read_text(encoding="utf-8")

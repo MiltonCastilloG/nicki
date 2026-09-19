@@ -52,7 +52,7 @@ cd nicki
 python3 install.py
 ```
 
-This writes a minimal `nicki-workspace.yaml` (nicki-only registry), ensures `worktrees/` exists, verifies committed `.cursor/agents` and `.cursor/skills` symlinks into `workflow-runtime/`, and generates `.cursor/rules/nicki-default.mdc`. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/PLAN.md`](docs/PLAN.md)). Canonical runtime ships under `workflow-runtime/`; Cursor adapters are committed symlinks plus a generated rule.
+This writes a minimal `nicki-workspace.yaml` (nicki-only registry), ensures `worktrees/` exists, and verifies committed `.cursor/agents` and `.cursor/skills` symlinks into `workflow-runtime/`. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/PLAN.md`](docs/PLAN.md)). Canonical runtime ships under `workflow-runtime/`; Cursor adapters are committed symlinks plus a committed `.cursor/rules/nicki-default.mdc` (regenerated from the canonical rule when that file changes).
 
 ### Claude Code quick start
 
@@ -70,11 +70,12 @@ Then open the cloned repository in Claude Code.
 - **Edit runtime in `workflow-runtime/`** (agents, skills, rules). That tree is canonical and committed.
 - **`.cursor/agents` and `.cursor/skills`** are committed directory symlinks into `workflow-runtime/` (Track 1). Fresh checkouts and new git worktrees get them with no extra step.
 - **`.claude/agents` and `.claude/skills`** are directory symlinks into `workflow-runtime/` (created by `install-claude.py`).
-- **`.cursor/rules/nicki-default.mdc`** and **`CLAUDE.md`** are generated from `workflow-runtime/rules/nicki-default.md` (independent adapters, not symlinks).
-- **Re-run installers only** on a fresh clone, or after changing the invocation rule (regenerates the host rule files). Agent/skill edits need no reinstall when using symlinks.
+- **`.cursor/rules/nicki-default.mdc`** is generated from `workflow-runtime/rules/nicki-default.md` and **committed** so fresh worktrees carry the invocation rule without `install.py`. Re-run `install.py` after editing the canonical rule, then commit the refreshed `.mdc`.
+- **`CLAUDE.md`** is generated the same way (with Claude vocabulary swaps) and remains gitignored.
+- **Re-run installers** on a fresh clone (Claude), or after changing the invocation rule (regenerates host rule files). Agent/skill edits need no reinstall when using symlinks.
 - **Atomic-save warning:** some editors save via write-temp-then-rename and can replace a symlink with a regular file or directory. Always edit under `workflow-runtime/`, never through the `.cursor/` or `.claude/` symlink path. Re-run the matching installer to self-repair if a link is severed.
 
-Generated Claude layout and the Cursor rule file are gitignored. If the OS rejects directory symlinks, the installer falls back to copying and warns that re-runs are required after runtime edits.
+Generated Claude layout is gitignored. If the OS rejects directory symlinks, the installer falls back to copying and warns that re-runs are required after runtime edits.
 
 Invoke Nicki by name:
 
@@ -176,7 +177,7 @@ nicki/
 ├── .cursor/                   # Cursor host adapter
 │   ├── agents -> ../workflow-runtime/agents
 │   ├── skills -> ../workflow-runtime/skills
-│   ├── rules/                 # generated nicki-default.mdc
+│   ├── rules/                 # committed nicki-default.mdc (from canonical rule)
 │   ├── hooks/
 │   └── permissions.json
 └── .claude/                   # Claude host adapter (generated, gitignored)

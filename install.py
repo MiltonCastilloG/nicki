@@ -9,12 +9,11 @@ import sys
 from pathlib import Path
 
 from install_common import (
-    CURSOR_RULE_FRONTMATTER,
     REPO_ROOT,
     RUNTIME_ROOT,
     copy_fallback_used,
     link_dir,
-    read_invocation_rule_body,
+    render_cursor_rule,
     reset_copy_fallback,
 )
 
@@ -74,9 +73,8 @@ def verify_cursor_runtime() -> tuple[int, str, str]:
 
 def write_cursor_rule() -> None:
     """Generate .cursor/rules/nicki-default.mdc from the canonical rule + Cursor frontmatter."""
-    body = read_invocation_rule_body()
     CURSOR_RULE.parent.mkdir(parents=True, exist_ok=True)
-    CURSOR_RULE.write_text(CURSOR_RULE_FRONTMATTER + body, encoding="utf-8")
+    CURSOR_RULE.write_text(render_cursor_rule(), encoding="utf-8")
 
 
 def print_success(agent_count: int, agent_mode: str, skill_mode: str) -> None:

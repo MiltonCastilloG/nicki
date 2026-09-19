@@ -23,6 +23,7 @@ from tests.smoke import (  # noqa: E402
     readiness_mapping,
     routing_next_step,
     routing_write,
+    rule_drift,
     status_boundary,
     status_update,
     status_vocabulary,
@@ -42,6 +43,7 @@ MODULES = [
     ("git_tail", git_tail),
     ("archive_side_effects", archive_side_effects),
     ("jump_mode", jump_mode),
+    ("rule_drift", rule_drift),
 ]
 
 
