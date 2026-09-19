@@ -64,7 +64,7 @@ Otherwise extract what the user wants built or fixed. Stop with a question if:
 
 Use read, grep, glob, or semantic_search **lightly** to bound scope realistically:
 
-- Read [CONTRIBUTING.md](../../../CONTRIBUTING.md) when present — missing file OK; record assumptions inline in spec
+- Read the project's `CONTRIBUTING.md` when present — missing file OK; record assumptions inline in spec
 - Skim top-level layout (`app/`, `src/components/`, `src/features/`) to know what areas exist
 - Do **not** explore file-by-file or draft implementation subtasks
 
