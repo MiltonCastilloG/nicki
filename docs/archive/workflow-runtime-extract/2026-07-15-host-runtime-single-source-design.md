@@ -1,8 +1,8 @@
 # Approach B — host-neutral workflow runtime
 
-**Status:** open — [`tasks.md`](tasks.md) **#20**  
+**Status:** open — [`tasks.md`](../../tasks/tasks.md) **#20**  
 **Checklist:** [`host-runtime-backlog-and-approach-b.md`](host-runtime-backlog-and-approach-b.md)  
-**Prerequisite (Approach A, shipped):** [`archive/host-runtime-symlink/report.md`](../archive/host-runtime-symlink/report.md) · design [`archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md`](../archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md)
+**Prerequisite (Approach A, shipped):** [`archive/host-runtime-symlink/report.md`](../host-runtime-symlink/report.md) · design [`archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md`](../host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md)
 
 ---
 

@@ -76,7 +76,7 @@ Harness shape: **read** (`bootstrap-context.py`) · **write** (`update-status.py
 | 12 | Trim `nicki.md` | Dropped numbered workflow, readiness table, sheep map, duplicated gate prose. Later: gate invocation removed; consent execute+sync only. |
 | 13 | Trim `status-read.md` | Example shows `current_step: gherkin` / `next_step: subtasks`; matches live `start → spec → gherkin → subtasks`. Closed in Stage 1 docs pass. |
 | 14 | Shorten `NICKI.md` | Shell allowlist for bootstrap; harness read/write table. |
-| | **Stage 1 docs cleanup** | Live docs match `start → spec → gherkin → subtasks` / `sheep-gherkin`; Shinobu blurbs point at fork plan. See [`SHINOBU_NEXT_STEPS.md`](../SHINOBU_NEXT_STEPS.md). |
+| | **Stage 1 docs cleanup** | Live docs match `start → spec → gherkin → subtasks` / `sheep-gherkin`. |
 
 Historical deletion map: [`archive/investigation-complexity/report.md`](archive/investigation-complexity/report.md).
 
@@ -84,9 +84,9 @@ Historical deletion map: [`archive/investigation-complexity/report.md`](archive/
 
 ## Stage 1 — Spec-first + Gherkin transform (done)
 
-Nicki pipeline head is `start → spec → gherkin → subtasks → execute → …`. Gherkin is a transform of the spec (`sheep-gherkin` + `story-maker`), not an interview. SoT: `routing.json`, `nicki.md`. Destination notes: [`SHINOBU_NEXT_STEPS.md`](../SHINOBU_NEXT_STEPS.md) · [`OWNERSHIP.md`](../OWNERSHIP.md).
+Nicki pipeline head is `start → spec → gherkin → subtasks → execute → …`. Gherkin is a transform of the spec (`sheep-gherkin` + `story-maker`), not an interview. SoT: `routing.json`, `nicki.md`.
 
-Remaining Stage 1 extract work after Approach A: complete (**#20a–20c**, **#21**). Next pre-fork item: **#22** in [`tasks.md`](tasks.md).
+Remaining Stage 1 extract work after Approach A: complete (**#20a–20c**, **#21**).
 
 ---
 
@@ -98,6 +98,7 @@ Remaining Stage 1 extract work after Approach A: complete (**#20a–20c**, **#21
 | | **Claude adapter (copy model)** | `install-claude.py` maps `.cursor/` → `.claude/` via copy; generates `CLAUDE.md`. Superseded by Approach A symlink. Archive: [`archive/claude-adapter/`](archive/claude-adapter/). |
 | | **Approach A: host-runtime symlink** | `RUNTIME_ROOT = .cursor`, `link_dir`, symlink `.claude/agents` + `.claude/skills`, generate `CLAUDE.md`. Archive: [`archive/host-runtime-symlink/`](archive/host-runtime-symlink/) — merge `302772d`. Design: [`archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md`](archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md). |
 | **20a** | **Cursor symlink spike** | PASS 2026-09-19: Cursor and Claude follow host `{agents,skills}` → `../workflow-runtime/...`. Gates Track 1. |
-| **20b** | **Extract to `workflow-runtime/`** | Canonical agents/skills/rules under `workflow-runtime/`; committed `.cursor/` symlinks; `install_common.py`; both installers; machine-read path flips; smoke.yml runs installers before `test.py`. Design: [`2026-09-19-runtime-extract-and-delivery-options.md`](2026-09-19-runtime-extract-and-delivery-options.md). |
+| **20b** | **Extract to `workflow-runtime/`** | Canonical agents/skills/rules under `workflow-runtime/`; committed `.cursor/` symlinks; `install_common.py`; both installers; machine-read path flips; smoke.yml runs installers before `test.py`. Design + checklist: [`archive/workflow-runtime-extract/`](../archive/workflow-runtime-extract/). |
 | **21** | **Path-resolution + rule-drift smokes** | `path_resolution` asserts runtime path strings resolve on disk; `rule_drift` asserts committed `.mdc` / installed `CLAUDE.md` match `install_common` renderers. (Scoped down from the wider discovery-contract row.) |
+| | **Shinobu fork** | Tag `v0.3.0-nicki-baseline` (2026-09-19) copied with full history to [github.com/MiltonCastilloG/shinobu](https://github.com/MiltonCastilloG/shinobu). Independent repositories from that commit on; no shared runtime, no cross-repo sync. Fork design docs left with the fork. |
 | **20c** | **Prose rewrite to neutral paths** | Agents, skills, `NICKI.md`, `PLAN.md`: `.cursor/{agents,skills,rules}` → `workflow-runtime/…`. Hooks / host-adapter dirs left as `.cursor/`. |

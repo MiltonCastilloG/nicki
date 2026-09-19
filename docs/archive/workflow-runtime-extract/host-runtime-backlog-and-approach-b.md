@@ -1,14 +1,14 @@
 # Approach B — neutral-dir extract checklist
 
-**Task:** [`tasks.md`](tasks.md) **#20**
+**Task:** [`tasks.md`](../../tasks/tasks.md) **#20**
 
 **Design (B):** [Approach B — neutral-dir host runtime](2026-07-15-host-runtime-single-source-design.md)
 
-**Approach A (shipped):** [`archive/host-runtime-symlink/report.md`](../archive/host-runtime-symlink/report.md) · [A design](../archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md)
+**Approach A (shipped):** [`archive/host-runtime-symlink/report.md`](../host-runtime-symlink/report.md) · [A design](../host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md)
 
-**Fresh-install context:** [Fresh install design](../archive/fresh-install/2026-07-02-fresh-install-design.md) — historical `#20` text calls the target `nicki-workflow/`; this live checklist supersedes it with `workflow-runtime/`.
+**Fresh-install context:** [Fresh install design](../fresh-install/2026-07-02-fresh-install-design.md) — historical `#20` text calls the target `nicki-workflow/`; this live checklist supersedes it with `workflow-runtime/`.
 
-**Prerequisite:** Approach A shipped — `.cursor/` canonical, `RUNTIME_ROOT = .cursor`, Claude symlinks via `install-claude.py`. See [`tasks-done.md`](../tasks-done.md).
+**Prerequisite:** Approach A shipped — `.cursor/` canonical, `RUNTIME_ROOT = .cursor`, Claude symlinks via `install-claude.py`. See [`tasks-done.md`](../../tasks/tasks-done.md).
 
 **Goal:** One **host-neutral** committed canonical dir for agents/skills/rules; host dirs (`.cursor/`, `.claude/`) become adapters via symlinks + generated rule files. Land this once before the history-preserving Shinobu repository fork.
 

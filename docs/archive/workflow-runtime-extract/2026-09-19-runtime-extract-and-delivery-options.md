@@ -1,8 +1,8 @@
 # Runtime extract and delivery — design options
 
-**Status:** analysis, not scheduled work. Decides the shape of [`tasks.md`](tasks.md) **#20** and what comes after it.
+**Status:** analysis, not scheduled work. Decides the shape of [`tasks.md`](../../tasks/tasks.md) **#20** and what comes after it.
 
-**Reads:** [`OWNERSHIP.md`](../OWNERSHIP.md) · [`SHINOBU_NEXT_STEPS.md`](../SHINOBU_NEXT_STEPS.md) · [Approach B design](2026-07-15-host-runtime-single-source-design.md) · [Approach B checklist](host-runtime-backlog-and-approach-b.md) · [Approach A report](../archive/host-runtime-symlink/report.md)
+**Reads:** [`OWNERSHIP.md`](../../OWNERSHIP.md) · [`SHINOBU_NEXT_STEPS.md`](../../SHINOBU_NEXT_STEPS.md) · [Approach B design](2026-07-15-host-runtime-single-source-design.md) · [Approach B checklist](host-runtime-backlog-and-approach-b.md) · [Approach A report](../host-runtime-symlink/report.md)
 
 **Settled elsewhere, not reopened here:** two products / two repos, history-preserving fork, no shared runtime package, flat agents, generic sheep and artifact names, spec-first + Gherkin transform.
 
@@ -16,9 +16,9 @@ The wider intuition, restated:
 
 | # | Want | Today |
 | - | ---- | ----- |
-| 1 | Canonical workflow source is host-neutral | `.cursor/` is canonical; Claude symlinks into it ([`install-claude.py:12`](../../install-claude.py#L12)) |
-| 2 | CI performs the host adaptations automatically | Adaptation is a manual local `python3 install-claude.py`; [`install.py`](../../install.py) links nothing at all |
-| 3 | Git tail gated by CI, PR-shaped | `sheep-sync` pushes the feature branch, `sheep-integrate` merges to `main` locally and pushes; [`smoke.yml`](../../.github/workflows/smoke.yml) runs on `push: main` — **after** the merge, never before |
+| 1 | Canonical workflow source is host-neutral | `.cursor/` is canonical; Claude symlinks into it ([`install-claude.py:12`](../../../install-claude.py#L12)) |
+| 2 | CI performs the host adaptations automatically | Adaptation is a manual local `python3 install-claude.py`; [`install.py`](../../../install.py) links nothing at all |
+| 3 | Git tail gated by CI, PR-shaped | `sheep-sync` pushes the feature branch, `sheep-integrate` merges to `main` locally and pushes; [`smoke.yml`](../../../.github/workflows/smoke.yml) runs on `push: main` — **after** the merge, never before |
 | 4 | Local dogfood still works | Dogfood is the only real end-to-end proof there is |
 
 Three of these are different projects wearing one hat. The analysis below splits them and sequences them.
@@ -49,7 +49,7 @@ A and B are frequently conflated because both say "install". They are not the sa
 
 Mechanical and already specified by [the B checklist](host-runtime-backlog-and-approach-b.md). Current surface: 13 flat agents in `.cursor/agents/`, 21 skill folders in `.cursor/skills/`, one rule in `.cursor/rules/`.
 
-Good news from inspection: [`bootstrap_utils.py:11`](../../.cursor/skills/nicki/scripts/bootstrap_utils.py#L11) resolves `routing.json` as `SCRIPT_DIR.parent / "routing.json"` — script-relative, so it survives the move untouched. The `link_dir` / `RUNTIME_ROOT` / `generate_claude_md()` machinery Approach A shipped is directly reusable.
+Good news from inspection: [`bootstrap_utils.py:11`](../../../.cursor/skills/nicki/scripts/bootstrap_utils.py#L11) resolves `routing.json` as `SCRIPT_DIR.parent / "routing.json"` — script-relative, so it survives the move untouched. The `link_dir` / `RUNTIME_ROOT` / `generate_claude_md()` machinery Approach A shipped is directly reusable.
 
 #### A.2 Canonical vs generated — the actual table
 
@@ -69,7 +69,7 @@ This answers "what exactly should be canonical vs generated" precisely, because 
 
 #### A.3 The rule file should stop being an `.mdc`
 
-Today `nicki-default.mdc` carries Cursor frontmatter (`description:`, `alwaysApply:`) and [`generate_claude_md()`](../../install-claude.py#L70) strips it, then applies four inline `.replace()` calls to translate host vocabulary — `Task (subagent_type: nicki)` → Agent tool, `AskQuestion` → `AskUserQuestion`, and so on ([`install-claude.py:80-90`](../../install-claude.py#L80-L90)).
+Today `nicki-default.mdc` carries Cursor frontmatter (`description:`, `alwaysApply:`) and [`generate_claude_md()`](../../../install-claude.py#L70) strips it, then applies four inline `.replace()` calls to translate host vocabulary — `Task (subagent_type: nicki)` → Agent tool, `AskQuestion` → `AskUserQuestion`, and so on ([`install-claude.py:80-90`](../../../install-claude.py#L80-L90)).
 
 That substitution table is the right idea and the wrong location. Moving an `.mdc` with Cursor frontmatter into `workflow-runtime/rules/` is host-neutral in name only. Make the canonical rule plain Markdown with **neutral placeholders**, and give each installer a small declared substitution map. Both adapters then generate symmetrically instead of Claude being a patch on top of Cursor.
 
@@ -81,12 +81,12 @@ The checklist offers "compatibility first" vs "rewrite later" as a single global
 
 | Population | Count | Reader | Verdict |
 | ---------- | ----- | ------ | ------- |
-| **Machine-read** — `tests/smoke/*.py` asserts, [`routing.json:111,123`](../../.cursor/skills/nicki/routing.json#L111), [`permissions.json`](../../.cursor/permissions.json) allowlist, [`create-worktree.py:176`](../../.cursor/skills/start-task/scripts/create-worktree.py#L176) workspace marker | ~25 strings | Python / the host's allowlist matcher | **Flip in the move commit. Non-negotiable.** |
+| **Machine-read** — `tests/smoke/*.py` asserts, [`routing.json:111,123`](../../../.cursor/skills/nicki/routing.json#L111), [`permissions.json`](../../../.cursor/permissions.json) allowlist, [`create-worktree.py:176`](../../../.cursor/skills/start-task/scripts/create-worktree.py#L176) workspace marker | ~25 strings | Python / the host's allowlist matcher | **Flip in the move commit. Non-negotiable.** |
 | **Prose in agent and skill bodies** — `Run .cursor/skills/<x>/SKILL.md` | ~40 strings across 13 agents + skills | The model, resolving against workspace root | Resolves fine through the `.cursor/` link. Flip in a follow-up sed, for the fork's sake. |
 
-Why the machine population cannot wait: [`tests/smoke/git_tail.py`](../../tests/smoke/git_tail.py) asserts `.cursor/agents/sheep-sync.md` **exists**. After the move that path is a link, and whether it exists in CI depends entirely on A.6. Leaving those asserts on `.cursor/` means the smoke suite is testing the adapter while claiming to test the runtime. Flip them.
+Why the machine population cannot wait: [`tests/smoke/git_tail.py`](../../../tests/smoke/git_tail.py) asserts `.cursor/agents/sheep-sync.md` **exists**. After the move that path is a link, and whether it exists in CI depends entirely on A.6. Leaving those asserts on `.cursor/` means the smoke suite is testing the adapter while claiming to test the runtime. Flip them.
 
-The prose population is a genuine `sed` and should land before the tag anyway: `.cursor/` inside sheep bodies is precisely the "hidden fork coupling" [`OWNERSHIP.md`](../OWNERSHIP.md) names. It is just not *correctness*-blocking.
+The prose population is a genuine `sed` and should land before the tag anyway: `.cursor/` inside sheep bodies is precisely the "hidden fork coupling" [`OWNERSHIP.md`](../../OWNERSHIP.md) names. It is just not *correctness*-blocking.
 
 #### A.5 The unknown that gates the whole slice
 
@@ -109,9 +109,9 @@ If Cursor refuses: A still lands, but `install.py` **copies** into `.cursor/` in
 | Windows | Checkout without `core.symlinks=true` yields text files containing the target path — silently wrong until `install.py` detects and copies | Copy fallback on first install, as today |
 | `.claude/` | Stays generated + gitignored either way | Same |
 
-**Recommend Track 1.** It deletes two whole failure classes for the price of one already-documented degradation. The worktree class is the sharp one: [`OWNERSHIP.md`](../OWNERSHIP.md)'s migration table already flags "worktrees inheriting `.cursor/`", and under Track 2 every `sheep-start` would have to grow a link step inside the new worktree — a load-bearing change to [`create-worktree.py`](../../.cursor/skills/start-task/scripts/create-worktree.py) that is easy to forget and fails silently (Cursor simply shows no agents). Track 1 makes it a non-event.
+**Recommend Track 1.** It deletes two whole failure classes for the price of one already-documented degradation. The worktree class is the sharp one: [`OWNERSHIP.md`](../../OWNERSHIP.md)'s migration table already flags "worktrees inheriting `.cursor/`", and under Track 2 every `sheep-start` would have to grow a link step inside the new worktree — a load-bearing change to [`create-worktree.py`](../../../.cursor/skills/start-task/scripts/create-worktree.py) that is easy to forget and fails silently (Cursor simply shows no agents). Track 1 makes it a non-event.
 
-Cost of Track 1: `_same_link()` in [`install-claude.py:31`](../../install-claude.py#L31) must also recognise "this is a regular file whose contents look like my target" — the Windows-checkout case — and repair it.
+Cost of Track 1: `_same_link()` in [`install-claude.py:31`](../../../install-claude.py#L31) must also recognise "this is a regular file whose contents look like my target" — the Windows-checkout case — and repair it.
 
 ### Layer B — distribution and the `nicki_template` ambition
 
@@ -130,7 +130,7 @@ So: the template ambition is about **managed projects**, not about Shinobu, and 
 | ------ | ----- | --------- |
 | **B0 — extend the installer** | `python3 install.py --project projects/<name>` links or copies `workflow-runtime/` into that project's `.cursor/` and `.claude/` | Reuses `link_dir`. Hours, not days. Fixes the actual observed staleness. No CI, no second repo, no token. **The YAGNI answer.** |
 | **B1 — same-repo generated commit** | CI on push to `main` materializes `.cursor/`, `.claude/`, `CLAUDE.md` and commits back | **Reject.** Creates a push→CI→push loop that collides with the git tail: `sheep-integrate` pushes `main`, CI lands a commit on top, and the next `sheep-sync` merges a commit no human wrote. Also reverses the `.gitignore` decision for `.claude/` and `CLAUDE.md`, and needs a bot token with write access to `main`. The cure is worse. |
-| **B2 — release artifact on tag** | CI on `v*` builds `nicki-runtime-<version>.tar.gz` containing `workflow-runtime/` plus **materialized** (copied, not linked) `.cursor/`, `.claude/`, `CLAUDE.md`; attaches to a GitHub Release | The right *shape* of the ambition. No commit loop. Windows-safe by construction. Version pinning falls out and [`nicki_version.yaml`](../../nicki_version.yaml) finally means something. ~40 lines of workflow YAML. Consumers get copies, so runtime edits need re-install — already the documented fallback behaviour. |
+| **B2 — release artifact on tag** | CI on `v*` builds `nicki-runtime-<version>.tar.gz` containing `workflow-runtime/` plus **materialized** (copied, not linked) `.cursor/`, `.claude/`, `CLAUDE.md`; attaches to a GitHub Release | The right *shape* of the ambition. No commit loop. Windows-safe by construction. Version pinning falls out and [`nicki_version.yaml`](../../../nicki_version.yaml) finally means something. ~40 lines of workflow YAML. Consumers get copies, so runtime edits need re-install — already the documented fallback behaviour. |
 | **B3 — separate `nicki_template` repo** | Push here → Action opens a PR of regenerated adapters in a template repo; consumers instantiate it | Literally what was described, and premature. Two repos to keep in sync before there is a consumer who is not the author; a cross-repo PAT; and it muddies the fork story — a *template* repo and a *fork* repo are different things and will be confused. |
 | **B4 — submodule / subtree** | Consumers vendor `workflow-runtime/` as a submodule | **Reject on principle.** Reintroduces a live shared runtime across repos, contradicting the settled "no shared runtime package." |
 
@@ -158,22 +158,22 @@ The honest substitute is a **discovery-contract test** asserting the layout rule
 
 | Bucket | Contents | Home |
 | ------ | -------- | ---- |
-| **Proven in CI today** | `python3 test.py` — 13 smoke modules over routing, status vocabulary, harness failure, errors, git-tail structure, jump mode | [`smoke.yml`](../../.github/workflows/smoke.yml) |
-| **Cheap to add to CI** | Everything in the list above: discovery contract, path resolution, adapter drift, installer idempotency, `py_compile` over runtime scripts, `create-worktree.py --dry-run` against the existing [fixtures](../../.cursor/skills/nicki/scripts/fixtures/) | One new job |
+| **Proven in CI today** | `python3 test.py` — 13 smoke modules over routing, status vocabulary, harness failure, errors, git-tail structure, jump mode | [`smoke.yml`](../../../.github/workflows/smoke.yml) |
+| **Cheap to add to CI** | Everything in the list above: discovery contract, path resolution, adapter drift, installer idempotency, `py_compile` over runtime scripts, `create-worktree.py --dry-run` against the existing [fixtures](../../../.cursor/skills/nicki/scripts/fixtures/) | One new job |
 | **Could run in CI, nobody has** | A real `git init` + `git worktree add` exercise of start → status → close against a throwaway fixture repo. Git is present in Actions; no remote needed. This is the largest unclaimed win. | New job |
-| **Cannot be automated** | Agent `Task` spawn · Cursor hooks and permission prompts · consent gates before `execute` and `sync` · `AskUserQuestion` stop-and-ask round trips · merge-conflict choices under [`conflict-resolution`](../../.cursor/skills/conflict-resolution/SKILL.md) · whether a spec is any *good* | **Dogfood. Permanently.** |
+| **Cannot be automated** | Agent `Task` spawn · Cursor hooks and permission prompts · consent gates before `execute` and `sync` · `AskUserQuestion` stop-and-ask round trips · merge-conflict choices under [`conflict-resolution`](../../../.cursor/skills/conflict-resolution/SKILL.md) · whether a spec is any *good* | **Dogfood. Permanently.** |
 
 The conclusion to hold onto: **CI is a structural gate, never a behavioural one.** Running Nicki on Nicki is the end-to-end suite and will remain so. Design D with that in mind — a green check means "the shape is intact", not "it works".
 
 ### Layer D — git tail
 
-Current tail, from [`routing.json`](../../.cursor/skills/nicki/routing.json) and [`NICKI.md:214`](../NICKI.md#L214):
+Current tail, from [`routing.json`](../../../.cursor/skills/nicki/routing.json) and [`NICKI.md:214`](../../NICKI.md#L214):
 
 ```
 sync → archive → sync → integrate → close
 ```
 
-`sheep-sync` commits, merges `main` into the feature branch, pushes the feature branch ([`sync-task/SKILL.md`](../../.cursor/skills/sync-task/SKILL.md)). `sheep-integrate` merges the feature branch into `main` **in a separate target worktree** and pushes `main` ([`integrate-task/SKILL.md`](../../.cursor/skills/integrate-task/SKILL.md)).
+`sheep-sync` commits, merges `main` into the feature branch, pushes the feature branch ([`sync-task/SKILL.md`](../../../.cursor/skills/sync-task/SKILL.md)). `sheep-integrate` merges the feature branch into `main` **in a separate target worktree** and pushes `main` ([`integrate-task/SKILL.md`](../../../.cursor/skills/integrate-task/SKILL.md)).
 
 Two structural facts that shape every option:
 
@@ -186,7 +186,7 @@ Two structural facts that shape every option:
 | **Conflict UX** | Local, human-approved | **Unchanged** — still local, during `sync`. GitHub's web conflict UI never appears. | Unchanged | Unchanged |
 | **Worktree model** | Unchanged | *Simpler* — `gh pr merge` needs no target worktree, so the "target branch worktree" input disappears. But `close` must then `git -C <main> pull`, or local `main` silently drifts behind. | As D1 | Unchanged |
 | Speed | fastest | + one CI wait per task (~30s for this suite) | + same | + local suite runtime |
-| **What breaks in the sheep** | — | [`integrate-task/SKILL.md`](../../.cursor/skills/integrate-task/SKILL.md) procedure steps 1–4 rewritten; [`sheep-integrate.md`](../../.cursor/agents/sheep-integrate.md) prose; `gh` entries added to [`permissions.json`](../../.cursor/permissions.json) and `.claude/settings.local.json`. `sync-task` gains one line. `routing.json` unchanged. `git_tail.py` unaffected — it asserts files and routing, not verbs. | As D1, plus branch protection blocks *you*: the last five commits went straight to `main`. | `integrate-task` gains a precondition |
+| **What breaks in the sheep** | — | [`integrate-task/SKILL.md`](../../../.cursor/skills/integrate-task/SKILL.md) procedure steps 1–4 rewritten; [`sheep-integrate.md`](../../../.cursor/agents/sheep-integrate.md) prose; `gh` entries added to [`permissions.json`](../../../.cursor/permissions.json) and `.claude/settings.local.json`. `sync-task` gains one line. `routing.json` unchanged. `git_tail.py` unaffected — it asserts files and routing, not verbs. | As D1, plus branch protection blocks *you*: the last five commits went straight to `main`. | `integrate-task` gains a precondition |
 | Migration cost | 0 | **Small — one skill, one agent, one allowlist** | Medium, and it changes daily habits | Tiny |
 | New failure mode | `main` can receive an unverified merge; `smoke.yml` finds out **after** | Hard dependency on `gh` + GitHub; must degrade gracefully where there is no remote | Same + protection friction | None; but proves nothing about the merge result |
 
@@ -208,7 +208,7 @@ D2 is the right end state and premature: branch protection hardens a repo that h
 | All of Layer B | Shinobu arrives by clone. Managed-project distribution is orthogonal. |
 | Claude permissions adapter, hook parity | Explicitly out of scope for B; Claude has no hook model to reach parity with |
 | Extra CI jobs from Layer C | Additive; each repo can adopt independently |
-| PLAN CLI, AWS, eval harness, caller-owned output shape | Already deferred in [`tasks.md`](tasks.md) |
+| PLAN CLI, AWS, eval harness, caller-owned output shape | Already deferred in [`tasks.md`](../../tasks/tasks.md) |
 
 ---
 
@@ -242,15 +242,15 @@ Explicitly: **the `nicki_template` / CI-adaptation ambition is a separate projec
 **Installers**
 
 4. New `install_common.py` (a module, not a package): `link_dir`, `_same_link`, `_remove_dest`, plus the host substitution table. Both installers import it. `_same_link` also recognises a Windows text-file checkout and repairs it.
-5. [`install-claude.py`](../../install-claude.py): `RUNTIME_ROOT = REPO_ROOT / "workflow-runtime"`; `INVOCATION_RULE = .../rules/nicki-default.md`; update the six `.cursor/` strings in `print_success()`.
-6. [`install.py`](../../install.py): add `verify_cursor_runtime()` (repair the committed links; copy-fallback where the OS refuses) and `write_cursor_rule()` generating `.cursor/rules/nicki-default.mdc` with frontmatter.
+5. [`install-claude.py`](../../../install-claude.py): `RUNTIME_ROOT = REPO_ROOT / "workflow-runtime"`; `INVOCATION_RULE = .../rules/nicki-default.md`; update the six `.cursor/` strings in `print_success()`.
+6. [`install.py`](../../../install.py): add `verify_cursor_runtime()` (repair the committed links; copy-fallback where the OS refuses) and `write_cursor_rule()` generating `.cursor/rules/nicki-default.mdc` with frontmatter.
 
 **Machine-read path flips — same commit, no exceptions**
 
 7. `tests/smoke/`: `git_tail.py` `REQUIRED`, `harness_failure.py`, `errors_append.py`, `archive_side_effects.py`, `status_update.py`, `status_vocabulary.py`, `routing_write.py`, `bootstrap_contract.py`. Leave `agent_tools.py` on `.cursor/hooks/…` — hooks stay Cursor-canonical.
-8. [`routing.json:111,123`](../../.cursor/skills/nicki/routing.json#L111) `harness_failure.scripts[*].route`.
-9. [`create-worktree.py:176`](../../.cursor/skills/start-task/scripts/create-worktree.py#L176) — add `workflow-runtime/` to the workspace-root marker tuple; keep `.cursor/skills/start-task` for one release.
-10. [`permissions.json`](../../.cursor/permissions.json) — the six `python3 .cursor/skills/…` and `bash .cursor/skills/…` allowlist prefixes.
+8. [`routing.json:111,123`](../../../.cursor/skills/nicki/routing.json#L111) `harness_failure.scripts[*].route`.
+9. [`create-worktree.py:176`](../../../.cursor/skills/start-task/scripts/create-worktree.py#L176) — add `workflow-runtime/` to the workspace-root marker tuple; keep `.cursor/skills/start-task` for one release.
+10. [`permissions.json`](../../../.cursor/permissions.json) — the six `python3 .cursor/skills/…` and `bash .cursor/skills/…` allowlist prefixes.
 
 **Git tracking**
 
@@ -258,12 +258,12 @@ Explicitly: **the `nicki_template` / CI-adaptation ambition is a separate projec
 
 **CI**
 
-12. [`smoke.yml`](../../.github/workflows/smoke.yml): insert `python3 install.py && python3 install-claude.py` before `python3 test.py`. This is the only automated proof that the adapter step runs at all, and it costs one line.
+12. [`smoke.yml`](../../../.github/workflows/smoke.yml): insert `python3 install.py && python3 install-claude.py` before `python3 test.py`. This is the only automated proof that the adapter step runs at all, and it costs one line.
 
 **Docs**
 
-13. [`README.md`](../../README.md) — 18 `.cursor/` references, including the Layout tree and the atomic-save warning, which must now name both host trees. Also fix the stale `docs/future-tasks/PLAN.md` and `docs/tasks.md` links while in there.
-14. [`tasks.md`](tasks.md) #20 → done; [`OWNERSHIP.md`](../OWNERSHIP.md) target layout confirmed live.
+13. [`README.md`](../../../README.md) — 18 `.cursor/` references, including the Layout tree and the atomic-save warning, which must now name both host trees. Also fix the stale `docs/future-tasks/PLAN.md` and `docs/tasks.md` links while in there.
+14. [`tasks.md`](../../tasks/tasks.md) #20 → done; [`OWNERSHIP.md`](../../OWNERSHIP.md) target layout confirmed live.
 
 **Done when:** clean clone → both installers → both hosts see agents and skills → `python3 test.py` green → editing `workflow-runtime/skills/…` is visible in both hosts with no reinstall → a fresh `git worktree add` yields working host dirs with no extra step.
 
@@ -303,7 +303,7 @@ Explicitly: **the `nicki_template` / CI-adaptation ambition is a separate projec
 
 ## 8. Open questions
 
-Real forks only. Nothing settled in [`OWNERSHIP.md`](../OWNERSHIP.md) or [`SHINOBU_NEXT_STEPS.md`](../SHINOBU_NEXT_STEPS.md) is reopened here.
+Real forks only. Nothing settled in [`OWNERSHIP.md`](../../OWNERSHIP.md) or [`SHINOBU_NEXT_STEPS.md`](../../SHINOBU_NEXT_STEPS.md) is reopened here.
 
 1. **Track 1 or Track 2?** Committing the Cursor symlinks removes the worktree and CI failure classes at the cost of a degraded Windows checkout. Is Windows a real target, or a documented-degraded path? *(Recommendation: Track 1.)*
 2. **D1 before or after the fork tag?** Before means both products inherit a green gate for free; after means the fork happens sooner and each repo adopts independently. Depends on whether the tail edit fits in one sitting. *(Recommendation: before — it is one skill, one agent, one allowlist.)*
@@ -314,7 +314,7 @@ Real forks only. Nothing settled in [`OWNERSHIP.md`](../OWNERSHIP.md) or [`SHINO
 
 ## 9. Non-goals
 
-Out of scope for everything above. Several are already deferred in [`tasks.md`](tasks.md); repeated here so this note is self-contained.
+Out of scope for everything above. Several are already deferred in [`tasks.md`](../../tasks/tasks.md); repeated here so this note is self-contained.
 
 - Evaluation harness or repository
 - Shared runtime package, submodule, or subtree across repos
