@@ -76,6 +76,7 @@ Start, status, and close retain the generic names `sheep-start`, `sheep-status`,
 - After green returns success, the **same loop** marks that line `- [x]`. Green never edits the story. Exact flip mechanism is for when the loop is built.
 - **Exit:** no `- [ ]` left → parallel test and implementation refactors.
 - Amend appends a new `- [ ]`. The loop will pick it up; earlier `- [x]` stay done.
+- **Runs where:** a plain in-repo script invoked synchronously in the live session — not a background daemon, not a graph framework (e.g. LangGraph). Same for the loop and the parallel refactor pair.
 
 `status.json` still holds `current_step` / `next_step` / artifact pointers / `open_questions`. It does not store which scenario is next — the story file does.
 

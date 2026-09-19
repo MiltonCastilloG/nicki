@@ -33,6 +33,7 @@ Run Stage 1 and the neutral-runtime extract before the fork so both products inh
 | Final refactors | `sheep-test-refactor` and `sheep-implementation-refactor` receive the post-loop diff and run **in parallel** with disjoint write domains. Exact scope is open until build time. |
 | Amend | Append as a **new** `- [ ]`. Final refactors or the human catch duplication. |
 | Cursor | The story checklist. The **loop** packs the first `- [ ]` into red; after green succeeds, the **same loop** marks `- [x]` programmatically. Not green. Exact flip is for loop-build time. Exit: none left. |
+| Loop implementation | Plain in-repo script, invoked synchronously in the live session — not a background daemon, not a graph framework. Same for the red/green loop and the parallel refactor pair. |
 | Step definitions | Code in the worktree. Red finds them like execute finds source. No extra pointer. |
 | Test runner | `black-sheep-testing-scaffold` in Stage 3. Until then, projects that already have a runner. |
 | Black sheep membership | Audit output. Not named in advance. |
