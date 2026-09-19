@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 SLUG = "routing-next"
-SCRIPTS_REL = ".cursor/skills/current-task-update/scripts"
+SCRIPTS_REL = "workflow-runtime/skills/current-task-update/scripts"
 
 
 def _load_resolver(root: Path):

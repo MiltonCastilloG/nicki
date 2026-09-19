@@ -55,12 +55,12 @@ def _fixture(base: Path) -> tuple[Path, Path]:
 
 
 def run(root: Path) -> None:
-    validate = script(root, ".cursor/skills/nicki/scripts/validate-harness-stdout.py")
+    validate = script(root, "workflow-runtime/skills/nicki/scripts/validate-harness-stdout.py")
     required = ("active_task", "status_path", "current_step", "next_step", "sheep")
 
     with tempfile.TemporaryDirectory() as td:
         workspace, worktree = _fixture(Path(td))
-        boot = script(root, ".cursor/skills/nicki/scripts/bootstrap-context.py")
+        boot = script(root, "workflow-runtime/skills/nicki/scripts/bootstrap-context.py")
         proc = run_py(
             boot,
             "--worktree",

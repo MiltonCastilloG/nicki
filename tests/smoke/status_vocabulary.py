@@ -28,7 +28,7 @@ def _status(worktree: Path) -> dict:
 
 
 def run(root: Path) -> None:
-    update = script(root, ".cursor/skills/current-task-update/scripts/update-status.py")
+    update = script(root, "workflow-runtime/skills/current-task-update/scripts/update-status.py")
 
     # completed_status is deleted: a sheep that could not finish says so with
     # open_questions, and the outcome word is nobody's input.
@@ -36,7 +36,7 @@ def run(root: Path) -> None:
         raise AssertionError("fail: completed_status is back in update-status.py")
 
     routing = json.loads(
-        (root / ".cursor/skills/nicki/routing.json").read_text(encoding="utf-8")
+        (root / "workflow-runtime/skills/nicki/routing.json").read_text(encoding="utf-8")
     )
     contract = routing.get("sheep_return_contract") or {}
     if "completed_status" in json.dumps(contract):

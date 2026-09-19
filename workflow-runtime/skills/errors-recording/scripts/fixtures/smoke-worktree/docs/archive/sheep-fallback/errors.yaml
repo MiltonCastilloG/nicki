@@ -1,0 +1,38 @@
+meta:
+  schema: errors.v1
+  worktree: worktree
+failures:
+- id: '2026-07-02T13:37:09Z'
+  recorded_at: '2026-07-02T13:37:09Z'
+  script_route: workflow-runtime/skills/nicki/scripts/bootstrap-context.py
+  input:
+    argv:
+    - --worktree
+    - worktrees/nicki-sheep-fallback
+    - --step
+    - execute
+  expected_output:
+    required_fields:
+    - allowed
+    - sheep
+    - reason
+  actual:
+    exit_code: 1
+    stdout: '{"allowed":false}'
+    stderr: null
+    validation_errors:
+    - 'missing field: reason'
+- id: 2026-07-02T13:37:09Z-2
+  recorded_at: '2026-07-02T13:37:09Z'
+  script_route: workflow-runtime/skills/current-task-update/scripts/update-status.py
+  input:
+    stdin: 'completed_step: execute'
+  expected_output:
+    required_fields:
+    - written
+  actual:
+    exit_code: 1
+    stdout: '{"written": false, "errors": ["missing required field: next_step"]}'
+    stderr: null
+    validation_errors:
+    - 'missing required field: next_step'

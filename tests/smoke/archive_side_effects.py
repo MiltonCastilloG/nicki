@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-FORMAT = ".cursor/skills/task-archive/archive-format.md"
-SKILL = ".cursor/skills/task-archive/SKILL.md"
-NICKI = ".cursor/agents/nicki.md"
+FORMAT = "workflow-runtime/skills/task-archive/archive-format.md"
+SKILL = "workflow-runtime/skills/task-archive/SKILL.md"
+NICKI = "workflow-runtime/agents/nicki.md"
 
 # Contract needles — archive drafts from these docs, so prose is the authority.
 # Sheep only points at the skill; side_effects language lives in skill + format.

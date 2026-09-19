@@ -37,6 +37,8 @@ Repository identity is the namespace. Do not add product suffixes merely to avoi
 
 ## Target runtime layout
 
+**Live** as of task **20b** (Track 1 — committed Cursor symlinks; Cursor symlink spike **20a** PASS).
+
 ```text
 workflow-runtime/
 ├── agents/                 # flat agent files
