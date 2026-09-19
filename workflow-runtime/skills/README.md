@@ -5,8 +5,8 @@ Skills are **pure functionality** — portable operation manuals with no knowled
 | Layer | Owns | Who uses it |
 |-------|------|-------------|
 | **Skill** (`SKILL.md` + `*-format.md`) | How to perform one job: algorithms, schemas, safety, default output shape | Attach to do the job in your own context |
-| **Sheep** (`.cursor/agents/sheep-*.md`) | Workflow binding: run one skill in isolated context, return JSON | Nicki on the pipeline; direct Task spawn for ad-hoc |
-| **Nicki** (`.cursor/agents/nicki.md`) | Full pipeline, transitions, user confirmations | User says `nicki …` |
+| **Sheep** (`workflow-runtime/agents/sheep-*.md`) | Workflow binding: run one skill in isolated context, return JSON | Nicki on the pipeline; direct Task spawn for ad-hoc |
+| **Nicki** (`workflow-runtime/agents/nicki.md`) | Full pipeline, transitions, user confirmations | User says `nicki …` |
 
 Pipeline leaf skills: `story-maker`, `spec-maker`, `subtask-maker`, `execute-plan`, `review-execution`, …
 

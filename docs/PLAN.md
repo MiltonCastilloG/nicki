@@ -13,7 +13,7 @@ Use [`NICKI.md`](../NICKI.md) for workflow semantics (orchestrator rules, artifa
 | Today | Target |
 | ----- | ------ |
 | Nicki lives inside one app repo (e.g. castlemill-landing) | Nicki is its own repo |
-| Workflow files committed in host `.cursor/` | Nicki owns source; installs runtime into managed projects |
+| Workflow files committed in host `.cursor/` | Canonical source is `workflow-runtime/`; host `.cursor/` is an adapter Nicki installs into managed projects |
 | Worktrees under repo root `worktrees/<project>-<slug>/` | Workspace-root `worktrees/<project>-<slug>/` via `create-worktree.py` |
 | Single-repo scope | Nicki workspace holds many cloned projects in parallel |
 
@@ -100,7 +100,7 @@ nicki/
 │   ├── PLAN.md                      # this file
 │   └── NICKI.md                     # workflow semantics + design decisions
 ├── nicki-workspace.example.yaml     # workspace registry stub
-└── .cursor/
+└── workflow-runtime/
     ├── agents/                      # subagent definitions (incl. nicki.md)
     ├── rules/                       # nicki-default routing
     └── skills/                      # skills + schemas + start-worktrees.sh
@@ -116,16 +116,16 @@ nicki/                               # new git repo root
 │   └── NICKI.md
 ├── nicki-workspace.example.yaml
 ├── bin/nicki                        # CLI (later)
-└── package/.cursor/                 # ← copy from repo .cursor/
+└── package/workflow-runtime/        # ← copy from repo workflow-runtime/
 ```
 
 To install runtime into a managed project:
 
 ```text
-cp -r package/.cursor/*  <workspace>/projects/<project>/.cursor/
+cp -r package/workflow-runtime/*  <workspace>/projects/<project>/.cursor/
 ```
 
-Or symlink if your OS/setup supports it. Worktrees inherit `.cursor/` from the branch they were created from, so commit runtime to the project's default branch or run a post-create hook.
+Or symlink if your OS/setup supports it. Worktrees inherit `.cursor/` from the branch they were created from, so commit the host adapter to the project's default branch or run a post-create hook.
 
 ---
 
@@ -133,7 +133,7 @@ Or symlink if your OS/setup supports it. Worktrees inherit `.cursor/` from the b
 
 ### Nicki repo owns
 
-- Agent, command, skill, and schema source files (see `runtime/.cursor/`)
+- Agent, command, skill, and schema source files (see `workflow-runtime/`)
 - Workspace registry format (`nicki-workspace.yaml`)
 - CLI: workspace init, project clone/register, runtime install/update, task start, doctor
 - Portable docs: `docs/NICKI.md`, `docs/future-tasks/PLAN.md`
@@ -174,7 +174,7 @@ It should track:
 | `nicki workspace init <path>` | Create workspace skeleton + default registry |
 | `nicki project clone <url> [name]` | Clone into `projects/<name>` |
 | `nicki project register <path> [name]` | Register an existing local repo |
-| `nicki runtime install <project>` | Copy/link `package/.cursor/` into project |
+| `nicki runtime install <project>` | Copy/link `package/workflow-runtime/` into project |
 | `nicki runtime update <project>` | Refresh managed runtime files |
 | `nicki task start <project> <description>` | Pull base branch, create worktree under `worktrees/<slug>` |
 | `nicki doctor` | Check registry, git, runtime files, gitignore for worktrees |
@@ -226,7 +226,7 @@ Nicki `doctor` can verify this.
 
 ### 4. Cursor workspace behavior
 
-When Cursor opens `projects/foo/worktrees/bar`, the workspace root is the worktree. Agents reference `.cursor/skills/...` relative to that root. Ensure runtime is present on the branch used to create worktrees.
+When Cursor opens `projects/foo/worktrees/bar`, the workspace root is the worktree. Agents reference `.cursor/skills/...` relative to that root (host adapter installed into the project). Ensure runtime is present on the branch used to create worktrees.
 
 ---
 
@@ -272,15 +272,15 @@ Full CLI sketch and adaptations below remain reference.
 
 | File | Role |
 | ---- | ---- |
-| `runtime/.cursor/agents/nicki.md` | Nicki subagent definition |
+| `workflow-runtime/agents/nicki.md` | Nicki subagent definition |
 | `docs/NICKI.md` | Workflow semantics |
 
 ### State
 
 | File | Role |
 | ---- | ---- |
-| `runtime/.cursor/agents/sheep-status.md` | State writer sheep |
-| `runtime/.cursor/skills/current-task-update/` | State writer skill + schemas |
+| `workflow-runtime/agents/sheep-status.md` | State writer sheep |
+| `workflow-runtime/skills/current-task-update/` | State writer skill + schemas |
 
 ### Sheep pipeline
 
@@ -299,6 +299,6 @@ Full CLI sketch and adaptations below remain reference.
 
 | File | Role |
 | ---- | ---- |
-| `runtime/.cursor/skills/conflict-resolution/` | Sync/integrate conflict protocol |
-| `runtime/.cursor/skills/validation/` | Readiness and out-of-scope next-steps |
-| `runtime/.cursor/skills/start-task/scripts/start-worktrees.sh` | Worktree creation |
+| `workflow-runtime/skills/conflict-resolution/` | Sync/integrate conflict protocol |
+| `workflow-runtime/skills/validation/` | Readiness and out-of-scope next-steps |
+| `workflow-runtime/skills/start-task/scripts/start-worktrees.sh` | Worktree creation |

@@ -12,7 +12,7 @@ You are a **sheep**. Nicki sent you. You do not choose the path. **Nicki-only** 
 
 Only job: follow path Nicki gave — run skill, return JSON contract. Use Nicki’s prompt; you cannot reach a human, so when you cannot proceed, return the question in `open_questions` and stop.
 
-Read and follow `.cursor/skills/start-task/SKILL.md` — classification, branch/slug naming, and one `create-worktree.py` run per work item live there; defer without duplicating those rules.
+Read and follow `workflow-runtime/skills/start-task/SKILL.md` — classification, branch/slug naming, and one `create-worktree.py` run per work item live there; defer without duplicating those rules.
 
 ## Agent-only (after skill)
 
@@ -28,7 +28,7 @@ Read and follow `.cursor/skills/start-task/SKILL.md` — classification, branch/
 
 Stdout → handoff: `worktree_path` → `worktree`. Nothing else is read — `create-worktree.py` has already written the opening `current-task/status.json`, so no status write follows you. Mention the branch and slug in `summary` for chat. Do not name pipeline position.
 
-2. **On failure** — surface script stderr JSON (`status`, `errors`, `workflow_doc`); never overwrite an existing worktree. Point operator to `.cursor/skills/start-task/scripts/WORKFLOW.md`.
+2. **On failure** — surface script stderr JSON (`status`, `errors`, `workflow_doc`); never overwrite an existing worktree. Point operator to `workflow-runtime/skills/start-task/scripts/WORKFLOW.md`.
 
 3. **Remind user:** `cd` to worktree, `npm install` if needed, open Cursor at worktree path.
 

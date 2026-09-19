@@ -58,7 +58,7 @@ Otherwise extract what the user wants built or fixed. Stop with a question if:
 - Multiple valid interpretations exist and the user has not chosen one
 - A design fork affects requirements (CTA link, copy, visual approach)
 
-**Stop, don't guess:** you cannot reach a human. Write no spec file while questions remain — return them in `open_questions`, naming the forks and their candidate answers, and stop. Your caller gets the answers and re-spawns you. When your prompt gave you a pause path, save what you explored first (`.cursor/skills/pause-context/SKILL.md`) so the re-spawn does not repeat the work. Write only once `open_questions` is `[]`.
+**Stop, don't guess:** you cannot reach a human. Write no spec file while questions remain — return them in `open_questions`, naming the forks and their candidate answers, and stop. Your caller gets the answers and re-spawns you. When your prompt gave you a pause path, save what you explored first (`workflow-runtime/skills/pause-context/SKILL.md`) so the re-spawn does not repeat the work. Write only once `open_questions` is `[]`.
 
 ### Step 3: Light context read
 

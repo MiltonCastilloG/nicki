@@ -43,7 +43,7 @@ Task Progress:
 - **Create, edit, delete** files only under the scope root.
 - Run shell commands with `working_directory` set to the scope root unless a subtask implies a subdirectory (still must stay under scope root).
 - Do **not** read sibling worktrees or the parent repo for the purpose of copying changes into other trees.
-- Do **not** modify `.cursor/`, parent-repo config, or paths outside the scope root — even if convenient.
+- Do **not** modify `.cursor/`, `workflow-runtime/`, parent-repo config, or paths outside the scope root — even if convenient.
 - If work would require changes outside the scope root, **stop** — return the question in `open_questions`; do not proceed.
 
 ### Step 2: Parse the plan

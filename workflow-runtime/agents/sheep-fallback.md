@@ -16,8 +16,8 @@ Only job: follow the path you were given — append one failure record, return J
 
 Read and follow:
 
-- `.cursor/skills/errors-recording/SKILL.md`
-- `.cursor/skills/errors-recording/errors-format.md`
+- `workflow-runtime/skills/errors-recording/SKILL.md`
+- `workflow-runtime/skills/errors-recording/errors-format.md`
 
 ## Output
 
