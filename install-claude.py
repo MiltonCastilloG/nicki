@@ -6,13 +6,11 @@ from __future__ import annotations
 import sys
 
 from install_common import (
-    CLAUDE_SUBSTITUTIONS,
     REPO_ROOT,
     RUNTIME_ROOT,
-    apply_substitutions,
     copy_fallback_used,
     link_dir,
-    read_invocation_rule_body,
+    render_claude_md,
     reset_copy_fallback,
 )
 
@@ -32,8 +30,7 @@ def install_skills() -> None:
 
 
 def generate_claude_md() -> None:
-    body = apply_substitutions(read_invocation_rule_body(), CLAUDE_SUBSTITUTIONS)
-    CLAUDE_MD.write_text(body, encoding="utf-8")
+    CLAUDE_MD.write_text(render_claude_md(), encoding="utf-8")
 
 
 def print_success(agent_count: int) -> None:

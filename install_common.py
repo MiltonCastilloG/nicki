@@ -66,6 +66,16 @@ def read_invocation_rule_body() -> str:
     return raw
 
 
+def render_cursor_rule() -> str:
+    """Cursor `.mdc` adapter: frontmatter + canonical rule body."""
+    return CURSOR_RULE_FRONTMATTER + read_invocation_rule_body()
+
+
+def render_claude_md() -> str:
+    """Claude `CLAUDE.md` adapter: canonical body with host substitutions."""
+    return apply_substitutions(read_invocation_rule_body(), CLAUDE_SUBSTITUTIONS)
+
+
 def _expected_rel(dest: Path, src: Path) -> str:
     return os.path.relpath(src, start=dest.parent)
 
@@ -83,17 +93,21 @@ def _is_windows_symlink_placeholder(dest: Path, src: Path) -> bool:
 
 
 def _same_link(dest: Path, src: Path) -> bool:
-    """True when dest is already a correct directory symlink to src.
+    """True when dest is already a correct relative directory symlink to src.
 
-    A Windows text-file checkout of a symlink is *not* the same — callers must
-    repair it (remove + recreate link or copy).
+    Compares the stored link text (not resolve()), so a stale double-hop like
+    `.claude/agents -> ../.cursor/agents` is repaired even when both paths
+    resolve to the same directory. A Windows text-file checkout of a symlink
+    is *not* the same — callers must repair it (remove + recreate link or copy).
     """
     if _is_windows_symlink_placeholder(dest, src):
         return False
     if not dest.is_symlink():
         return False
     try:
-        return dest.resolve() == src.resolve()
+        actual = os.readlink(dest).replace("\\", "/")
+        expected = _expected_rel(dest, src).replace("\\", "/")
+        return actual == expected
     except OSError:
         return False
 
