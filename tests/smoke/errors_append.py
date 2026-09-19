@@ -36,7 +36,7 @@ def _append(append: Path, root: Path, worktree: Path, *, route: str, stdout: str
 
 
 def run(root: Path) -> None:
-    append = script(root, ".cursor/skills/errors-recording/scripts/append-error.py")
+    append = script(root, "workflow-runtime/skills/errors-recording/scripts/append-error.py")
 
     with tempfile.TemporaryDirectory() as td:
         worktree = Path(td) / "wt"
@@ -47,7 +47,7 @@ def run(root: Path) -> None:
             append,
             root,
             worktree,
-            route=".cursor/skills/nicki/scripts/bootstrap-context.py",
+            route="workflow-runtime/skills/nicki/scripts/bootstrap-context.py",
             stdout='{"active_task":"t-demo"}',
             errors='["missing field: next_step"]',
         )
@@ -71,7 +71,7 @@ def run(root: Path) -> None:
             append,
             root,
             worktree,
-            route=".cursor/skills/current-task-update/scripts/update-status.py",
+            route="workflow-runtime/skills/current-task-update/scripts/update-status.py",
             stdout="not json",
             errors='["stdout is not valid JSON"]',
         )

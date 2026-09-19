@@ -28,9 +28,9 @@ def _status(worktree: Path) -> dict:
 
 
 def run(root: Path) -> None:
-    update = script(root, ".cursor/skills/current-task-update/scripts/update-status.py")
+    update = script(root, "workflow-runtime/skills/current-task-update/scripts/update-status.py")
     routing = json.loads(
-        (root / ".cursor/skills/nicki/routing.json").read_text(encoding="utf-8")
+        (root / "workflow-runtime/skills/nicki/routing.json").read_text(encoding="utf-8")
     )
     steps = routing.get("steps") or {}
 

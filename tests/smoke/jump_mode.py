@@ -33,7 +33,7 @@ def _put(path: Path, text: str) -> None:
 
 
 def run(root: Path) -> None:
-    update = script(root, ".cursor/skills/current-task-update/scripts/update-status.py")
+    update = script(root, "workflow-runtime/skills/current-task-update/scripts/update-status.py")
 
     with tempfile.TemporaryDirectory() as tmp:
         tmpdir = Path(tmp)

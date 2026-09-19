@@ -1,8 +1,8 @@
 {
   "terminalAllowlist": [
-    "bash .cursor/skills/start-task/scripts/start-worktrees.sh",
-    "bash .cursor/skills/start-task/scripts/register-global-status.sh",
-    "bash .cursor/skills/close-scope/scripts/unregister-global-status.sh",
+    "bash workflow-runtime/skills/start-task/scripts/start-worktrees.sh",
+    "bash workflow-runtime/skills/start-task/scripts/register-global-status.sh",
+    "bash workflow-runtime/skills/close-scope/scripts/unregister-global-status.sh",
     "python3 test.py",
     "test.py",
     "PROJECT=",
@@ -50,9 +50,9 @@
     "git branch -d",
     "git -C",
 
-    "python3 .cursor/skills/start-task/scripts/create-worktree.py",
-    "python3 .cursor/skills/start-task/scripts/register-global-status.py",
-    "python3 .cursor/skills/nicki/scripts/bootstrap-context.py",
+    "python3 workflow-runtime/skills/start-task/scripts/create-worktree.py",
+    "python3 workflow-runtime/skills/start-task/scripts/register-global-status.py",
+    "python3 workflow-runtime/skills/nicki/scripts/bootstrap-context.py",
     "python3 -m py_compile",
 
     "jq",

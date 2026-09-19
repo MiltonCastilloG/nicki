@@ -13,10 +13,10 @@ def run(root: Path) -> None:
 
 
 def _run(root: Path, worktree: Path) -> None:
-    validate = script(root, ".cursor/skills/nicki/scripts/validate-harness-stdout.py")
-    append = script(root, ".cursor/skills/errors-recording/scripts/append-error.py")
-    update = script(root, ".cursor/skills/current-task-update/scripts/update-status.py")
-    script_route = ".cursor/skills/nicki/scripts/bootstrap-context.py"
+    validate = script(root, "workflow-runtime/skills/nicki/scripts/validate-harness-stdout.py")
+    append = script(root, "workflow-runtime/skills/errors-recording/scripts/append-error.py")
+    update = script(root, "workflow-runtime/skills/current-task-update/scripts/update-status.py")
+    script_route = "workflow-runtime/skills/nicki/scripts/bootstrap-context.py"
     (worktree / "current-task/specs").mkdir(parents=True)
     errors_json = worktree / "current-task/specs/errors.json"
 

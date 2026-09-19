@@ -62,7 +62,7 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 | 11 | Permissions | Bootstrap (and formerly check-gate) allowlisted; check-gate entry removed 2026-08-05. |
 | | **`update-status.py`** | Authoritative write for `current-task/status.json` via `sheep-status`. |
 | | **sheep-fallback** | Failure recording + harness-failure routing. Archive: [`archive/sheep-fallback/`](archive/sheep-fallback/). |
-| | **Smoke CI** | `.github/workflows/smoke.yml` runs `python3 test.py`. |
+| | **Smoke CI** | `.github/workflows/smoke.yml` runs both installers then `python3 test.py`. |
 | | **Flexibility** | Ad-hoc + jump + consent model shipped; dogfood done. Optional quoting polish only → `story-format.md`. Detail: [`flexibility.md`](flexibility.md) · archive: [`archive/flexibility/report.md`](archive/flexibility/report.md). |
 
 Harness shape: **read** (`bootstrap-context.py`) · **write** (`update-status.py`). Consent is Nicki chat (execute + sync).
@@ -86,7 +86,7 @@ Historical deletion map: [`archive/investigation-complexity/report.md`](archive/
 
 Nicki pipeline head is `start → spec → gherkin → subtasks → execute → …`. Gherkin is a transform of the spec (`sheep-gherkin` + `story-maker`), not an interview. SoT: `routing.json`, `nicki.md`. Destination notes: [`SHINOBU_NEXT_STEPS.md`](../SHINOBU_NEXT_STEPS.md) · [`OWNERSHIP.md`](../OWNERSHIP.md).
 
-Remaining Stage 1 extract work is **#20** (still open in [`tasks.md`](tasks.md)).
+Remaining Stage 1 extract work after Approach A: **#20c** (prose rewrite) and follow-ons in [`tasks.md`](tasks.md). **#20a–20b** shipped — see Host runtime below.
 
 ---
 
@@ -97,3 +97,5 @@ Remaining Stage 1 extract work is **#20** (still open in [`tasks.md`](tasks.md))
 | 19 | Fresh-install `install.py` | Post-clone registry + `worktrees/` bootstrap; `.cursor/` untouched (Cursor link hook deferred to #20). Archive: [`archive/fresh-install/`](archive/fresh-install/). |
 | | **Claude adapter (copy model)** | `install-claude.py` maps `.cursor/` → `.claude/` via copy; generates `CLAUDE.md`. Superseded by Approach A symlink. Archive: [`archive/claude-adapter/`](archive/claude-adapter/). |
 | | **Approach A: host-runtime symlink** | `RUNTIME_ROOT = .cursor`, `link_dir`, symlink `.claude/agents` + `.claude/skills`, generate `CLAUDE.md`. Archive: [`archive/host-runtime-symlink/`](archive/host-runtime-symlink/) — merge `302772d`. Design: [`archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md`](archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md). |
+| **20a** | **Cursor symlink spike** | PASS 2026-09-19: Cursor and Claude follow host `{agents,skills}` → `../workflow-runtime/...`. Gates Track 1. |
+| **20b** | **Extract to `workflow-runtime/`** | Canonical agents/skills/rules under `workflow-runtime/`; committed `.cursor/` symlinks; `install_common.py`; both installers; machine-read path flips; smoke.yml runs installers before `test.py`. Design: [`2026-09-19-runtime-extract-and-delivery-options.md`](2026-09-19-runtime-extract-and-delivery-options.md). |

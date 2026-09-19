@@ -10,20 +10,20 @@ Cursor workflow for structured agent-driven development. Nicki orchestrates the 
 
 | Component | Location | Role |
 | --------- | -------- | ---- |
-| Orchestrator | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.json` | Read-only conductor; routes from disk; sends sheep via Task in isolated context |
-| Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — load disk inputs, invoke skills (Nicki on the pipeline; direct spawn for ad-hoc) |
-| Skills | `.cursor/skills/<name>/` | Pure functionality — how to perform one job; artifact schemas |
-| Skill index | `.cursor/skills/README.md` | Skills vs agents rules and exceptions |
+| Orchestrator | `workflow-runtime/agents/nicki.md` + `workflow-runtime/skills/nicki/routing.json` | Read-only conductor; routes from disk; sends sheep via Task in isolated context |
+| Sheep | `workflow-runtime/agents/sheep-*.md` | Workflow binding — load disk inputs, invoke skills (Nicki on the pipeline; direct spawn for ad-hoc) |
+| Skills | `workflow-runtime/skills/<name>/` | Pure functionality — how to perform one job; artifact schemas |
+| Skill index | `workflow-runtime/skills/README.md` | Skills vs agents rules and exceptions |
 
 Ad-hoc work outside the pipeline: Task-spawn the sheep directly with instructions and an output path (default `docs/adhoc/`), or attach the skill (e.g. `spec-maker`, `execute-plan`, `conflict-resolution`) to do the work inline. No task, worktree, or status write is involved. `sheep-start`, `sheep-close`, and `sheep-status` stay Nicki-only.
 
 ### Three layers
 
 ```text
-Nicki (.cursor/agents/nicki.md + routing.json)
-  └─ sends sheep (child loads .cursor/agents/sheep-*.md)
+Nicki (workflow-runtime/agents/nicki.md + routing.json)
+  └─ sends sheep (child loads workflow-runtime/agents/sheep-*.md)
        └─ loads current-task/* from disk
-       └─ follows skill (.cursor/skills/<name>/SKILL.md)
+       └─ follows skill (workflow-runtime/skills/<name>/SKILL.md)
        └─ returns compact YAML → Nicki → sheep-status
 ```
 
@@ -35,8 +35,8 @@ Orchestration edges are invoke-and-exit Python — not a per-step schema validat
 
 | Type | Script | Role |
 | ---- | ------ | ---- |
-| Read | `.cursor/skills/nicki/scripts/bootstrap-context.py` | Position, next step, intended sheep |
-| Write | `.cursor/skills/current-task-update/scripts/update-status.py` | Sole writer for `current-task/status.json` |
+| Read | `workflow-runtime/skills/nicki/scripts/bootstrap-context.py` | Position, next step, intended sheep |
+| Write | `workflow-runtime/skills/current-task-update/scripts/update-status.py` | Sole writer for `current-task/status.json` |
 
 Missing required write fields → `written: false` + `errors[]` (retry JSON); not a harness crash. Spawn gate retired: [`docs/archive/retire-check-gate/report.md`](docs/archive/retire-check-gate/report.md).
 
@@ -52,7 +52,7 @@ cd nicki
 python3 install.py
 ```
 
-This writes a minimal `nicki-workspace.yaml` (nicki-only registry) and ensures `worktrees/` exists. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/future-tasks/PLAN.md`](docs/future-tasks/PLAN.md)). Committed `.cursor/` agents, skills, rules, and hooks ship with the clone — no manual copying.
+This writes a minimal `nicki-workspace.yaml` (nicki-only registry), ensures `worktrees/` exists, verifies committed `.cursor/agents` and `.cursor/skills` symlinks into `workflow-runtime/`, and generates `.cursor/rules/nicki-default.mdc`. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/PLAN.md`](docs/PLAN.md)). Canonical runtime ships under `workflow-runtime/`; Cursor adapters are committed symlinks plus a generated rule.
 
 ### Claude Code quick start
 
@@ -61,19 +61,20 @@ Use this path when working in Claude Code instead of Cursor:
 ```bash
 git clone <repo-url> nicki
 cd nicki
-python3 install.py          # repository bootstrap (worktrees + registry)
-python3 install-claude.py   # symlink .claude/ agents+skills into .cursor/; generate CLAUDE.md
+python3 install.py          # repository bootstrap + Cursor adapter
+python3 install-claude.py   # symlink .claude/ agents+skills into workflow-runtime/; generate CLAUDE.md
 ```
 
 Then open the cloned repository in Claude Code.
 
-- **Edit runtime in `.cursor/`** (agents, skills, rules). That tree is canonical and committed.
-- **`.claude/agents` and `.claude/skills` are directory symlinks** into `.cursor/` — edits there are visible under Claude without reinstall.
-- **`CLAUDE.md`** is generated from `.cursor/rules/nicki-default.mdc` (independent adapter, not a symlink).
-- **Re-run `python3 install-claude.py` only** on a fresh clone, or after changing the invocation rule (regenerates `CLAUDE.md`). Agent/skill edits need no reinstall.
-- **Atomic-save warning:** some editors save via write-temp-then-rename and can replace a symlink with a regular file. Always edit the `.cursor/` path, never the `.claude/` symlink destination. Re-run the installer to self-repair if a link is severed.
+- **Edit runtime in `workflow-runtime/`** (agents, skills, rules). That tree is canonical and committed.
+- **`.cursor/agents` and `.cursor/skills`** are committed directory symlinks into `workflow-runtime/` (Track 1). Fresh checkouts and new git worktrees get them with no extra step.
+- **`.claude/agents` and `.claude/skills`** are directory symlinks into `workflow-runtime/` (created by `install-claude.py`).
+- **`.cursor/rules/nicki-default.mdc`** and **`CLAUDE.md`** are generated from `workflow-runtime/rules/nicki-default.md` (independent adapters, not symlinks).
+- **Re-run installers only** on a fresh clone, or after changing the invocation rule (regenerates the host rule files). Agent/skill edits need no reinstall when using symlinks.
+- **Atomic-save warning:** some editors save via write-temp-then-rename and can replace a symlink with a regular file or directory. Always edit under `workflow-runtime/`, never through the `.cursor/` or `.claude/` symlink path. Re-run the matching installer to self-repair if a link is severed.
 
-Generated Claude layout is gitignored. If the OS rejects directory symlinks, the installer falls back to copying and warns that re-runs are required after runtime edits.
+Generated Claude layout and the Cursor rule file are gitignored. If the OS rejects directory symlinks, the installer falls back to copying and warns that re-runs are required after runtime edits.
 
 Invoke Nicki by name:
 
@@ -97,7 +98,7 @@ nicki start my-task
 nicki continue
 ```
 
-The parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`). Nicki asks before execute and sync and sends sheep (`sheep-start`, `sheep-spec`, `sheep-gherkin`, `sheep-execute`, …). After every sheep except start and close, Nicki sends `sheep-status` to update `current-task/status.json`.
+The parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`, generated from `workflow-runtime/rules/nicki-default.md`). Nicki asks before execute and sync and sends sheep (`sheep-start`, `sheep-spec`, `sheep-gherkin`, `sheep-execute`, …). After every sheep except start and close, Nicki sends `sheep-status` to update `current-task/status.json`.
 
 Git steps (`sync`, `integrate`) need explicit confirmation. Archive and close need separate confirms. Close asks to confirm worktree delete only.
 
@@ -151,7 +152,7 @@ worktrees/<path>/current-task/
 
 Operational steps write no handoff files. Position plus these document artifacts is the whole record.
 
-Writer schemas: `.cursor/skills/current-task-update/status-format.md`, `global-status-format.md`. Nicki and readers use slim `status-read.md` / `global-status-read.md`.
+Writer schemas: `workflow-runtime/skills/current-task-update/status-format.md`, `global-status-format.md`. Nicki and readers use slim `status-read.md` / `global-status-read.md`.
 
 ---
 
@@ -160,18 +161,27 @@ Writer schemas: `.cursor/skills/current-task-update/status-format.md`, `global-s
 ```text
 nicki/
 ├── README.md
+├── install.py / install-claude.py / install_common.py
+├── workflow-runtime/          # canonical host-neutral runtime
+│   ├── agents/                # nicki + sheep (flat)
+│   ├── skills/                # pure functionality + README.md
+│   └── rules/                 # nicki-default.md (no host frontmatter)
 ├── docs/
-│   ├── NICKI.md              # workflow semantics (rebuild guide)
-│   ├── WORKFLOW-DIAGRAMS.md  # mermaid pipeline maps
-│   ├── tasks.md              # actionable backlog
-│   ├── tasks-done.md         # shipped tasks index
-│   ├── future-tasks/         # open designs, checklists, plans
-│   └── archive/<slug>/       # closed task archives
-└── .cursor/
-    ├── agents/               # nicki + sheep workflow binding
-    ├── rules/
-    ├── hooks/
-    └── skills/               # pure functionality + README.md
+│   ├── NICKI.md
+│   ├── WORKFLOW-DIAGRAMS.md
+│   ├── PLAN.md
+│   ├── OWNERSHIP.md
+│   ├── tasks/                 # backlog + designs
+│   └── archive/<slug>/
+├── .cursor/                   # Cursor host adapter
+│   ├── agents -> ../workflow-runtime/agents
+│   ├── skills -> ../workflow-runtime/skills
+│   ├── rules/                 # generated nicki-default.mdc
+│   ├── hooks/
+│   └── permissions.json
+└── .claude/                   # Claude host adapter (generated, gitignored)
+    ├── agents -> ../workflow-runtime/agents
+    └── skills -> ../workflow-runtime/skills
 ```
 
-Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Diagrams: [`docs/WORKFLOW-DIAGRAMS.md`](docs/WORKFLOW-DIAGRAMS.md). Multi-project workspace: [`docs/future-tasks/PLAN.md`](docs/future-tasks/PLAN.md). Backlog: [`docs/tasks.md`](docs/tasks.md). Future tasks: [`docs/future-tasks/`](docs/future-tasks/).
+Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Diagrams: [`docs/WORKFLOW-DIAGRAMS.md`](docs/WORKFLOW-DIAGRAMS.md). Multi-project workspace: [`docs/PLAN.md`](docs/PLAN.md). Backlog: [`docs/tasks/tasks.md`](docs/tasks/tasks.md). Ownership / fork map: [`docs/OWNERSHIP.md`](docs/OWNERSHIP.md).

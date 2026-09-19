@@ -8,8 +8,8 @@ from tests.smoke._helpers import run_py, script
 
 
 def run(root: Path) -> None:
-    update = script(root, ".cursor/skills/current-task-update/scripts/update-status.py")
-    validate = script(root, ".cursor/skills/nicki/scripts/validate-harness-stdout.py")
+    update = script(root, "workflow-runtime/skills/current-task-update/scripts/update-status.py")
+    validate = script(root, "workflow-runtime/skills/nicki/scripts/validate-harness-stdout.py")
 
     with tempfile.TemporaryDirectory() as tmp:
         fixture = Path(tmp)

@@ -6,17 +6,17 @@ import json
 from pathlib import Path
 
 REQUIRED = (
-    ".cursor/agents/sheep-sync.md",
-    ".cursor/skills/sync-task/SKILL.md",
-    ".cursor/agents/sheep-integrate.md",
-    ".cursor/skills/integrate-task/SKILL.md",
+    "workflow-runtime/agents/sheep-sync.md",
+    "workflow-runtime/skills/sync-task/SKILL.md",
+    "workflow-runtime/agents/sheep-integrate.md",
+    "workflow-runtime/skills/integrate-task/SKILL.md",
 )
 
 RETIRED = (
-    ".cursor/agents/commit-task.md",
-    ".cursor/agents/push-task.md",
-    ".cursor/agents/merge-task.md",
-    ".cursor/agents/publish-task.md",
+    "workflow-runtime/agents/commit-task.md",
+    "workflow-runtime/agents/push-task.md",
+    "workflow-runtime/agents/merge-task.md",
+    "workflow-runtime/agents/publish-task.md",
 )
 
 # Routing must keep a sheep for each git-tail step, since Nicki spawns from that value.
@@ -39,7 +39,7 @@ def run(root: Path) -> None:
             failures.append(f"fail: {rel} should be removed")
 
     steps = (
-        json.loads((root / ".cursor/skills/nicki/routing.json").read_text(encoding="utf-8")).get(
+        json.loads((root / "workflow-runtime/skills/nicki/routing.json").read_text(encoding="utf-8")).get(
             "steps"
         )
         or {}
