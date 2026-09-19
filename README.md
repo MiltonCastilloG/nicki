@@ -38,7 +38,7 @@ Orchestration edges are invoke-and-exit Python — not a per-step schema validat
 | Read | `.cursor/skills/nicki/scripts/bootstrap-context.py` | Position, next step, intended sheep |
 | Write | `.cursor/skills/current-task-update/scripts/update-status.py` | Sole writer for `current-task/status.json` |
 
-Missing required write fields → `written: false` + `errors[]` (retry JSON); not a harness crash. Spawn gate retired: [`docs/superpowers/specs/2026-08-05-retire-check-gate-design.md`](docs/superpowers/specs/2026-08-05-retire-check-gate-design.md).
+Missing required write fields → `written: false` + `errors[]` (retry JSON); not a harness crash. Spawn gate retired: [`docs/archive/retire-check-gate/report.md`](docs/archive/retire-check-gate/report.md).
 
 ---
 
@@ -52,7 +52,7 @@ cd nicki
 python3 install.py
 ```
 
-This writes a minimal `nicki-workspace.yaml` (nicki-only registry) and ensures `worktrees/` exists. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/PLAN.md`](docs/PLAN.md)). Committed `.cursor/` agents, skills, rules, and hooks ship with the clone — no manual copying.
+This writes a minimal `nicki-workspace.yaml` (nicki-only registry) and ensures `worktrees/` exists. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/future-tasks/PLAN.md`](docs/future-tasks/PLAN.md)). Committed `.cursor/` agents, skills, rules, and hooks ship with the clone — no manual copying.
 
 ### Claude Code quick start
 
@@ -97,7 +97,7 @@ nicki start my-task
 nicki continue
 ```
 
-The parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`). Nicki asks before each step and sends sheep (`sheep-start`, `sheep-describe`, `sheep-spec`, `sheep-execute`, …). After every sheep except start and close, Nicki sends `sheep-status` to update `current-task/status.json`.
+The parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`). Nicki asks before execute and sync and sends sheep (`sheep-start`, `sheep-spec`, `sheep-gherkin`, `sheep-execute`, …). After every sheep except start and close, Nicki sends `sheep-status` to update `current-task/status.json`.
 
 Git steps (`sync`, `integrate`) need explicit confirmation. Archive and close need separate confirms. Close asks to confirm worktree delete only.
 
@@ -106,7 +106,7 @@ Git steps (`sync`, `integrate`) need explicit confirmation. Archive and close ne
 ## Pipeline
 
 ```
-start → describe → spec → subtasks → execute → review → [fix] → acceptance → sync → archive → sync → integrate → close
+start → spec → gherkin → subtasks → execute → review → [fix] → acceptance → sync → archive → sync → integrate → close
 ```
 
 Post-review routing comes from the review sheep's return `summary`, not from a file on disk:
@@ -124,8 +124,8 @@ Nicki-only steps: `acceptance`, `fix`.
 | Step | Sheep | Loads (typical) | Primary output |
 | ---- | ----- | --------------- | -------------- |
 | Setup | `sheep-start` | — (creates worktree + registry) | worktree + `global-status.json` entry |
-| Describe | `sheep-describe` | status, `task.original` | `current-task/story.md` (Gherkin) |
-| Spec | `sheep-spec` | status, story | `current-task/specs/<slug>.json` |
+| Spec | `sheep-spec` | status, free text / `task.original` | `current-task/specs/<slug>.json` |
+| Gherkin | `sheep-gherkin` | spec path | `current-task/story.md` (Gherkin checklist) |
 | Subtasks | `sheep-subtask` | status, spec | `current-task/subtasks/<slug>.md` |
 | Execute | `sheep-execute` | status, subtasks, spec (optional) | code changes in worktree (no execution JSON) |
 | Review | `sheep-review` | worktree diff + available current-task files | no file — verdict in the return `summary` |
@@ -163,9 +163,9 @@ nicki/
 ├── docs/
 │   ├── NICKI.md              # workflow semantics (rebuild guide)
 │   ├── WORKFLOW-DIAGRAMS.md  # mermaid pipeline maps
-│   ├── complexity.md         # agent load analysis
-│   ├── PLAN.md               # multi-project workspace plan
 │   ├── tasks.md              # actionable backlog
+│   ├── tasks-done.md         # shipped tasks index
+│   ├── future-tasks/         # open designs, checklists, plans
 │   └── archive/<slug>/       # closed task archives
 └── .cursor/
     ├── agents/               # nicki + sheep workflow binding
@@ -174,4 +174,4 @@ nicki/
     └── skills/               # pure functionality + README.md
 ```
 
-Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Diagrams: [`docs/WORKFLOW-DIAGRAMS.md`](docs/WORKFLOW-DIAGRAMS.md). Multi-project workspace: [`docs/PLAN.md`](docs/PLAN.md). Backlog: [`docs/tasks.md`](docs/tasks.md).
+Design rationale: [`docs/NICKI.md`](docs/NICKI.md). Diagrams: [`docs/WORKFLOW-DIAGRAMS.md`](docs/WORKFLOW-DIAGRAMS.md). Multi-project workspace: [`docs/future-tasks/PLAN.md`](docs/future-tasks/PLAN.md). Backlog: [`docs/tasks.md`](docs/tasks.md). Future tasks: [`docs/future-tasks/`](docs/future-tasks/).

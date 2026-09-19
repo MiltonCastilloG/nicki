@@ -15,11 +15,13 @@ drop source_context · drop outcome.status/final_artifact · story.md optional �
 
 Target `main`. No feature branch pushed (`pushed_branch` null). Landed on local `main`.
 
-Ad-hoc source-document archive from `docs/superpowers/specs/2026-08-05-delete-unread-outputs-design.md`. No `status.json`, no errors path — no `errors.json`. No `story.md` (no story path). Checklist at `docs/adhoc/delete-unread-outputs/subtasks.md` used for process/decisions context only.
+Ad-hoc source-document archive from `docs/superpowers/specs/2026-08-05-delete-unread-outputs-design.md`. No `status.json`, no errors path — no `errors.json`. No `story.md` (no story path). Checklist at `docs/adhoc/delete-unread-outputs/subtasks.md` used for process/decisions context only. Design ADR now lives at `docs/archive/delete-unread-outputs/2026-08-05-delete-unread-outputs-design.md`.
 
 ## Process
 
-Empty. No handoff pointers, no `side_effects`. Source: design doc (status implemented) plus checked ad-hoc subtasks.
+Prior archive had empty process: no handoff pointers, no `side_effects`. Source: design doc (status implemented) plus checked ad-hoc subtasks.
+
+- **archive** — Design ADR paired into archive as `2026-08-05-delete-unread-outputs-design.md`; live `docs/superpowers/specs/2026-08-05-delete-unread-outputs-design.md` deleted.
 
 ## Decisions
 

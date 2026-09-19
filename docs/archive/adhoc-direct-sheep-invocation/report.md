@@ -19,7 +19,9 @@ This is the **second** live ad-hoc direct invocation of `sheep-archive`, after t
 
 ## Process
 
-Empty. No task `status.json`, no handoff pointers, no `side_effects`. Format only sources process from those; inventing git/design history is out of contract. Source document: `docs/superpowers/specs/2026-08-05-adhoc-direct-sheep-invocation-design.md`.
+Prior archive had empty process: no task `status.json`, no handoff pointers, no `side_effects`. Format only sources process from those; inventing git/design history is out of contract. Source document was `docs/superpowers/specs/2026-08-05-adhoc-direct-sheep-invocation-design.md`.
+
+- **archive** — Design ADR paired into archive as `2026-08-05-adhoc-direct-sheep-invocation-design.md`; live `docs/superpowers/specs/2026-08-05-adhoc-direct-sheep-invocation-design.md` deleted.
 
 ## Decisions
 

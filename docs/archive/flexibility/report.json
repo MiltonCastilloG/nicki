@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "schema": "task-archive.v1",
+    "generated_by": "task-archive",
+    "source_context": "docs/flexibility.md"
+  },
+  "task": {
+    "slug": "flexibility",
+    "title": "Flexibility — ad-hoc, informal jump, drop-sequence, artifact ownership",
+    "original": "Joined flexibility writeups + jump_blocker + ADR trio (informal-jump, drop-sequence, artifact-ownership) into one source-document archive.",
+    "type": "docs",
+    "branch": "main"
+  },
+  "story": "ad-hoc direct sheep · informal jump · drop sequence/override · artifact ownership/position · jump blocker resolved",
+  "outcome": {
+    "target": "main",
+    "pushed_branch": null
+  },
+  "process": [
+    {
+      "step": "archive",
+      "summary": "Joined flexibility writeups + jump_blocker + ADR trio into one archive; shipped model documented; pending leftovers (quoting, CI, dogfood) remain for live thin flexibility.md."
+    }
+  ],
+  "decisions": [
+    {
+      "topic": "Archive cluster",
+      "decision": "One flexibility archive owns the three ADRs (informal-jump, drop-sequence, artifact-ownership)."
+    },
+    {
+      "topic": "Live docs pointer",
+      "decision": "Live docs should point at docs/archive/flexibility/report.md."
+    }
+  ],
+  "open_questions": [],
+  "suggestions": [
+    {
+      "area": "orchestration",
+      "suggestion": "Thin-rewrite docs/flexibility.md to summary + pointer here + pending only.",
+      "evidence": "flexibility.md left live for later rewrite; flexibility_next_steps.md archived with quoting/CI/dogfood leftovers."
+    }
+  ]
+}

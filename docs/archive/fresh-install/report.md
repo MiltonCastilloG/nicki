@@ -14,7 +14,7 @@ Pending integrate. Feature branch pushed to origin; sync handoff at `current-tas
 
 ## Process
 
-Story captured first-install, idempotent re-run, missing-git failure, README flow, and post-install Nicki readiness. Spec defined stdlib-only install.py with nicki-only registry stub and worktrees directory. Thirteen subtasks covered install.py, README quick-start, and verification runs. Execution completed all subtasks in install.py and README.md. Review found no blockers; ready for acceptance. Sync committed, merged main, and pushed chore/fresh-install.
+Story captured first-install, idempotent re-run, missing-git failure, README flow, and post-install Nicki readiness. Spec defined stdlib-only install.py with nicki-only registry stub and worktrees directory. Thirteen subtasks covered install.py, README quick-start, and verification runs. Execution completed all subtasks in install.py and README.md. Review found no blockers; ready for acceptance. Sync committed, merged main, and pushed chore/fresh-install. Design ADR paired into this archive at `docs/archive/fresh-install/2026-07-02-fresh-install-design.md` (removed from live `docs/superpowers/specs/`).
 
 ## Decisions
 

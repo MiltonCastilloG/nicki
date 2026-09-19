@@ -4,7 +4,7 @@
 
 This document is the rebuild guide for extracting Nicki from a host repo into its own project. Nicki becomes a repo you clone once; it manages a workspace of other git projects and orchestrates the current-task pipeline inside each project's worktrees.
 
-Use [`NICKI.md`](NICKI.md) for workflow semantics (orchestrator rules, artifact chain, design decisions). Use this file for repo layout, workspace model, and implementation phases.
+Use [`NICKI.md`](../NICKI.md) for workflow semantics (orchestrator rules, artifact chain, design decisions). Use this file for repo layout, workspace model, and implementation phases.
 
 ---
 
@@ -136,7 +136,7 @@ Or symlink if your OS/setup supports it. Worktrees inherit `.cursor/` from the b
 - Agent, command, skill, and schema source files (see `runtime/.cursor/`)
 - Workspace registry format (`nicki-workspace.yaml`)
 - CLI: workspace init, project clone/register, runtime install/update, task start, doctor
-- Portable docs: `docs/NICKI.md`, `docs/PLAN.md`
+- Portable docs: `docs/NICKI.md`, `docs/future-tasks/PLAN.md`
 
 ### Each managed project owns
 
@@ -155,7 +155,7 @@ Or symlink if your OS/setup supports it. Worktrees inherit `.cursor/` from the b
 
 ## Workspace registry
 
-`nicki-workspace.yaml` lives at the workspace root. See [`nicki-workspace.example.yaml`](../nicki-workspace.example.yaml).
+`nicki-workspace.yaml` lives at the workspace root. See [`nicki-workspace.example.yaml`](../../nicki-workspace.example.yaml).
 
 It should track:
 
@@ -179,7 +179,7 @@ It should track:
 | `nicki task start <project> <description>` | Pull base branch, create worktree under `worktrees/<slug>` |
 | `nicki doctor` | Check registry, git, runtime files, gitignore for worktrees |
 
-Start with bash. Per-step sheep-return schema validation is deferred — harness is read / gate / write only ([harness ADR](superpowers/specs/2026-07-17-harness-read-write-types-design.md)).
+Start with bash. Harness is read / write only ([harness ADR](../archive/bootstrap-script/2026-07-17-harness-read-write-types-design.md)); consent is Nicki chat for execute + sync.
 
 ---
 
@@ -233,21 +233,21 @@ When Cursor opens `projects/foo/worktrees/bar`, the workspace root is the worktr
 ## Canonical workflow (unchanged)
 
 ```
-start → describe → spec → subtasks → execute → review → acceptance → sync → archive → sync → integrate → close
+start → spec → gherkin → subtasks → execute → review → acceptance → sync → archive → sync → integrate → close
 ```
 
 With automatic `sheep-status` after each sheep except start and close. Review reports its verdict in the return `summary`; Nicki turns it into `next_step`.
 
-Full detail: [`NICKI.md`](NICKI.md).
+Full detail: [`NICKI.md`](../NICKI.md).
 
 ---
 
 ## Implementation phases
 
-Tracked in [`tasks.md`](tasks.md). Priority: (1) workflow functioning, (2) harness/guardrails, (3) trimming.
+Tracked in [`tasks.md`](../tasks.md). Priority: (1) workflow functioning, (2) harness/guardrails, (3) trimming.
 
 1. **Worktree setup** — `create-worktree.py`, root `worktrees/`, copy gitignored locals.
-2. **Guardrails** — `bootstrap-context.py`, `update-status.py`, smoke fixtures. Spawn gate retired 2026-08-05. No separate return validator (#9 deferred).
+2. **Guardrails** — `bootstrap-context.py`, `update-status.py`, smoke fixtures. Spawn gate retired 2026-08-05 — [`archive/retire-check-gate/`](../archive/retire-check-gate/).
 3. **Trim orchestrator prompt** — after harness proven.
 4. **Minimal CLI** — later.
 

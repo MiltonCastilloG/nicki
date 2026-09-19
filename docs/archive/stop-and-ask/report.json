@@ -15,7 +15,12 @@
     "target": "main",
     "pushed_branch": null
   },
-  "process": [],
+  "process": [
+    {
+      "step": "archive",
+      "summary": "Design ADR paired into archive as 2026-08-06-stop-and-ask-design.md; live docs/superpowers/specs/2026-08-06-stop-and-ask-design.md deleted."
+    }
+  ],
   "decisions": [
     {
       "topic": "Who asks the human",

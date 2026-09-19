@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "schema": "task-archive.v1",
+    "generated_by": "task-archive"
+  },
+  "task": {
+    "slug": "harness-gate-era",
+    "title": "Harness gate era (bugs + alignment briefs + fallback notes)",
+    "original": "Archive three historical gate-era docs from docs/: harness-gate-bugs.md (bug archaeology), harness-alignment-subagents.md (superseded alignment Task briefs), fallback_bug_investigation.md (fallback recurrence notes).",
+    "type": "docs",
+    "branch": "main"
+  },
+  "story": "gate bug archaeology · superseded alignment Task briefs · fallback recurrence notes · pre-retire-check-gate",
+  "outcome": {
+    "target": "main",
+    "pushed_branch": null
+  },
+  "process": [
+    {
+      "step": "archive",
+      "summary": "Joined three historical gate-era docs (harness-gate-bugs.md, harness-alignment-subagents.md, fallback_bug_investigation.md) into one archive under docs/archive/harness-gate-era/; removed them from live docs/. Spawn gate later retired — see docs/archive/retire-check-gate/."
+    }
+  ],
+  "decisions": [
+    {
+      "topic": "Archive cluster",
+      "decision": "One archive for the gate-bugs cluster (bugs + alignment briefs + fallback notes)."
+    },
+    {
+      "topic": "Design ADRs",
+      "decision": "Design ADRs for retire-check-gate and drop-sequence live with their ship archives, not here."
+    }
+  ],
+  "open_questions": [],
+  "suggestions": []
+}

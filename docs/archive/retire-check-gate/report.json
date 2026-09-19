@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "schema": "task-archive.v1",
+    "generated_by": "task-archive",
+    "source_context": "source_document",
+    "source_document": "docs/superpowers/specs/2026-08-05-retire-check-gate-design.md",
+    "tail_override": null
+  },
+  "task": {
+    "slug": "retire-check-gate",
+    "title": "Retire spawn-time check-gate; chat consent only",
+    "original": "retire spawn-time check-gate; chat consent only",
+    "type": "chore",
+    "branch": "main"
+  },
+  "story": "Delete check-gate · consent SoT Nicki chat · execute + sync only · bootstrap_utils · routing_write · archive report",
+  "outcome": {
+    "target": "main",
+    "pushed_branch": "main",
+    "implementation_commit": "30c16b8",
+    "design": "docs/archive/retire-check-gate/2026-08-05-retire-check-gate-design.md",
+    "note": "Full Nicki pipeline (worktree / sync / integrate / close) was not run for this task — archive report written manually after the removal commit."
+  },
+  "process": [
+    {
+      "step": "execute",
+      "summary": "Analysis showed gate no longer enforced progress: only thin document/consent bookends remaining, while hard stops were user confirmation before execute and before sync. Chose hard delete of the spawn veto. Removed check-gate.py / gates.py / gate smokes, stripped routing gate/consent/adhoc flags, renamed thinned helpers to bootstrap_utils.py and routing_write.py, updated Nicki prose and live docs. python3 test.py passed. Commit 30c16b8 records the removal."
+    },
+    {
+      "step": "archive",
+      "summary": "Design ADR paired into this archive at docs/archive/retire-check-gate/2026-08-05-retire-check-gate-design.md; removed from docs/superpowers/specs/."
+    }
+  ],
+  "decisions": [
+    {
+      "topic": "consent SoT",
+      "decision": "Nicki chat only; explicit yes for execute and sync only."
+    },
+    {
+      "topic": "gate invocation",
+      "decision": "No gate invocation on normal, adhoc, or jump."
+    },
+    {
+      "topic": "jump bookends",
+      "decision": "start / close / done stay in update-status.py."
+    },
+    {
+      "topic": "open questions",
+      "decision": "Sheep + status; no script spawn re-check."
+    }
+  ],
+  "open_questions": [],
+  "suggestions": [
+    {
+      "area": "orchestration",
+      "suggestion": "Optional follow-up: trim leftover historical gate mentions in investigation/flexibility backlog docs.",
+      "evidence": "Prior retire-check-gate archive suggestions."
+    },
+    {
+      "area": "orchestration",
+      "suggestion": "Consider renaming sheep prose that still says “enforce gates” if that language confuses operators.",
+      "evidence": "Prior retire-check-gate archive suggestions."
+    }
+  ]
+}

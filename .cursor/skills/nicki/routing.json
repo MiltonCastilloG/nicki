@@ -13,7 +13,7 @@
       "prompt": "output path (Nicki-owned; usually worktree specs/<slug>.json), task id, free text / task.original, pause path (Nicki-owned; usually worktree current-task/specs/<slug>.pause.md); on re-spawn after questions, the same pause path plus the user's answers"
     },
     "gherkin": {
-      "sheep": "gherkin-sheep",
+      "sheep": "sheep-gherkin",
       "artifact_key": "story",
       "default_next_step": "subtasks",
       "prompt": "spec path (Nicki-owned; usually worktree specs/<slug>.json), story output path (Nicki-owned; usually worktree current-task/story.md); not chat / interview"

@@ -1,8 +1,8 @@
 # Single source of truth for Cursor + Claude runtime
 
-**Status:** proposed (2026-07-15)
-**Approach:** A (symlink `.claude/` → `.cursor/`); designed to migrate cheaply to B (neutral canonical dir) later
-**Implementation:** `install-claude.py` at repo root (edit copy → symlink)
+**Status:** Approach A **shipped** ([`archive/host-runtime-symlink/`](../../archive/host-runtime-symlink/)); Approach B (**#20**) still open — this file stays live as the design for B  
+**Approach:** A (symlink `.claude/` → `.cursor/`); migrate to B (neutral canonical dir) via [`host-runtime-backlog-and-approach-b.md`](../../host-runtime-backlog-and-approach-b.md)  
+**Implementation:** `install-claude.py` at repo root (symlink model)
 
 ---
 

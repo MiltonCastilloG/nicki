@@ -26,6 +26,8 @@ Integrated into `main` at `55dca0a`. Feature branch `chore/bootstrap-script` syn
 
 **Sync.** Committed implementation paths, excluded `current-task/`, merged `origin/main`, pushed `chore/bootstrap-script`.
 
+**Archive.** Harness read/write types ADR paired into this archive at `docs/archive/bootstrap-script/2026-07-17-harness-read-write-types-design.md` (bootstrap read + update-status write era); removed from live `docs/superpowers/specs/`.
+
 ## Decisions
 
 - `bootstrap-context.py` assembles routing context; `check-gate.py` keeps spawn veto.

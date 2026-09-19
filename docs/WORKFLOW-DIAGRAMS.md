@@ -16,6 +16,7 @@ flowchart TD
 
     SS[sheep-start]
     SSpec[sheep-spec]
+    SDesc[sheep-gherkin]
     SSub[sheep-subtask]
     SExec[sheep-execute]
     SRev[sheep-review]
@@ -28,11 +29,12 @@ flowchart TD
     User <-->|confirm steps| Nicki
 
     Nicki -->|start| SS
-    SS --> SStat
-    Nicki -->|describe<br/>Nicki-only| SStat
 
     Nicki -->|spec| SSpec
     SSpec --> SStat
+
+    Nicki -->|gherkin| SDesc
+    SDesc --> SStat
 
     Nicki -->|subtasks| SSub
     SSub --> SStat
@@ -71,9 +73,9 @@ flowchart TD
 
 | Step | Who runs it | Default next |
 | ---- | ----------- | ------------ |
-| `start` | sheep-start | `describe` |
-| `describe` | Nicki (Gherkin story) | `spec` |
-| `spec` | sheep-spec | `subtasks` |
+| `start` | sheep-start | `spec` |
+| `spec` | sheep-spec | `gherkin` |
+| `gherkin` | sheep-gherkin (transform of spec) | `subtasks` |
 | `subtasks` | sheep-subtask | `execute` |
 | `execute` | sheep-execute | `review` |
 | `review` | sheep-review | readiness-driven |
@@ -87,7 +89,7 @@ flowchart TD
 ### Rules Nicki enforces
 
 - After every sheep **except** `sheep-start` and `sheep-close`, Nicki auto-sends `sheep-status`.
-- `sync`, `archive`, `integrate`, and `close` need explicit user confirmation.
+- Explicit chat confirmation before **execute** and **sync** only (archive / integrate / close proceed after the card; git conflicts still need user decisions).
 - Post-review routing from the review sheep's return `summary`, not a file on disk:
   - ready → acceptance (sync blocked until user accepts)
   - fixes required → execute (`## Fix` appended to subtasks)
@@ -113,6 +115,7 @@ flowchart TB
     subgraph SheepLayer["Sheep subagents (Nicki Task-spawns only)"]
         SS[sheep-start]
         SSpec[sheep-spec]
+        SDesc[sheep-gherkin]
         SSub[sheep-subtask]
         SExec[sheep-execute]
         SRev[sheep-review]
@@ -125,6 +128,7 @@ flowchart TB
     subgraph SkillsLayer["Skills (how-to manuals)"]
         StartTask["start-task"]
         SpecMaker["spec-maker"]
+        StoryMaker["story-maker"]
         SubtaskMaker["subtask-maker"]
         ExecutePlan["execute-plan"]
         ReviewExec["review-execution"]
@@ -152,8 +156,8 @@ flowchart TB
     Nicki --> StatusFmt
 
     Nicki -->|start| SS
-    Nicki -->|describe: draft Gherkin| SStat
     Nicki -->|spec| SSpec
+    Nicki -->|gherkin| SDesc
     Nicki -->|subtasks| SSub
     Nicki -->|execute| SExec
     Nicki -->|review| SRev
@@ -165,6 +169,7 @@ flowchart TB
 
     SS --> StartTask
     SSpec --> SpecMaker
+    SDesc --> StoryMaker
     SSub --> SubtaskMaker
     SExec --> ExecutePlan
     SRev --> ReviewExec
@@ -181,14 +186,15 @@ flowchart TB
     StartTask --> ST
     CurrentUpdate --> ST
     SpecMaker --> SpecA
+    StoryMaker --> Story
     SubtaskMaker --> SubA
     ExecutePlan -->|code + checklist ticks| SubA
     TaskArchive --> Arch
     CloseScope -->|unregister| GS
     CloseScope -->|rm -rf worktree| Arch
 
-    SS -.->|after| SStat
     SSpec -.->|after| SStat
+    SDesc -.->|after| SStat
     SSub -.->|after| SStat
     SExec -.->|after| SStat
     SRev -.->|after| SStat
@@ -210,6 +216,7 @@ flowchart TB
 | **Nicki** | `hook-contract` (reads); `routing.json`; status format docs | nothing (readonly) |
 | **sheep-start** | `start-task` | worktree + `global-status.json` registry |
 | **sheep-spec** | `spec-maker` | `current-task/specs/<slug>.json` |
+| **sheep-gherkin** | `story-maker` | `current-task/story.md` (from spec path) |
 | **sheep-subtask** | `subtask-maker` | `current-task/subtasks/<slug>.md` |
 | **sheep-execute** | `execute-plan` | code changes + checklist ticks (no execution JSON) |
 | **sheep-review** | `review-execution` | no file — verdict in the return `summary` |

@@ -13,24 +13,28 @@ Use this document as a rebuild guide: what Nicki is, what it controls, how the p
 | Run `bootstrap-context.py` (shell allowlist) | Write files or run other shell |
 | Send sheep via the Task tool | Search or edit application source |
 | Ask for confirmation before **execute** and **sync** | Improvise workflow transitions |
-| Pass worktree path, context, and prior artifacts to sheep | Spawn nested sheep from workers |
+| Pack **output path** (and for gherkin **spec path**; for spec/subtasks **pause path**; for archive **`prefix` + `slug`**) | Spawn nested sheep from workers |
 | Send `sheep-status` automatically after each sheep (except start and close) | Skip execute/sync without explicit user confirmation |
-| Track orchestration progress with todos | Re-derive sheep map from prose (scripts + `routing.json` own that) |
+| Pack the **spec path** into `sheep-gherkin` (plus story output path) | Re-derive sheep map from prose (scripts + `routing.json` own that) |
 
 Nicki = `.cursor/agents/nicki.md` subagent (`readonly: false` — Cursor needs write to spawn sheep; shell only for bootstrap). Invoke via Task (`subagent_type: nicki`) or address by name. Custom Cursor mode may wrap Nicki later; not promised today.
 
 ### Harness scripts
 
-Authoritative read / write surface (spawn gate retired 2026-08-05 — see [retire-check-gate design](superpowers/specs/2026-08-05-retire-check-gate-design.md)):
+Authoritative read / write surface (spawn gate retired 2026-08-05 — see [retire-check-gate](archive/retire-check-gate/report.md)):
 
 | Type | Script | Role |
 | ---- | ------ | ---- |
 | Read | `bootstrap-context.py` | Position (`current_step`, `next_step`), intended sheep on stdout |
 | Write | `update-status.py` | `sheep-status` path — Nicki passes `--step`/`--mode`; routing owns `next_step` on normal completion |
 
+Modes: `normal` | `jump` only. Ad-hoc is not a write mode — the parent agent spawns a sheep directly (see [flexibility](tasks/flexibility.md) → [archive report](archive/flexibility/report.md)).
+
 ### Bootstrap chain
 
 **Session** cold start (hooks / parent) may surface registry pointers. **Disk** bootstrap is Nicki’s every-response read: resolve worktree → run `bootstrap-context.py` → card and route from stdout only. Consent for execute/sync is chat only. Do not re-read `status.json` for routing while bootstrap succeeds.
+
+Harness crash / bad stdout → `sheep-fallback` (not on `written: false` input errors).
 
 ---
 
@@ -38,19 +42,19 @@ Authoritative read / write surface (spawn gate retired 2026-08-05 — see [retir
 
 | Layer | Path | Role |
 | ----- | ---- | ---- |
-| Nicki | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.json` | Pipeline, gates, transitions, status-update summaries |
-| Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — disk inputs, gates, handoffs; loaded in **child** Task context only (Nicki sends) |
+| Nicki | `.cursor/agents/nicki.md` + `.cursor/skills/nicki/routing.json` | Pipeline, transitions, status-update summaries, output paths |
+| Sheep | `.cursor/agents/sheep-*.md` | Workflow binding — disk inputs, handoffs; loaded in **child** Task context only (Nicki sends) |
 | Skill | `.cursor/skills/<name>/` | Pure functionality — procedures and artifact schemas; no pipeline knowledge |
 
 See `.cursor/skills/README.md` for rules and workflow exceptions.
 
 **Frontmatter parsing:** Cursor uses a simplified YAML parser. Use single-line quoted `description: "..."` strings — do not use block scalars (`>-`, `>`, `|`) or the description may truncate to the first line only.
 
-**Sheep** never spawn other sheep. Nicki is the only orchestrator; she sends one sheep at a time via `routing.json` → Task `subagent_type`. Nicki does **not** read sheep agent files — each child loads `current-task/*` per its disk inputs, then follows the skill. Nicki relays the sheep return JSON to `sheep-status`.
+**Sheep** never spawn other sheep. Nicki is the only orchestrator; she sends one sheep at a time via `routing.json` → Task `subagent_type`. Nicki does **not** read sheep agent files — each child writes only at the path Nicki packed, then follows the skill. Nicki relays the sheep return JSON to `sheep-status`.
 
 **State writer** is `sheep-status`: sole writer for per-task `current-task/status.json`. **Registry writer** is `sheep-start` / `sheep-close` only for `global-status.json`. Nicki never writes either directly.
 
-**Ad-hoc work** spawns a sheep directly from the parent agent (or attaches the skill) — no task, no status write. `sheep-start`, `sheep-close`, and `sheep-status` stay Nicki-only.
+**Ad-hoc work** spawns a sheep directly from the parent agent (or attaches the skill) — no task, no status write. `sheep-start`, `sheep-close`, and `sheep-status` stay Nicki-only. Rule: `.cursor/rules/nicki-default.mdc`.
 
 ---
 
@@ -60,9 +64,9 @@ Step order and automatic `sheep-status` after each sheep (except start and close
 
 ```mermaid
 flowchart LR
-  A[sheep-start] --> C[describe]
+  A[sheep-start] --> C[spec]
   C --> D[sheep-status]
-  D --> E[sheep-spec]
+  D --> E[sheep-gherkin]
   E --> F[sheep-status]
   F --> G[sheep-subtask]
   G --> H[sheep-status]
@@ -84,48 +88,45 @@ flowchart LR
   T --> Y[sheep-close]
 ```
 
+**Gherkin nuance:** Gherkin is a transform of the spec, not an interview. After spec, Nicki sends `sheep-gherkin` with the spec path and the story output path. Incomplete spec (`summary.spec_incomplete`) → send `sheep-spec` again with the gaps; do not interview at gherkin; do not send `sheep-status` for that incomplete transform. Product questions stay on spec (`spec-maker` Step 2 / stop-and-ask).
+
+**Stop and ask:** When a sheep return carries `open_questions`, Nicki (or the parent agent ad-hoc) puts each question to the user — offering `options` when present — then re-spawns the **same** sheep with the answers. For `spec` / `subtasks`, keep the pause path so the sheep resumes. Non-empty `open_questions` holds `next_step` where it was. Never answer for the user.
+
 ---
 
 ## Sheep and artifacts
 
-Each sheep produces YAML handoff under `worktrees/<project>-<slug>/current-task/` (workspace root; single hyphen between project and slug).
+Handoffs live under `worktrees/<project>-<slug>/current-task/` at the **workspace root** (single hyphen between project and slug). Spec is JSON; story and subtasks are Markdown; archive is `report.json` + `report.md`.
 
 | Step | Sheep | Writes code? | Primary output |
 | ---- | ----- | ------------ | -------------- |
-| Setup | `sheep-start` | No | `worktrees/<project>-<slug>/` |
+| Setup | `sheep-start` | No | `worktrees/<project>-<slug>/` via `create-worktree.py` |
 | State | `sheep-status` | No (status JSON only) | `current-task/status.json` |
-| Describe | Nicki only | No | `artifacts.story` → `current-task/story.md` (Gherkin user story) |
-| Spec | `sheep-spec` | No | `current-task/specs/<slug>.json` |
-| Subtasks | `sheep-subtask` | No | `current-task/subtasks/<slug>.md` |
+| Spec | `sheep-spec` | No | `current-task/specs/<slug>.json` (+ pause path) |
+| Gherkin | `sheep-gherkin` | No | `artifacts.story` → usually `current-task/story.md` (from spec path) |
+| Subtasks | `sheep-subtask` | No | `current-task/subtasks/<slug>.md` (+ pause path) |
 | Execute | `sheep-execute` | Yes | Code changes + updated subtasks (no execution JSON) |
 | Review | `sheep-review` | No | No file — verdict in the return `summary` |
 | Sync | `sheep-sync` | Yes (commit + pre-push merge + push feature) | Git side effects only |
-| Archive | `sheep-archive` | No (writes `docs/archive/`) | `docs/archive/<slug>/report.json` |
-| Integrate | `sheep-integrate` | Yes (merge into `main` + push `main`) | Git side effects only |
+| Archive | `sheep-archive` | No | `<prefix>/docs/archive/<slug>/report.json` (+ `report.md`; optional `story.md` / `errors.json`) |
+| Integrate | `sheep-integrate` | Yes (merge into target + push target) | Git side effects only |
 | Close | `sheep-close` | Delete worktree | unregister + teardown |
+| Fallback | `sheep-fallback` | No | Append harness failure to errors file (Nicki-only) |
 
 ### Artifact handoff chain
 
 ```
-spec ──→ subtasks ──→ execute (code + checklist) ──→ review (verdict in the return summary)
+spec ──→ gherkin (story) ──→ subtasks ──→ execute (code + checklist) ──→ review (verdict in summary)
 sync ──→ archive ──→ sync ──→ integrate ──→ close
 ```
 
-- **Spec** defines *what* to build — requirements, scope, acceptance. No file paths.
+- **Spec** defines *what* to build — requirements, scope, acceptance. No file paths. Packed from free text / `task.original`.
+- **Story** (Gherkin checklist) is a transform of the spec. Nicki packs the spec path; `sheep-gherkin` does not interview.
 - **Subtask list** breaks spec into one-sentence build items with checkbox completion state (tests included).
 - **Execute-plan** implements unchecked subtasks in order and marks each `- [x]` in place. No `executions/*.json` handoff.
 - **Review** inspects the worktree diff plus available `current-task/` files and reports its verdict in the return `summary`. No review file, no readiness file — Nicki turns the verdict into `next_step`.
-- **Archive** — `report.yaml`, `report.md`, `story.md` under `docs/archive/`; committed on feature branch before integrate. `current-task/` is gitignored (worktree-local).
+- **Archive** — always `<prefix>/docs/archive/<slug>/` (`report.json`, `report.md`; `story.md` when present). Committed on feature branch before integrate. `current-task/` is gitignored (worktree-local).
 - **Close** — unregister + delete whole worktree after integrate.
-
-Closed tasks are stored at:
-
-```
-docs/archive/<slug>/
-  report.yaml
-  report.md
-  story.md
-```
 
 ---
 
@@ -153,22 +154,22 @@ No verbose `history[]`, no `completed_steps`, no `last_completed_step`, no dupli
 
 ### Step values
 
-`start`, `describe`, `spec`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`
+`start`, `spec`, `gherkin`, `subtasks`, `execute`, `review`, `fix`, `acceptance`, `sync`, `archive`, `integrate`, `close`, `done`
 
 Schemas: `.cursor/skills/current-task-update/status-format.md`, `.cursor/skills/current-task-update/global-status-format.md`, `.cursor/skills/hook-contract/SKILL.md`
 
 ### Nicki summary → context update
 
-After each sheep except start and close, Nicki sends `sheep-status` with a compact summary plus the `--step` and `--mode` she dispatched (no separate user confirmation needed). On normal completion, routing owns `next_step` — the summary does not need it.
+After each sheep except start and close, Nicki sends `sheep-status` with a compact summary plus the `--step` and `--mode` she dispatched (no separate user confirmation needed). On normal completion, routing owns `next_step` — the summary does not need it. After review, Nicki may set summary `next_step` to `acceptance`, `execute`, or `review`.
 
 ```yaml
-worktree: projects/castlemill-landing/worktrees/hero-section
+worktree: worktrees/castlemill-landing-hero-section
 artifact: current-task/specs/hero-section.json
 open_questions: []
 summary: Spec captured requirements and acceptance criteria.
 ```
 
-Nicki passes `--step spec --mode normal` (or `jump` to skip ahead — see [`flexibility.md`](flexibility.md)).
+Nicki passes `--step spec --mode normal` (or `jump` to skip ahead — see [flexibility](tasks/flexibility.md)).
 
 Exceptions: **do not send `sheep-status` after sheep-start** — `create-worktree.py` already wrote the opening position — **or after sheep-close** — close deletes `current-task/`.
 
@@ -176,9 +177,9 @@ Exceptions: **do not send `sheep-status` after sheep-start** — `create-worktre
 
 ## Transition discipline
 
-Before each sheep (except `sheep-status`), Nicki shows a compact state card. **Explicit yes is required only for `execute` and `sync`.** Other steps spawn after the card without waiting for approval. Sheep name comes from bootstrap / `routing.json` — there is no spawn-gate script.
+Before each sheep (except `sheep-status`), Nicki shows a compact state card (task / progress / sheep / **Output path** for document steps; **spec path** for gherkin; **pause path** for spec/subtasks; **`prefix` + `slug`** for archive). **Explicit yes is required only for `execute` and `sync`.** Other steps spawn after the card without waiting for approval. Sheep name comes from bootstrap / `routing.json` — there is no spawn-gate script.
 
-`--mode jump` changes how `update-status.py` moves position; `normal` and `jump` are the only modes, and both need a task. Ad-hoc work does not go through Nicki at all — the agent spawns the sheep directly (see [`flexibility.md`](flexibility.md)).
+`--mode jump` changes how `update-status.py` moves position; `normal` and `jump` are the only modes, and both need a task. Ad-hoc work does not go through Nicki at all — the agent spawns the sheep directly.
 
 ---
 
@@ -196,11 +197,11 @@ Every workflow step agent has `task: false`. Nicki is the only agent that invoke
 
 ### 3. Nicki sends sheep
 
-Nicki sends sheep via Task `subagent_type` only. Parent agent does not run pipeline steps inline and does not send sheep.
+Nicki sends sheep via Task `subagent_type` only. Parent agent does not run pipeline steps inline and does not send sheep (except ad-hoc, which is outside Nicki).
 
-### 4. YAML handoffs between steps, not chat memory
+### 4. Disk handoffs between steps, not chat memory
 
-Each step produces compact handoff artifacts (YAML/Markdown). Downstream agents consume prior artifacts plus `global-status.json` / `status.json` pointers. Disk-first, not chat memory.
+Each document step produces a compact handoff (JSON or Markdown) at a Nicki-owned path. Downstream agents consume prior artifacts plus `global-status.json` / `status.json` pointers. Disk-first, not chat memory.
 
 ### 5. No broad state enum — step pointers + open questions
 
@@ -208,19 +209,19 @@ Instead of a `state: in_progress | blocked | done` field, status uses `current_s
 
 ### 6. Worktree path is the hard scope boundary
 
-Task work inside `projects/<project>/worktrees/<slug>/` (or legacy path). execute-plan hard boundary. Nicki validates `scope.worktree_path`.
+Task work inside `worktrees/<project>-<slug>/` at the workspace root. Legacy `projects/<project>/worktrees/<slug>/` is deprecated. execute-plan hard boundary. Nicki validates `scope.worktree_path`.
 
 ### 7. Git tail: sync → archive → sync → integrate → close
 
-1. **Sync** — local commit, merge `main` into feature branch, push feature branch (`sync-task`)
-2. **Archive** — write `docs/archive/<slug>/` (`sheep-archive` / `task-archive`); no git
-3. **Sync** (again) — commit and push `docs/archive/`
-4. **Integrate** — merge feature into `main`, push `main` to remote (`integrate-task`)
+1. **Sync** — local commit, merge base into feature branch, push feature branch (`sync-task`)
+2. **Archive** — write `<prefix>/docs/archive/<slug>/` (`sheep-archive` / `task-archive`); no git
+3. **Sync** (again) — commit and push archive
+4. **Integrate** — merge feature into target branch, push target (`integrate-task`)
 5. **Close** — unregister `global-status.json`, delete worktree (`close-task` / `close-scope`)
 
-`current-task/` is gitignored — orchestration stays worktree-local; only `docs/archive/` and product changes reach `main`.
+`current-task/` is gitignored — orchestration stays worktree-local; only archive and product changes reach the target branch.
 
-Three chat confirms that matter for consent: **execute**, then **sync** (acceptance). Archive / integrate / close proceed without a second gate script; conflict/problems still need user approval per the hard-gate note in `nicki.md`.
+Chat confirms for consent: **execute**, then **sync** (acceptance). Archive / integrate / close proceed after the card; merge conflicts still need user approval (`open_questions` + re-spawn).
 
 ### 8. Shared conflict-resolution protocol
 
@@ -243,17 +244,21 @@ close-task unregisters `global-status.json` and deletes the whole worktree last.
 
 ### 12. Review outcomes; Nicki sets next_step
 
-Review returns a summary; Nicki may set summary `next_step` to `acceptance`, `execute`, or `review`. Default routing after review is `acceptance`. Validation readiness files are retired.
+Review returns a summary; Nicki may set summary `next_step` to `acceptance`, `execute`, or `review`. Default routing after review is `acceptance`. When fixes are needed, Nicki relays suggested lines in chat, waits for approval, then sends `sheep-subtask` to append `## Fix` (preserving `- [x]`). Validation readiness files are retired.
 
 ### 13. Acceptance before sync
 
 After review lands on `acceptance`, Nicki asks yes before `sync`. No spawn-gate script.
 
-### 14. Spec open_questions
+### 14. open_questions (stop and ask)
 
-Non-empty `open_questions` are relayed in chat and stored in status. Sheep shape them; there is no script spawn veto for open questions.
+Non-empty `open_questions` are relayed in chat and stored in status. Sheep shape them; there is no script spawn veto. Caller re-spawns the same sheep with answers (and pause path for spec/subtasks).
 
-### 15. Partial review scope
+### 15. Caller owns paths (and archive prefix)
+
+Nicki packs output paths. Archive always uses caller `prefix` + `slug` → `<prefix>/docs/archive/<slug>/`. Sheep must not invent paths or invent the archive root.
+
+### 16. Partial review scope
 
 Partial review scope (when supplied via Nicki prompt) is conversation-scoped. Review does not load an execution artifact for scope.
 
@@ -266,6 +271,8 @@ Partial review scope (when supplied via Nicki prompt) is conversation-scoped. Re
 | File | Role |
 | ---- | ---- |
 | `.cursor/agents/nicki.md` | Nicki subagent definition |
+| `.cursor/skills/nicki/routing.json` | Step → sheep, prompts, harness_failure |
+| `.cursor/skills/nicki/scripts/bootstrap-context.py` | Read harness |
 | `docs/NICKI.md` | This context overview |
 
 ### State
@@ -274,6 +281,7 @@ Partial review scope (when supplied via Nicki prompt) is conversation-scoped. Re
 | ---- | ---- |
 | `.cursor/agents/sheep-status.md` | State writer sheep |
 | `.cursor/skills/current-task-update/SKILL.md` | State writer workflow |
+| `.cursor/skills/current-task-update/scripts/update-status.py` | Write harness |
 | `.cursor/skills/current-task-update/status-format.md` | Per-task status schema |
 | `.cursor/skills/current-task-update/global-status-format.md` | Workspace registry schema |
 
@@ -281,21 +289,23 @@ Partial review scope (when supplied via Nicki prompt) is conversation-scoped. Re
 
 | Step | Sheep | Skill | Format schema |
 | ---- | ----- | ----- | ------------- |
-| Start | `sheep-start.md` | `start-task/SKILL.md` | — |
-| Spec | `sheep-spec.md` | `spec-maker/SKILL.md` | `spec-format.md` |
-| Subtasks | `sheep-subtask.md` | `subtask-maker/SKILL.md` | `subtask-format.md` |
-| Execute | `sheep-execute.md` | `execute-plan/SKILL.md` | — (no execution JSON) |
-| Review | `sheep-review.md` | `review-execution/SKILL.md` | `review-format.md`, `validation/` |
-| Sync | `sheep-sync.md` | `sync-task/SKILL.md` | (no handoff file) |
-| Archive | `sheep-archive.md` | `task-archive/SKILL.md` | `task-archive/archive-format.md` |
-| Integrate | `sheep-integrate.md` | `integrate-task/SKILL.md` | (no handoff file) |
-| Close | `sheep-close.md` | `close-task/SKILL.md` | — |
+| Start | `sheep-start.md` | `start-task/` (`create-worktree.py`) | — |
+| Spec | `sheep-spec.md` | `spec-maker/` | `spec-format.md` |
+| Gherkin | `sheep-gherkin.md` | `story-maker/` | `story-format.md` |
+| Subtasks | `sheep-subtask.md` | `subtask-maker/` | `subtask-format.md` |
+| Execute | `sheep-execute.md` | `execute-plan/` | — (no execution JSON) |
+| Review | `sheep-review.md` | `review-execution/` | `review-format.md` |
+| Sync | `sheep-sync.md` | `sync-task/` | (no handoff file) |
+| Archive | `sheep-archive.md` | `task-archive/` | `archive-format.md` (`report.json`) |
+| Integrate | `sheep-integrate.md` | `integrate-task/` | (no handoff file) |
+| Close | `sheep-close.md` | `close-task/` | — |
+| Fallback | `sheep-fallback.md` | `errors-recording/` | errors file |
 
-### Close helpers (no sheep)
+### Close helpers
 
 | Skill | Role |
 | ----- | ---- |
-| `docs/archive/` | `report.yaml`, `report.md`, `story.md` |
+| `task-archive/` | Writes `<prefix>/docs/archive/<slug>/` |
 | `close-scope/` | Paths, unregister, worktree delete |
 
 ### Shared
@@ -303,10 +313,9 @@ Partial review scope (when supplied via Nicki prompt) is conversation-scoped. Re
 | File | Role |
 | ---- | ---- |
 | `.cursor/skills/conflict-resolution/SKILL.md` | Shared merge conflict protocol for sync and integrate |
-| `.cursor/skills/validation/SKILL.md` | Validation, readiness, out-of-scope next-steps |
-| `.cursor/skills/start-task/scripts/start-worktrees.sh` | Worktree creation |
-| `.cursor/skills/close-scope/scripts/unregister-global-status.sh` | Registry unregister (close-task only) |
-| `CONTRIBUTING.md` | Full contributor workflow documentation |
+| `.cursor/skills/validation/` | **Retired** — historical readiness format only |
+| `.cursor/rules/nicki-default.mdc` | Opt-in Nicki routing + ad-hoc sheep rules |
+| `.cursor/skills/hook-contract/SKILL.md` | Hook / permissions contract |
 
 ---
 
@@ -323,7 +332,7 @@ nicki hero-section
 nicki continue
 ```
 
-Nicki sends `sheep-start` (no status write — the script already wrote position), then describe, and each sheep after confirmation with `sheep-status` after every sheep except start and close. Ad-hoc: spawn one sheep directly with instructions and an output path; do not run the pipeline inline in the parent agent.
+Nicki sends `sheep-start` (no status write — the script already wrote `current_step: start` and `next_step: spec`), then `sheep-spec`, then `sheep-gherkin` with the spec path and story output path, and continues with `sheep-status` after every sheep except start and close. Ad-hoc: spawn one sheep directly with instructions and an output path; do not run the pipeline inline in the parent agent.
 
 ---
 
@@ -335,9 +344,11 @@ Cursor compacts chats — disk wins via harness: `bootstrap-context.py` stdout, 
 
 ## Further reading
 
-- Full contributor workflow: [`CONTRIBUTING.md`](../CONTRIBUTING.md) — agent workflow pipeline section
-- Flexibility (ad-hoc + jump): [`flexibility.md`](flexibility.md)
 - Nicki agent definition: [`.cursor/agents/nicki.md`](../.cursor/agents/nicki.md)
-- Harness read/write types: [`docs/superpowers/specs/2026-07-17-harness-read-write-types-design.md`](superpowers/specs/2026-07-17-harness-read-write-types-design.md)
+- Flexibility (shipped + optional quoting polish): [`tasks/flexibility.md`](tasks/flexibility.md) → [`archive/flexibility/report.md`](archive/flexibility/report.md)
+- Harness read/write ADR: [`archive/bootstrap-script/2026-07-17-harness-read-write-types-design.md`](archive/bootstrap-script/2026-07-17-harness-read-write-types-design.md)
+- Retire check-gate: [`archive/retire-check-gate/report.md`](archive/retire-check-gate/report.md)
 - Status schemas: [`.cursor/skills/current-task-update/status-format.md`](../.cursor/skills/current-task-update/status-format.md), [`.cursor/skills/current-task-update/global-status-format.md`](../.cursor/skills/current-task-update/global-status-format.md)
 - Archive format: [`.cursor/skills/task-archive/archive-format.md`](../.cursor/skills/task-archive/archive-format.md)
+- Backlog: [`tasks/tasks.md`](tasks/tasks.md) · Done: [`tasks/tasks-done.md`](tasks/tasks-done.md) · PLAN: [`PLAN.md`](PLAN.md)
+- Shinobu (separate repo forked from Nicki after Stage 1 + #20): [`SHINOBU.md`](SHINOBU.md) · next steps: [`SHINOBU_NEXT_STEPS.md`](SHINOBU_NEXT_STEPS.md)

@@ -13,7 +13,7 @@ Today the caller (Nicki on the pipeline, or the parent agent ad-hoc) packs **pat
 | Already caller-owned | Still sheep-owned (this task) |
 |---|---|
 | Input paths / worktree / `source_document` | Document body *schema* and required fields |
-| Output path (`prefix` + slug for archive; prompt path for describe/spec/subtasks) | Defaults when the caller did not say (e.g. always `pending_integrate`) |
+| Output path (`prefix` + slug for archive; prompt path for gherkin/spec/subtasks) | Defaults when the caller did not say (e.g. always `pending_integrate`) |
 | Ad-hoc vs pipeline dispatch | Return JSON extras beyond the thin contract; invented enums |
 
 Sheep still **author content** (story prose, spec requirements, archive summary text). They must not **choose the contract** — which fields exist, which are required, which enum values are legal — unless the caller packed that contract or pointed at a format the caller selected.
@@ -22,7 +22,7 @@ Exact mechanism TBD in brainstorm (prompt section? routing fields? thin format p
 
 ## Scope
 
-- **In:** all sheep that write documents or return structured JSON — at least describe, spec, subtasks, archive, review (summary/verdict), fallback/errors; and the shared return contract (`completed_status`, `open_questions`, `artifact`, `summary`).
+- **In:** all sheep that write documents or return structured JSON — at least gherkin, spec, subtasks, archive, review (summary/verdict), fallback/errors; and the shared return contract (`completed_status`, `open_questions`, `artifact`, `summary`).
 - **Especially important evidence:** archive (`task-archive` + `archive-format.md`) — richest live friction.
 - **Out / already done:** path ownership, ad-hoc direct invocation, archive `<prefix>/docs/archive/<slug>/`, delete of pointed `spec`/`subtasks`, no close-scope for archive inputs. Do not reopen those.
 
@@ -34,8 +34,8 @@ Exact mechanism TBD in brainstorm (prompt section? routing fields? thin format p
 
 Apply the same discipline to **shape**: caller packs (or points at) the output contract; sheep fill content into that shape; skills/formats stop shipping hard defaults that contradict the caller.
 
-Baseline path ownership: [`2026-08-01-artifact-ownership-and-position-design.md`](../../superpowers/specs/2026-08-01-artifact-ownership-and-position-design.md).  
-Ad-hoc dispatch: [`2026-08-05-adhoc-direct-sheep-invocation-design.md`](../../superpowers/specs/2026-08-05-adhoc-direct-sheep-invocation-design.md).  
+Baseline path ownership: [`2026-08-01-artifact-ownership-and-position-design.md`](../archive/flexibility/2026-08-01-artifact-ownership-and-position-design.md).  
+Ad-hoc dispatch: [`2026-08-05-adhoc-direct-sheep-invocation-design.md`](../archive/adhoc-direct-sheep-invocation/2026-08-05-adhoc-direct-sheep-invocation-design.md).  
 Live rule: `.cursor/rules/nicki-default.mdc`. Nicki ownership blurb: `.cursor/agents/nicki.md`.
 
 ## Archive evidence (two live ad-hoc runs)
@@ -50,7 +50,7 @@ Design/implementation commits (local `main`): `52432f0` → `755616b` → `3f4e7
 ### Concrete archive friction (still open — shape, not path)
 
 1. **`outcome.status: pending_integrate` hardcoded** in `task-archive` step 3 — false when work landed on `main` with no integrate.
-2. **`story.md` treated as required** when no describe/`artifacts.story` exists.
+2. **`story.md` treated as required** when no gherkin/`artifacts.story` exists.
 3. **`process` only from status handoffs + `side_effects`** — empty for source-document ad-hoc; no caller-supplied process shape.
 4. **`meta.source_context` exemplified only as `status.json`** — ad-hoc source was a design path.
 5. **No caller field for invocation** (pipeline vs ad-hoc) — sheep improvised non-schema blocks.
@@ -66,7 +66,7 @@ Same class of problem — skills/formats decide shape:
 | Sheep | Likely shape ownership leaks |
 |---|---|
 | `sheep-spec` | Spec JSON schema / required keys; block-without-write rules |
-| `sheep-describe` | Story/Gherkin shape; whether path alone is enough |
+| `sheep-gherkin` | Story/Gherkin shape; whether path alone is enough |
 | `sheep-subtask` | Checklist format; frontmatter |
 | `sheep-review` | Verdict vocabulary in `summary` (`acceptance` / `execute` / `review`) — Nicki consumes it for `next_step` |
 | `sheep-fallback` | `errors.v1` entry shape |
@@ -94,4 +94,4 @@ Same class of problem — skills/formats decide shape:
 - Sheep/skills do not invent defaults that contradict a packed contract.
 - Archive ad-hoc with `source_document` can produce a valid report without fake `pending_integrate` / empty forced process / required missing `story.md` — unless the caller asked for those.
 - Pattern applies across sheep, not an archive-only special case.
-- Documented in `docs/superpowers/specs/` and verified (prefer another ad-hoc archive dogfood).
+- Documented under `docs/future-tasks/` and verified (prefer another ad-hoc archive dogfood).

@@ -32,6 +32,8 @@ process:
     summary: ready_for_acceptance — review approved; no blocking or deferred findings.
   - step: sync
     summary: Synced chore/host-runtime-symlink (573aa7d); pre_push_merge merged; pushed origin/chore/host-runtime-symlink.
+  - step: archive
+    summary: Approach A design ADR paired into this archive at docs/archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md; live docs/superpowers/specs/2026-07-15-host-runtime-single-source-design.md deleted. Live docs will keep a B-only design linking to this archive.
 
 decisions:
   - topic: Canonical source

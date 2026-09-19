@@ -17,7 +17,7 @@ Shipped work moved out of [`tasks.md`](tasks.md) to keep the backlog lean. Task 
 | 15 | `nicki.code-workspace` sync | `scripts/generate-code-workspace.sh` wired into `create-worktree.py` (start) and `close-scope` (close). Warn on regen failure; skip on `--dry-run`. Archive: [`archive/code-workspace-sync/`](archive/code-workspace-sync/). |
 | 16 | **Context handling** | Disk-first bootstrap in `nicki.md` + `nicki-default.mdc`. Archive: [`archive/context-handling/`](archive/context-handling/). |
 | 18 | **`bootstrap-context.py`** | Nicki reads orchestration context from stdout. (Originally sibling to check-gate; gate retired 2026-08-05.) Archive: [`archive/bootstrap-script/`](archive/bootstrap-script/) — merge `55dca0a`. |
-| | **status.json YAGNI (v2)** | Simplify per-task status to task-status.v2: step pointers + `artifacts.*`, no verbose history. Originally shipped with `task.completed_steps`; that list was **removed 2026-07-29** (position is `current_step`/`next_step` only — see [`flexibility.md`](flexibility.md)). Archive: [`archive/status-json-yagni/`](archive/status-json-yagni/). |
+| | **status.json YAGNI (v2)** | Simplify per-task status to task-status.v2: step pointers + `artifacts.*`, no verbose history. Originally shipped with `task.completed_steps`; that list was **removed 2026-07-29** (position is `current_step`/`next_step` only — see [`archive/flexibility/report.md`](archive/flexibility/report.md)). Archive: [`archive/status-json-yagni/`](archive/status-json-yagni/). |
 
 Projects on disk: `castlemill-landing`, `project-psychic-lemon`, `tetris-clone-frp` (one active worktree). Gitignored env is copied by script — not a layout problem.
 
@@ -58,10 +58,14 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 |---|------|-------|
 | 7 | `check-gate.py` | Shipped then **retired 2026-08-05** (`30c16b8`). Archives: [`archive/check-gate-py/`](archive/check-gate-py/), [`archive/retire-check-gate/`](archive/retire-check-gate/). |
 | 8 | Nicki **calls** gate script | Shipped then retired with #7. Archive: [`archive/nicki-gate-wiring/`](archive/nicki-gate-wiring/). |
+| 10 | Smoke fixtures | Live suite: `python3 test.py`. Gate matrix retired — [`archive/retire-check-gate/`](archive/retire-check-gate/). |
 | 11 | Permissions | Bootstrap (and formerly check-gate) allowlisted; check-gate entry removed 2026-08-05. |
 | | **`update-status.py`** | Authoritative write for `current-task/status.json` via `sheep-status`. |
-
 | | **sheep-fallback** | Failure recording + harness-failure routing. Archive: [`archive/sheep-fallback/`](archive/sheep-fallback/). |
+| | **Smoke CI** | `.github/workflows/smoke.yml` runs `python3 test.py`. |
+| | **Flexibility** | Ad-hoc + jump + consent model shipped; dogfood done. Optional quoting polish only → `story-format.md`. Detail: [`flexibility.md`](flexibility.md) · archive: [`archive/flexibility/report.md`](archive/flexibility/report.md). |
+
+Harness shape: **read** (`bootstrap-context.py`) · **write** (`update-status.py`). Consent is Nicki chat (execute + sync).
 
 ---
 
@@ -70,7 +74,20 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 | # | Task | Notes |
 |---|------|-------|
 | 12 | Trim `nicki.md` | Dropped numbered workflow, readiness table, sheep map, duplicated gate prose. Later: gate invocation removed; consent execute+sync only. |
+| 13 | Trim `status-read.md` | Example shows `current_step: gherkin` / `next_step: subtasks`; matches live `start → spec → gherkin → subtasks`. Closed in Stage 1 docs pass. |
 | 14 | Shorten `NICKI.md` | Shell allowlist for bootstrap; harness read/write table. |
+| | **Stage 1 docs cleanup** | Live docs match `start → spec → gherkin → subtasks` / `sheep-gherkin`; Shinobu blurbs point at fork plan. See [`SHINOBU_NEXT_STEPS.md`](../SHINOBU_NEXT_STEPS.md). |
+
+Historical deletion map: [`archive/investigation-complexity/report.md`](archive/investigation-complexity/report.md).
+
+---
+
+## Stage 1 — Spec-first + Gherkin transform (done)
+
+Nicki pipeline head is `start → spec → gherkin → subtasks → execute → …`. Gherkin is a transform of the spec (`sheep-gherkin` + `story-maker`), not an interview. SoT: `routing.json`, `nicki.md`. Destination notes: [`SHINOBU_NEXT_STEPS.md`](../SHINOBU_NEXT_STEPS.md) · [`OWNERSHIP.md`](../OWNERSHIP.md).
+
+Remaining Stage 1 extract work is **#20** (still open in [`tasks.md`](tasks.md)).
+
 ---
 
 ## Host runtime (done)
@@ -79,4 +96,4 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 |---|------|-------|
 | 19 | Fresh-install `install.py` | Post-clone registry + `worktrees/` bootstrap; `.cursor/` untouched (Cursor link hook deferred to #20). Archive: [`archive/fresh-install/`](archive/fresh-install/). |
 | | **Claude adapter (copy model)** | `install-claude.py` maps `.cursor/` → `.claude/` via copy; generates `CLAUDE.md`. Superseded by Approach A symlink. Archive: [`archive/claude-adapter/`](archive/claude-adapter/). |
-| | **Approach A: host-runtime symlink** | `RUNTIME_ROOT = .cursor`, `link_dir`, symlink `.claude/agents` + `.claude/skills`, generate `CLAUDE.md`. Archive: [`archive/host-runtime-symlink/`](archive/host-runtime-symlink/) — merge `302772d`. Design: [`superpowers/specs/2026-07-15-host-runtime-single-source-design.md`](superpowers/specs/2026-07-15-host-runtime-single-source-design.md). |
+| | **Approach A: host-runtime symlink** | `RUNTIME_ROOT = .cursor`, `link_dir`, symlink `.claude/agents` + `.claude/skills`, generate `CLAUDE.md`. Archive: [`archive/host-runtime-symlink/`](archive/host-runtime-symlink/) — merge `302772d`. Design: [`archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md`](archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md). |

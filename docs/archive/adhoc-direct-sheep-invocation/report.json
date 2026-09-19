@@ -18,7 +18,12 @@
     "pushed_branch": null,
     "final_artifact": "docs/archive/adhoc-direct-sheep-invocation/report.json"
   },
-  "process": [],
+  "process": [
+    {
+      "step": "archive",
+      "summary": "Design ADR paired into archive as 2026-08-05-adhoc-direct-sheep-invocation-design.md; live docs/superpowers/specs/2026-08-05-adhoc-direct-sheep-invocation-design.md deleted."
+    }
+  ],
   "decisions": [
     {
       "topic": "What ad-hoc means",

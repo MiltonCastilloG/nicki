@@ -19,7 +19,7 @@ Merged into `main` at `aef52f6`. Final handoff: `current-task/integrates/status-
 
 ## Process
 
-Describe captured three feature groups for minimal status.json, history trim, and doc alignment. Spec defined routing preservation, duplicate collapse, and artifact-sourced archive process. Execute updated status-format, status-read, create-worktree scaffold, task-archive, and consumer docs. R3 review approved after r2 polish on artifacts.story references. Sync committed and pushed feature branch. Integrate merged to main; docs/tasks.md conflict resolved by keeping main backlog layout.
+Describe captured three feature groups for minimal status.json, history trim, and doc alignment. Spec defined routing preservation, duplicate collapse, and artifact-sourced archive process. Execute updated status-format, status-read, create-worktree scaffold, task-archive, and consumer docs. R3 review approved after r2 polish on artifacts.story references. Sync committed and pushed feature branch. Integrate merged to main; docs/tasks.md conflict resolved by keeping main backlog layout. JSON pipeline artifacts ADR paired into this archive at `docs/archive/status-json-yagni/2026-07-28-json-pipeline-artifacts-design.md` (removed from live `docs/superpowers/specs/`).
 
 ## Decisions
 

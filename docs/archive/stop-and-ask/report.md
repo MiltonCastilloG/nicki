@@ -13,11 +13,13 @@ sheep emit open_questions · orchestrator asks · fresh re-spawn · pause-contex
 
 ## Outcome
 
-Target `main`. `pushed_branch` null. Source-document archive from `docs/superpowers/specs/2026-08-06-stop-and-ask-design.md`. No `status.json`, no errors path — no `errors.json`. No story path — no `story.md`. Spec/subtasks cleanup skipped (no worktree artifact pointers).
+Target `main`. `pushed_branch` null. Source-document archive from `docs/superpowers/specs/2026-08-06-stop-and-ask-design.md`. No `status.json`, no errors path — no `errors.json`. No story path — no `story.md`. Spec/subtasks cleanup skipped (no worktree artifact pointers). Design ADR now lives at `docs/archive/stop-and-ask/2026-08-06-stop-and-ask-design.md`.
 
 ## Process
 
-Empty. No handoff pointers, no `side_effects`. Checklist at `docs/adhoc/stop-and-ask/subtasks.md` used for decisions context only.
+Prior archive had empty process: no handoff pointers, no `side_effects`. Checklist at `docs/adhoc/stop-and-ask/subtasks.md` used for decisions context only.
+
+- **archive** — Design ADR paired into archive as `2026-08-06-stop-and-ask-design.md`; live `docs/superpowers/specs/2026-08-06-stop-and-ask-design.md` deleted.
 
 ## Decisions
 

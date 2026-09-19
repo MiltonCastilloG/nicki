@@ -10,11 +10,13 @@ Delete check-gate · consent SoT Nicki chat · execute + sync only · bootstrap_
 
 ## Outcome
 
-Landed on `main` at `30c16b8`. Design: `docs/superpowers/specs/2026-08-05-retire-check-gate-design.md`. Full Nicki pipeline (worktree / sync / integrate / close) was not run for this task — archive report written manually after the removal commit.
+Landed on `main` at `30c16b8`. Design: `docs/archive/retire-check-gate/2026-08-05-retire-check-gate-design.md`. Full Nicki pipeline (worktree / sync / integrate / close) was not run for this task — archive report written manually after the removal commit.
 
 ## Process
 
 Analysis showed gate no longer enforced progress: only thin document/consent bookends remaining, while hard stops the user cared about were user confirmation before execute and before sync. Chose hard delete of the spawn veto (not soft retire). Implement removed `check-gate.py` / `gates.py` / gate smokes, stripped routing gate/consent/adhoc flags, renamed thinned helpers to `bootstrap_utils.py` (bootstrap-only) and `routing_write.py` (writer `next_step_for` / `MODES`), updated Nicki prose and live docs. `python3 test.py` passed. Commit `30c16b8` records the removal.
+
+Design ADR paired into this archive at `docs/archive/retire-check-gate/2026-08-05-retire-check-gate-design.md` (removed from live `docs/superpowers/specs/`).
 
 ## Decisions
 

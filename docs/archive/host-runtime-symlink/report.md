@@ -29,6 +29,8 @@ RUNTIME_ROOT · link_dir · agents/skills symlinks · CLAUDE.md adapter · copy 
 
 **sync** — Committed and pushed `chore/host-runtime-symlink` (`573aa7d`); `pre_push_merge` merged.
 
+**archive** — Approach A design ADR paired into this archive at `docs/archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md`; live `docs/superpowers/specs/2026-07-15-host-runtime-single-source-design.md` deleted. Live docs will keep a B-only design linking to this archive.
+
 ## Decisions
 
 - Canonical runtime stays under `.cursor/agents` and `.cursor/skills`.

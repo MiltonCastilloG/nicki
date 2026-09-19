@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "schema": "task-archive.v1",
+    "generated_by": "task-archive"
+  },
+  "task": {
+    "slug": "investigation-complexity",
+    "title": "Investigation + complexity analysis (joined)",
+    "original": "Archive three historical analysis docs from docs/: investigation.md (article vs Nicki), investigation-complexity.md (trimming deletion map), complexity.md (agent complexity line counts).",
+    "type": "docs",
+    "branch": "main"
+  },
+  "story": "article vs Nicki investigation · trimming deletion map · agent complexity line counts",
+  "outcome": {
+    "target": "main",
+    "pushed_branch": null
+  },
+  "process": [
+    {
+      "step": "archive",
+      "summary": "Joined three historical analysis docs (investigation.md, investigation-complexity.md, complexity.md) into one archive under docs/archive/investigation-complexity/; removed them from live docs/."
+    }
+  ],
+  "decisions": [
+    {
+      "topic": "Archive cluster",
+      "decision": "Joined complexity.md with investigation-complexity.md (and investigation.md) as one archive — same analysis cluster."
+    }
+  ],
+  "open_questions": [],
+  "suggestions": []
+}
