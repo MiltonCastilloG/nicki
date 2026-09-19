@@ -1,6 +1,6 @@
 # Nicki workflow diagrams
 
-Visual maps of the current-task pipeline as defined in `.cursor/agents/`, `.cursor/skills/nicki/routing.json`, and `.cursor/skills/`.
+Visual maps of the current-task pipeline as defined in `workflow-runtime/agents/`, `workflow-runtime/skills/nicki/routing.json`, and `workflow-runtime/skills/`.
 
 For orchestrator rules and artifact schemas, see [`NICKI.md`](NICKI.md).
 

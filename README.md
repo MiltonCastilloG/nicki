@@ -2,7 +2,7 @@
 
 **Nicki is a good dog.**
 
-Cursor workflow for structured agent-driven development. Nicki orchestrates the current-task pipeline (start → close) in project-local worktrees with YAML/Markdown handoffs on disk.
+Workflow for Cursor and Claude Code. Nicki orchestrates the current-task pipeline (start → close) in project-local worktrees with YAML/Markdown handoffs on disk.
 
 ---
 
@@ -56,35 +56,14 @@ This writes a minimal `nicki-workspace.yaml` (nicki-only registry), ensures `wor
 
 ### Claude Code quick start
 
-Use this path when working in Claude Code instead of Cursor:
-
 ```bash
 git clone <repo-url> nicki
 cd nicki
-python3 install.py          # repository bootstrap + Cursor adapter
-python3 install-claude.py   # symlink .claude/ agents+skills into workflow-runtime/; generate CLAUDE.md
+python3 install.py
+python3 install-claude.py
 ```
 
-Then open the cloned repository in Claude Code.
-
-- **Edit runtime in `workflow-runtime/`** (agents, skills, rules). That tree is canonical and committed.
-- **`.cursor/agents` and `.cursor/skills`** are committed directory symlinks into `workflow-runtime/` (Track 1). Fresh checkouts and new git worktrees get them with no extra step.
-- **`.claude/agents` and `.claude/skills`** are directory symlinks into `workflow-runtime/` (created by `install-claude.py`).
-- **`.cursor/rules/nicki-default.mdc`** is generated from `workflow-runtime/rules/nicki-default.md` and **committed** so fresh worktrees carry the invocation rule without `install.py`. Re-run `install.py` after editing the canonical rule, then commit the refreshed `.mdc`.
-- **`CLAUDE.md`** is generated the same way (with Claude vocabulary swaps) and remains gitignored.
-- **Re-run installers** on a fresh clone (Claude), or after changing the invocation rule (regenerates host rule files). Agent/skill edits need no reinstall when using symlinks.
-- **Atomic-save warning:** some editors save via write-temp-then-rename and can replace a symlink with a regular file or directory. Always edit under `workflow-runtime/`, never through the `.cursor/` or `.claude/` symlink path. Re-run the matching installer to self-repair if a link is severed.
-
-Generated Claude layout is gitignored. If the OS rejects directory symlinks, the installer falls back to copying and warns that re-runs are required after runtime edits.
-
-Invoke Nicki by name:
-
-```text
-nicki start my-task
-nicki continue
-```
-
-Claude Code does not replicate Cursor hooks; Nicki pipeline work uses the installed agents and skills only.
+Open the cloned repository in Claude Code. Claude Code does not replicate Cursor hooks; pipeline work uses the installed agents and skills only. How to edit the runtime (both hosts): [Editing the runtime](#editing-the-runtime).
 
 ### 2. Open in Cursor
 
@@ -102,6 +81,40 @@ nicki continue
 The parent agent Task-spawns the `nicki` subagent (see `.cursor/rules/nicki-default.mdc`, generated from `workflow-runtime/rules/nicki-default.md`). Nicki asks before execute and sync and sends sheep (`sheep-start`, `sheep-spec`, `sheep-gherkin`, `sheep-execute`, …). After every sheep except start and close, Nicki sends `sheep-status` to update `current-task/status.json`.
 
 Git steps (`sync`, `integrate`) need explicit confirmation. Archive and close need separate confirms. Close asks to confirm worktree delete only.
+
+---
+
+## Editing the runtime
+
+One real copy; both hosts read it through shortcuts.
+
+```text
+workflow-runtime/agents/   ← edit here
+workflow-runtime/skills/   ← edit here
+workflow-runtime/rules/    ← edit here
+
+.cursor/agents, .cursor/skills   → symlinks (committed)
+.claude/agents, .claude/skills   → symlinks (install-claude.py)
+```
+
+Agent and skill edits are visible to Cursor and Claude the moment you save. No reinstall.
+
+**One special case — the invocation rule.** Cursor and Claude need it as two
+different files, so they are generated, not linked:
+
+```text
+workflow-runtime/rules/nicki-default.md
+  → python3 install.py          writes .cursor/rules/nicki-default.mdc (committed)
+  → python3 install-claude.py   writes CLAUDE.md (gitignored)
+```
+
+After editing the rule, run both and commit the refreshed `.mdc`. If you forget,
+`python3 test.py` fails on `rule_drift`.
+
+**Never edit through `.cursor/` or `.claude/`.** Some editors save by
+write-temp-then-rename, which turns a symlink into a real folder. If a link
+breaks, re-run the matching installer; it self-repairs. CI runs both installers
+and the smokes on every push.
 
 ---
 

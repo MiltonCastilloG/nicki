@@ -1,6 +1,6 @@
-# Nicki 
-# Bump version when you change .cursor/ (agents, skills, rules, hooks).
+# Nicki
+# Bump version when you change workflow-runtime/ (agents, skills, rules) or .cursor/ hooks.
 
 name: nicki
-version: 0.2.1
-description: Cursor workflow orchestrator for structured agent-driven development
+version: 0.3.0
+description: Workflow orchestrator for Cursor and Claude Code
