@@ -102,3 +102,4 @@ Remaining Stage 1 extract work after Approach A: complete (**#20a–20c**, **#21
 | **21** | **Path-resolution + rule-drift smokes** | `path_resolution` asserts runtime path strings resolve on disk; `rule_drift` asserts committed `.mdc` / installed `CLAUDE.md` match `install_common` renderers. (Scoped down from the wider discovery-contract row.) |
 | | **Shinobu fork** | Tag `v0.3.0-nicki-baseline` (2026-09-19) copied with full history to [github.com/MiltonCastilloG/shinobu](https://github.com/MiltonCastilloG/shinobu). Independent repositories from that commit on; no shared runtime, no cross-repo sync. Fork design docs left with the fork. |
 | **20c** | **Prose rewrite to neutral paths** | Agents, skills, `NICKI.md`, `PLAN.md`: `.cursor/{agents,skills,rules}` → `workflow-runtime/…`. Hooks / host-adapter dirs left as `.cursor/`. |
+| | **Single installer for both hosts** | `install.py` always sets up Cursor and Claude; `install-claude.py` deleted. |

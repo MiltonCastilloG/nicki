@@ -35,7 +35,7 @@ def run(root: Path) -> None:
         installed = root / CLAUDE_MD
         if not installed.is_file():
             failures.append(
-                f"fail: missing installed {CLAUDE_MD} — run python3 install-claude.py"
+                f"fail: missing installed {CLAUDE_MD} — run python3 install.py"
             )
         elif installed.read_bytes() != tmp_claude.read_bytes():
             failures.append(

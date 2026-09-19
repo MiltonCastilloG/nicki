@@ -52,22 +52,11 @@ cd nicki
 python3 install.py
 ```
 
-This writes a minimal `nicki-workspace.yaml` (nicki-only registry), ensures `worktrees/` exists, and verifies committed `.cursor/agents` and `.cursor/skills` symlinks into `workflow-runtime/`. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/PLAN.md`](docs/PLAN.md)). How to edit the runtime: [Editing the runtime](#editing-the-runtime).
+This writes a minimal `nicki-workspace.yaml` (nicki-only registry), ensures `worktrees/` exists, verifies committed `.cursor/agents` and `.cursor/skills` symlinks into `workflow-runtime/`, links `.claude/agents` and `.claude/skills` the same way, and generates `CLAUDE.md`. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/PLAN.md`](docs/PLAN.md)). How to edit the runtime: [Editing the runtime](#editing-the-runtime).
 
-### Claude Code quick start
+### 2. Open in Cursor or Claude Code
 
-```bash
-git clone <repo-url> nicki
-cd nicki
-python3 install.py
-python3 install-claude.py
-```
-
-Open the cloned repository in Claude Code. Claude Code does not replicate Cursor hooks; pipeline work uses the installed agents and skills only. How to edit the runtime (both hosts): [Editing the runtime](#editing-the-runtime).
-
-### 2. Open in Cursor
-
-Open the cloned repository folder in Cursor.
+Open the cloned repository folder in Cursor or Claude Code. Claude Code does not replicate Cursor hooks; pipeline work uses the installed agents and skills only.
 
 ### 3. Run with Nicki
 
@@ -94,7 +83,7 @@ workflow-runtime/skills/   ← edit here
 workflow-runtime/rules/    ← edit here
 
 .cursor/agents, .cursor/skills   → symlinks (committed)
-.claude/agents, .claude/skills   → symlinks (install-claude.py)
+.claude/agents, .claude/skills   → symlinks (install.py)
 ```
 
 Agent and skill edits are visible to Cursor and Claude the moment you save. No reinstall.
@@ -104,17 +93,17 @@ different files, so they are generated, not linked:
 
 ```text
 workflow-runtime/rules/nicki-default.md
-  → python3 install.py          writes .cursor/rules/nicki-default.mdc (committed)
-  → python3 install-claude.py   writes CLAUDE.md (gitignored)
+  → python3 install.py   writes .cursor/rules/nicki-default.mdc (committed)
+                         and CLAUDE.md (gitignored)
 ```
 
-After editing the rule, run both and commit the refreshed `.mdc`. If you forget,
-`python3 test.py` fails on `rule_drift`.
+After editing the rule, run `python3 install.py` and commit the refreshed `.mdc`.
+If you forget, `python3 test.py` fails on `rule_drift`.
 
 **Never edit through `.cursor/` or `.claude/`.** Some editors save by
 write-temp-then-rename, which turns a symlink into a real folder. If a link
-breaks, re-run the matching installer; it self-repairs. CI runs both installers
-and the smokes on every push.
+breaks, re-run `python3 install.py`; it self-repairs. CI runs the installer and
+the smokes on every push.
 
 ---
 
@@ -175,7 +164,7 @@ Writer schemas: `workflow-runtime/skills/current-task-update/status-format.md`, 
 ```text
 nicki/
 ├── README.md
-├── install.py / install-claude.py / install_common.py
+├── install.py / install_common.py
 ├── workflow-runtime/          # canonical host-neutral runtime
 │   ├── agents/                # nicki + sheep (flat)
 │   ├── skills/                # pure functionality + README.md
