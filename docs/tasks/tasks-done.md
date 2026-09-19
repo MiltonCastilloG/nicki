@@ -1,6 +1,6 @@
 # Nicki — completed tasks
 
-Shipped work moved out of [`tasks.md`](tasks.md) to keep the backlog lean. Task archives: [`archive/`](archive/).
+Shipped work moved out of [`tasks.md`](tasks.md) to keep the backlog lean. Task archives: [`archive/`](../archive/).
 
 ---
 
@@ -8,16 +8,16 @@ Shipped work moved out of [`tasks.md`](tasks.md) to keep the backlog lean. Task 
 
 | # | Task | Notes |
 |---|------|-------|
-| 1 | `create-worktree.py` | Pull base branch, `git worktree add`, workspace `worktrees/<project>-<slug>`, copy gitignored locals from registry, `post_create`, scaffold `current-task/`, register `global-status.json`. Archive: [`archive/nicki/04/`](archive/nicki/04/). |
+| 1 | `create-worktree.py` | Pull base branch, `git worktree add`, workspace `worktrees/<project>-<slug>`, copy gitignored locals from registry, `post_create`, scaffold `current-task/`, register `global-status.json`. Archive: [`archive/nicki/04/`](../archive/nicki/04/). |
 | 2 | Root `worktrees/` layout | Shipped with #1. **Unified:** `worktrees/<project>-<slug>` at workspace root (single hyphen). See `create-worktree.py` and `nicki-workspace.example.yaml`. |
 | 3 | `post_create` copy list | Shipped with #1. Per-project `copy` and `post_create` in workspace registry; readable by `create-worktree.py`. |
-| 4 | Migrate active task | `tetris-clone-frp` active at `worktrees/tetris-clone-frp-ghost-piece-rendering`; `global-status.json` and `status.json` use unified paths. No legacy `projects/tetris-clone-frp/worktrees/`. Archive: [`archive/ghost-piece-rendering/`](archive/ghost-piece-rendering/). |
-| 5 | Wire `sheep-start` to new script | `sheep-start.md` invokes `create-worktree.py` per `start-task/SKILL.md`; legacy `start-worktrees.sh` retired from agent path. Archive: [`archive/wire-sheep-start/`](archive/wire-sheep-start/). |
-| 6 | **Gherkin + spec mutual understanding** | Archive: [`archive/gherkin-spec-mutual-understanding/`](archive/gherkin-spec-mutual-understanding/). See below. |
-| 15 | `nicki.code-workspace` sync | `scripts/generate-code-workspace.sh` wired into `create-worktree.py` (start) and `close-scope` (close). Warn on regen failure; skip on `--dry-run`. Archive: [`archive/code-workspace-sync/`](archive/code-workspace-sync/). |
-| 16 | **Context handling** | Disk-first bootstrap in `nicki.md` + `nicki-default.mdc`. Archive: [`archive/context-handling/`](archive/context-handling/). |
-| 18 | **`bootstrap-context.py`** | Nicki reads orchestration context from stdout. (Originally sibling to check-gate; gate retired 2026-08-05.) Archive: [`archive/bootstrap-script/`](archive/bootstrap-script/) — merge `55dca0a`. |
-| | **status.json YAGNI (v2)** | Simplify per-task status to task-status.v2: step pointers + `artifacts.*`, no verbose history. Originally shipped with `task.completed_steps`; that list was **removed 2026-07-29** (position is `current_step`/`next_step` only — see [`archive/flexibility/report.md`](archive/flexibility/report.md)). Archive: [`archive/status-json-yagni/`](archive/status-json-yagni/). |
+| 4 | Migrate active task | `tetris-clone-frp` active at `worktrees/tetris-clone-frp-ghost-piece-rendering`; `global-status.json` and `status.json` use unified paths. No legacy `projects/tetris-clone-frp/worktrees/`. Archive: [`archive/ghost-piece-rendering/`](../archive/ghost-piece-rendering/). |
+| 5 | Wire `sheep-start` to new script | `sheep-start.md` invokes `create-worktree.py` per `start-task/SKILL.md`; legacy `start-worktrees.sh` retired from agent path. Archive: [`archive/wire-sheep-start/`](../archive/wire-sheep-start/). |
+| 6 | **Gherkin + spec mutual understanding** | Archive: [`archive/gherkin-spec-mutual-understanding/`](../archive/gherkin-spec-mutual-understanding/). See below. |
+| 15 | `nicki.code-workspace` sync | `scripts/generate-code-workspace.sh` wired into `create-worktree.py` (start) and `close-scope` (close). Warn on regen failure; skip on `--dry-run`. Archive: [`archive/code-workspace-sync/`](../archive/code-workspace-sync/). |
+| 16 | **Context handling** | Disk-first bootstrap in `nicki.md` + `nicki-default.mdc`. Archive: [`archive/context-handling/`](../archive/context-handling/). |
+| 18 | **`bootstrap-context.py`** | Nicki reads orchestration context from stdout. (Originally sibling to check-gate; gate retired 2026-08-05.) Archive: [`archive/bootstrap-script/`](../archive/bootstrap-script/) — merge `55dca0a`. |
+| | **status.json YAGNI (v2)** | Simplify per-task status to task-status.v2: step pointers + `artifacts.*`, no verbose history. Originally shipped with `task.completed_steps`; that list was **removed 2026-07-29** (position is `current_step`/`next_step` only — see [`archive/flexibility/report.md`](../archive/flexibility/report.md)). Archive: [`archive/status-json-yagni/`](../archive/status-json-yagni/). |
 
 Projects on disk: `castlemill-landing`, `project-psychic-lemon`, `tetris-clone-frp` (one active worktree). Gitignored env is copied by script — not a layout problem.
 
@@ -56,14 +56,14 @@ Scripts: `.cursor/skills/start-task/scripts/create-worktree.py`, `register-globa
 
 | # | Task | Notes |
 |---|------|-------|
-| 7 | `check-gate.py` | Shipped then **retired 2026-08-05** (`30c16b8`). Archives: [`archive/check-gate-py/`](archive/check-gate-py/), [`archive/retire-check-gate/`](archive/retire-check-gate/). |
-| 8 | Nicki **calls** gate script | Shipped then retired with #7. Archive: [`archive/nicki-gate-wiring/`](archive/nicki-gate-wiring/). |
-| 10 | Smoke fixtures | Live suite: `python3 test.py`. Gate matrix retired — [`archive/retire-check-gate/`](archive/retire-check-gate/). |
+| 7 | `check-gate.py` | Shipped then **retired 2026-08-05** (`30c16b8`). Archives: [`archive/check-gate-py/`](../archive/check-gate-py/), [`archive/retire-check-gate/`](../archive/retire-check-gate/). |
+| 8 | Nicki **calls** gate script | Shipped then retired with #7. Archive: [`archive/nicki-gate-wiring/`](../archive/nicki-gate-wiring/). |
+| 10 | Smoke fixtures | Live suite: `python3 test.py`. Gate matrix retired — [`archive/retire-check-gate/`](../archive/retire-check-gate/). |
 | 11 | Permissions | Bootstrap (and formerly check-gate) allowlisted; check-gate entry removed 2026-08-05. |
 | | **`update-status.py`** | Authoritative write for `current-task/status.json` via `sheep-status`. |
-| | **sheep-fallback** | Failure recording + harness-failure routing. Archive: [`archive/sheep-fallback/`](archive/sheep-fallback/). |
+| | **sheep-fallback** | Failure recording + harness-failure routing. Archive: [`archive/sheep-fallback/`](../archive/sheep-fallback/). |
 | | **Smoke CI** | `.github/workflows/smoke.yml` runs both installers then `python3 test.py`. |
-| | **Flexibility** | Ad-hoc + jump + consent model shipped; dogfood done. Optional quoting polish only → `story-format.md`. Detail: [`flexibility.md`](flexibility.md) · archive: [`archive/flexibility/report.md`](archive/flexibility/report.md). |
+| | **Flexibility** | Ad-hoc + jump + consent model shipped; dogfood done. Optional quoting polish only → `story-format.md`. Detail: [`flexibility.md`](flexibility.md) · archive: [`archive/flexibility/report.md`](../archive/flexibility/report.md). |
 
 Harness shape: **read** (`bootstrap-context.py`) · **write** (`update-status.py`). Consent is Nicki chat (execute + sync).
 
@@ -78,7 +78,7 @@ Harness shape: **read** (`bootstrap-context.py`) · **write** (`update-status.py
 | 14 | Shorten `NICKI.md` | Shell allowlist for bootstrap; harness read/write table. |
 | | **Stage 1 docs cleanup** | Live docs match `start → spec → gherkin → subtasks` / `sheep-gherkin`. |
 
-Historical deletion map: [`archive/investigation-complexity/report.md`](archive/investigation-complexity/report.md).
+Historical deletion map: [`archive/investigation-complexity/report.md`](../archive/investigation-complexity/report.md).
 
 ---
 
@@ -94,9 +94,9 @@ Remaining Stage 1 extract work after Approach A: complete (**#20a–20c**, **#21
 
 | # | Task | Notes |
 |---|------|-------|
-| 19 | Fresh-install `install.py` | Post-clone registry + `worktrees/` bootstrap; `.cursor/` untouched (Cursor link hook deferred to #20). Archive: [`archive/fresh-install/`](archive/fresh-install/). |
-| | **Claude adapter (copy model)** | `install-claude.py` maps `.cursor/` → `.claude/` via copy; generates `CLAUDE.md`. Superseded by Approach A symlink. Archive: [`archive/claude-adapter/`](archive/claude-adapter/). |
-| | **Approach A: host-runtime symlink** | `RUNTIME_ROOT = .cursor`, `link_dir`, symlink `.claude/agents` + `.claude/skills`, generate `CLAUDE.md`. Archive: [`archive/host-runtime-symlink/`](archive/host-runtime-symlink/) — merge `302772d`. Design: [`archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md`](archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md). |
+| 19 | Fresh-install `install.py` | Post-clone registry + `worktrees/` bootstrap; `.cursor/` untouched (Cursor link hook deferred to #20). Archive: [`archive/fresh-install/`](../archive/fresh-install/). |
+| | **Claude adapter (copy model)** | `install-claude.py` maps `.cursor/` → `.claude/` via copy; generates `CLAUDE.md`. Superseded by Approach A symlink. Archive: [`archive/claude-adapter/`](../archive/claude-adapter/). |
+| | **Approach A: host-runtime symlink** | `RUNTIME_ROOT = .cursor`, `link_dir`, symlink `.claude/agents` + `.claude/skills`, generate `CLAUDE.md`. Archive: [`archive/host-runtime-symlink/`](../archive/host-runtime-symlink/) — merge `302772d`. Design: [`archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md`](../archive/host-runtime-symlink/2026-07-15-host-runtime-single-source-design.md). |
 | **20a** | **Cursor symlink spike** | PASS 2026-09-19: Cursor and Claude follow host `{agents,skills}` → `../workflow-runtime/...`. Gates Track 1. |
 | **20b** | **Extract to `workflow-runtime/`** | Canonical agents/skills/rules under `workflow-runtime/`; committed `.cursor/` symlinks; `install_common.py`; both installers; machine-read path flips; smoke.yml runs installers before `test.py`. Design + checklist: [`archive/workflow-runtime-extract/`](../archive/workflow-runtime-extract/). |
 | **21** | **Path-resolution + rule-drift smokes** | `path_resolution` asserts runtime path strings resolve on disk; `rule_drift` asserts committed `.mdc` / installed `CLAUDE.md` match `install_common` renderers. (Scoped down from the wider discovery-contract row.) |
