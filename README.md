@@ -52,7 +52,7 @@ cd nicki
 python3 install.py
 ```
 
-This writes a minimal `nicki-workspace.yaml` (nicki-only registry), ensures `worktrees/` exists, and verifies committed `.cursor/agents` and `.cursor/skills` symlinks into `workflow-runtime/`. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/PLAN.md`](docs/PLAN.md)). Canonical runtime ships under `workflow-runtime/`; Cursor adapters are committed symlinks plus a committed `.cursor/rules/nicki-default.mdc` (regenerated from the canonical rule when that file changes).
+This writes a minimal `nicki-workspace.yaml` (nicki-only registry), ensures `worktrees/` exists, and verifies committed `.cursor/agents` and `.cursor/skills` symlinks into `workflow-runtime/`. For multi-project workspaces, managed clones live under `projects/<name>/` (see [`docs/PLAN.md`](docs/PLAN.md)). How to edit the runtime: [Editing the runtime](#editing-the-runtime).
 
 ### Claude Code quick start
 
