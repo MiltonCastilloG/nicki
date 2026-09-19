@@ -81,8 +81,8 @@ def write_cursor_rule() -> None:
     CURSOR_RULE.write_text(render_cursor_rule(), encoding="utf-8")
 
 
-def verify_claude_runtime() -> tuple[int, str, str]:
-    """Repair .claude/agents and .claude/skills links into workflow-runtime/."""
+def install_claude_runtime() -> tuple[int, str, str]:
+    """Link .claude/agents and .claude/skills into workflow-runtime/."""
     agent_mode = link_dir(RUNTIME_ROOT / "agents", CLAUDE_AGENTS)
     skill_mode = link_dir(RUNTIME_ROOT / "skills", CLAUDE_SKILLS)
     agent_count = len(list((RUNTIME_ROOT / "agents").glob("*.md")))
@@ -94,44 +94,47 @@ def write_claude_md() -> None:
     CLAUDE_MD.write_text(render_claude_md(), encoding="utf-8")
 
 
-def _host_mode(agent_mode: str, skill_mode: str) -> str:
-    return "copies" if "copy" in (agent_mode, skill_mode) else "links"
+def _mode_label(agent_mode: str, skill_mode: str) -> str:
+    return "copies" if agent_mode == "copy" or skill_mode == "copy" else "links"
 
 
 def print_success(
     cursor_modes: tuple[str, str],
     claude_modes: tuple[str, str],
 ) -> None:
-    cursor_kind = _host_mode(*cursor_modes)
-    claude_kind = _host_mode(*claude_modes)
-    fallback_hosts = [
-        name
-        for name, kind in (("Cursor", cursor_kind), ("Claude", claude_kind))
-        if kind == "copies"
-    ]
-    if fallback_hosts:
-        hosts = " and ".join(fallback_hosts)
+    cursor_fallback = cursor_modes[0] == "copy" or cursor_modes[1] == "copy"
+    claude_fallback = claude_modes[0] == "copy" or claude_modes[1] == "copy"
+    if cursor_fallback or claude_fallback:
+        hosts = []
+        if cursor_fallback:
+            hosts.append("Cursor")
+        if claude_fallback:
+            hosts.append("Claude")
+        which = " and ".join(hosts)
         print(
-            f"warning: directory symlinks unavailable for {hosts}; "
+            f"warning: directory symlinks unavailable for {which}; "
             "copied agents/skills — re-run install.py after runtime edits",
             file=sys.stderr,
         )
 
-    print(
-        f"Cursor:  .cursor/agents, .cursor/skills -> workflow-runtime/ ({cursor_kind})"
-    )
-    print(
-        f"         {CURSOR_RULE.relative_to(REPO_ROOT)} written (committed)"
-    )
-    print(
-        f"Claude:  .claude/agents, .claude/skills -> workflow-runtime/ ({claude_kind})"
-    )
+    cursor_kind = _mode_label(*cursor_modes)
+    claude_kind = _mode_label(*claude_modes)
+    print(f"Cursor:  .cursor/agents, .cursor/skills -> workflow-runtime/ ({cursor_kind})")
+    print(f"         {CURSOR_RULE.relative_to(REPO_ROOT)} written (committed)")
+    print(f"Claude:  .claude/agents, .claude/skills -> workflow-runtime/ ({claude_kind})")
     print("         CLAUDE.md written (gitignored)")
+    print("Edit runtime under workflow-runtime/. Re-run install.py after editing")
+    print("workflow-runtime/rules/*.md and commit the refreshed .mdc.")
+    print()
+    print("Next steps:")
+    print("  1. Open this repository in Cursor or Claude Code.")
+    print("  2. Invoke Nicki to start or continue a task:")
+    print("       nicki start my-task")
+    print("       nicki continue")
+    print()
     print(
-        "Edit runtime under workflow-runtime/. Re-run install.py after editing"
-    )
-    print(
-        "  workflow-runtime/rules/*.md and commit the refreshed .mdc."
+        "Note: Claude Code does not replicate Cursor hooks; "
+        "Nicki pipeline work uses the installed agents and skills only."
     )
 
 
@@ -142,7 +145,7 @@ def main() -> None:
     write_registry()
     _, cursor_agent_mode, cursor_skill_mode = verify_cursor_runtime()
     write_cursor_rule()
-    _, claude_agent_mode, claude_skill_mode = verify_claude_runtime()
+    _, claude_agent_mode, claude_skill_mode = install_claude_runtime()
     write_claude_md()
     print_success(
         (cursor_agent_mode, cursor_skill_mode),
