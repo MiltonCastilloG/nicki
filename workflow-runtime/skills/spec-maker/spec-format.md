@@ -2,7 +2,7 @@
 
 **JSON only** — spec-maker writes this schema. Subtask-maker reads via [spec-input.md](../subtask-maker/spec-input.md).
 
-Default path: `current-task/specs/<slug>.json` under the worktree scope root.
+Written at the caller's packed output path — spec-maker never invents one.
 
 Specs define **what** to build (requirements, scope, acceptance). They do **not** name implementation subtasks or file paths.
 

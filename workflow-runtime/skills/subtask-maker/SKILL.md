@@ -30,7 +30,7 @@ Output schema: [subtask-format.md](subtask-format.md). Spec input: [spec-input.m
 4. Write only that file. Report that fixes were applied, not a full regenerate.
 ### 1. Resolve worktree scope
 
-Resolve path to absolute; confirm exists. Scope root = that path; `<slug>` = final folder name. Default output: `current-task/subtasks/<slug>.md`.
+Resolve path to absolute; confirm exists. Scope root = that path; `<slug>` = final folder name. Output path is the caller's packed path — never invent it.
 
 **Scope:** read anywhere under scope root; write only the subtask output path (create parent dir if needed). Never edit application code or files outside the scope root.
 

@@ -10,19 +10,19 @@
       "sheep": "sheep-spec",
       "artifact_key": "spec",
       "default_next_step": "gherkin",
-      "prompt": "output path (Nicki-owned; usually worktree specs/<slug>.json), task id, free text / task.original, pause path (Nicki-owned; usually worktree current-task/specs/<slug>.pause.md); on re-spawn after questions, the same pause path plus the user's answers"
+      "prompt": "output path (Nicki-owned; usually worktree current-task/specs/<slug>.json), task id, free text / task.original, pause path (Nicki-owned; usually worktree current-task/specs/<slug>.pause.md); on re-spawn after questions, the same pause path plus the user's answers"
     },
     "gherkin": {
       "sheep": "sheep-gherkin",
       "artifact_key": "story",
       "default_next_step": "subtasks",
-      "prompt": "spec path (Nicki-owned; usually worktree specs/<slug>.json), story output path (Nicki-owned; usually worktree current-task/story.md); not chat / interview"
+      "prompt": "spec path (Nicki-owned; usually worktree current-task/specs/<slug>.json), story output path (Nicki-owned; usually worktree current-task/story.md); not chat / interview"
     },
     "subtasks": {
       "sheep": "sheep-subtask",
       "artifact_key": "subtasks",
       "default_next_step": "execute",
-      "prompt": "output path (Nicki-owned; usually worktree subtasks/<slug>.md), task id, chat, pause path (Nicki-owned; usually worktree current-task/subtasks/<slug>.pause.md); on re-spawn after questions, the same pause path plus the user's answers; or existing checklist path + approved review fix lines to append ## Fix"
+      "prompt": "output path (Nicki-owned; usually worktree current-task/subtasks/<slug>.md), task id, chat, pause path (Nicki-owned; usually worktree current-task/subtasks/<slug>.pause.md); on re-spawn after questions, the same pause path plus the user's answers; or existing checklist path + approved review fix lines to append ## Fix"
     },
     "execute": {
       "sheep": "sheep-execute",

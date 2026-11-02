@@ -2,7 +2,7 @@
 
 **Markdown only** — subtask-maker writes; execute-plan reads via [subtask-input.md](subtask-input.md).
 
-Default path: `current-task/subtasks/<slug>.md` under the worktree scope root.
+Written at the caller's packed output path — subtask-maker never invents one.
 
 ## File structure
 
